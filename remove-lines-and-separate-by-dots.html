@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remove Lines and Separate by Dots in HTML</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      #result div {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Remove Lines and Separate by Dots in HTML</h1>
+    <textarea
+      id="textInput"
+      rows="10"
+      cols="50"
+      placeholder="Enter the paragraphs here..."
+      oninput="autoProcess()"
+    ></textarea>
+    <br /><br />
+    <label>
+      <input type="checkbox" id="autoProcessCheckbox" checked />
+      Auto process after entering text
+    </label>
+    <br /><br />
+    <button onclick="processParagraphs()">Process Paragraphs</button>
+
+    <h2>Result</h2>
+    <div id="result"></div>
+
+    <script>
+      function processParagraphs() {
+        const text = document.getElementById("textInput").value
+        const cleanedText = removeLineBreaks(text)
+        const paragraphs = splitTextByDots(cleanedText)
+        displayParagraphs(paragraphs)
+      }
+
+      function removeLineBreaks(text) {
+        const lines = text.split("\n")
+        return lines.map((line) => line.trim() + " ").join("")
+      }
+
+      function splitTextByDots(text) {
+        const maxChar = 5000
+        const paragraphs = []
+        let start = 0
+
+        while (start < text.length) {
+          let end = start + maxChar
+
+          if (end >= text.length) {
+            paragraphs.push(text.substring(start))
+            break
+          }
+
+          let nearestDot = text.lastIndexOf(".", end)
+          if (nearestDot > start) {
+            end = nearestDot + 1
+          } else {
+            end = text.indexOf(".", end) + 1
+            if (end <= start) {
+              end = start + maxChar
+            }
+          }
+
+          paragraphs.push(text.substring(start, end).trim())
+          start = end
+        }
+        return paragraphs
+      }
+
+      function displayParagraphs(paragraphs) {
+        const resultDiv = document.getElementById("result")
+        resultDiv.innerHTML = ""
+        paragraphs.forEach((paragraph) => {
+          const div = document.createElement("div")
+          div.textContent = paragraph
+          resultDiv.appendChild(div)
+        })
+      }
+
+      function autoProcess() {
+        const autoProcessCheckbox = document.getElementById(
+          "autoProcessCheckbox"
+        ).checked
+        if (autoProcessCheckbox) {
+          processParagraphs()
+        }
+      }
+    </script>
+  </body>
+</html>
