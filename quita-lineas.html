@@ -1,83 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Procesar Texto Automáticamente</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Procesar Texto Automáticamente</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Procesar Texto</h1>
+  <textarea id="inputText" placeholder="Introduce el texto aquí..." oninput="checkAutoProcess()"></textarea>
+  <textarea id="outputText" placeholder="Texto procesado aparecerá aquí..." readonly></textarea>
+  <label>
+    <input type="checkbox" id="autoProcessCheckbox" checked /> Procesado
+    automático
+  </label>
+  <label>
+    <input type="checkbox" id="autoCopyCheckbox" checked /> Copiado automático
+    después de procesar
+  </label>
+
+  <script>
+    function checkAutoProcess() {
+      if (document.getElementById("autoProcessCheckbox").checked) {
+        processText()
       }
-      textarea {
-        width: 100%;
-        height: 150px;
-        margin-bottom: 20px;
+    }
+
+    function processText() {
+      // Obtener el texto del textarea de entrada
+      let inputText = document.getElementById("inputText").value
+
+      // Dividir el texto en líneas
+      let lines = inputText.split("\n")
+
+      // Procesar cada línea
+      let processedLines = lines.map((line) => line.trim() + " ").join("")
+
+      // Poner el texto procesado en el textarea de salida
+      document.getElementById("outputText").value = processedLines
+
+      // Copiar al portapapeles si el checkbox está marcado
+      if (document.getElementById("autoCopyCheckbox").checked) {
+        copyToClipboard(processedLines)
       }
-      label {
-        display: block;
-        margin-bottom: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Procesar Texto</h1>
-    <textarea
-      id="inputText"
-      placeholder="Introduce el texto aquí..."
-      oninput="checkAutoProcess()"
-    ></textarea>
-    <textarea
-      id="outputText"
-      placeholder="Texto procesado aparecerá aquí..."
-      readonly
-    ></textarea>
-    <label>
-      <input type="checkbox" id="autoProcessCheckbox" checked /> Procesado
-      automático
-    </label>
-    <label>
-      <input type="checkbox" id="autoCopyCheckbox" checked /> Copiado automático
-      después de procesar
-    </label>
+    }
 
-    <script>
-      function checkAutoProcess() {
-        if (document.getElementById("autoProcessCheckbox").checked) {
-          processText()
-        }
-      }
+    function copyToClipboard(text) {
+      // Crear un elemento temporal para seleccionar y copiar el texto
+      let tempInput = document.createElement("textarea")
+      tempInput.style.position = "absolute"
+      tempInput.style.left = "-9999px"
+      tempInput.value = text
+      document.body.appendChild(tempInput)
+      tempInput.select()
+      document.execCommand("copy")
+      document.body.removeChild(tempInput)
+    }
+  </script>
+</body>
 
-      function processText() {
-        // Obtener el texto del textarea de entrada
-        let inputText = document.getElementById("inputText").value
-
-        // Dividir el texto en líneas
-        let lines = inputText.split("\n")
-
-        // Procesar cada línea
-        let processedLines = lines.map((line) => line.trim() + " ").join("")
-
-        // Poner el texto procesado en el textarea de salida
-        document.getElementById("outputText").value = processedLines
-
-        // Copiar al portapapeles si el checkbox está marcado
-        if (document.getElementById("autoCopyCheckbox").checked) {
-          copyToClipboard(processedLines)
-        }
-      }
-
-      function copyToClipboard(text) {
-        // Crear un elemento temporal para seleccionar y copiar el texto
-        let tempInput = document.createElement("textarea")
-        tempInput.style.position = "absolute"
-        tempInput.style.left = "-9999px"
-        tempInput.value = text
-        document.body.appendChild(tempInput)
-        tempInput.select()
-        document.execCommand("copy")
-        document.body.removeChild(tempInput)
-      }
-    </script>
-  </body>
 </html>

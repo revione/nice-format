@@ -1,56 +1,53 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Separar Párrafos</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      #resultado div {
-        margin-bottom: 10px;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Separar Párrafos</h1>
-    <textarea
-      id="texto"
-      rows="10"
-      cols="50"
-      placeholder="Introduce los párrafos aquí..."
-    ></textarea
-    ><br /><br />
-    <button onclick="separarParrafos()">Separar Párrafos</button>
 
-    <h2>Resultado</h2>
-    <div id="resultado"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Separar Párrafos Automáticamente</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
 
-    <script>
-      function separarParrafos() {
-        // Obtener el texto del textarea
-        var texto = document.getElementById("texto").value
-        // Dividir el texto en párrafos usando saltos de línea
-        var parrafos = texto
-          .split("\n")
-          .filter((parrafo) => parrafo.trim() !== "")
-        // Obtener el div de resultado
-        var resultado = document.getElementById("resultado")
-        // Limpiar el contenido anterior
-        resultado.innerHTML = ""
-        // Crear un div para cada párrafo y agregarlo al resultado
-        parrafos.forEach((parrafo) => {
-          var div = document.createElement("div")
-          div.textContent = parrafo
-          resultado.appendChild(div)
-        })
-      }
-    </script>
-  </body>
+    #resultado div {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Separar Párrafos</h1>
+  <textarea id="texto" rows="10" cols="50" placeholder="Introduce los párrafos aquí..."
+    oninput="separarParrafos()"></textarea>
+  <h2>Resultado</h2>
+  <div id="resultado"></div>
+
+  <script>
+    function separarParrafos() {
+      // Obtener el texto del textarea
+      var texto = document.getElementById("texto").value
+      // Dividir el texto en párrafos usando saltos de línea
+      var parrafos = texto
+        .split("\n")
+        .filter((parrafo) => parrafo.trim() !== "")
+      // Obtener el div de resultado
+      var resultado = document.getElementById("resultado")
+      // Limpiar el contenido anterior
+      resultado.innerHTML = ""
+      // Crear un div para cada párrafo y agregarlo al resultado
+      parrafos.forEach((parrafo) => {
+        var div = document.createElement("div")
+        div.textContent = parrafo
+        resultado.appendChild(div)
+      })
+    }
+  </script>
+</body>
+
 </html>

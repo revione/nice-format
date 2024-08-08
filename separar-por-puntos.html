@@ -1,57 +1,54 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Separador de Párrafos</title>
-  </head>
-  <body>
-    <textarea
-      id="inputText"
-      rows="10"
-      cols="100"
-      placeholder="Pega tu texto aquí..."
-    ></textarea>
-    <button onclick="separarTexto()">Separar en Párrafos</button>
-    <div id="output"></div>
 
-    <script>
-      function separarTexto() {
-        const inputText = document.getElementById("inputText").value
-        const outputDiv = document.getElementById("output")
-        const maxChar = 5000
-        let paragraphs = []
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Separador de Párrafos Automático</title>
+</head>
 
-        let start = 0
-        while (start < inputText.length) {
-          let end = start + maxChar
+<body>
+  <textarea id="inputText" rows="10" cols="100" placeholder="Pega tu texto aquí..." oninput="separarTexto()"></textarea>
+  <div id="output"></div>
 
-          if (end >= inputText.length) {
-            paragraphs.push(inputText.substring(start))
-            break
-          }
+  <script>
+    function separarTexto() {
+      const inputText = document.getElementById("inputText").value
+      const outputDiv = document.getElementById("output")
+      const maxChar = 5000
+      let paragraphs = []
 
-          let puntoMasCercano = inputText.lastIndexOf(".", end)
-          if (puntoMasCercano > start) {
-            end = puntoMasCercano + 1
-          } else {
-            end = inputText.indexOf(".", end) + 1
-            if (end <= start) {
-              end = start + maxChar
-            }
-          }
+      let start = 0
+      while (start < inputText.length) {
+        let end = start + maxChar
 
-          paragraphs.push(inputText.substring(start, end).trim())
-          start = end
+        if (end >= inputText.length) {
+          paragraphs.push(inputText.substring(start))
+          break
         }
 
-        outputDiv.innerHTML = ""
-        paragraphs.forEach((paragraph) => {
-          const p = document.createElement("p")
-          p.textContent = paragraph
-          outputDiv.appendChild(p)
-        })
+        let puntoMasCercano = inputText.lastIndexOf(".", end)
+        if (puntoMasCercano > start) {
+          end = puntoMasCercano + 1
+        } else {
+          end = inputText.indexOf(".", end) + 1
+          if (end <= start) {
+            end = start + maxChar
+          }
+        }
+
+        paragraphs.push(inputText.substring(start, end).trim())
+        start = end
       }
-    </script>
-  </body>
+
+      outputDiv.innerHTML = ""
+      paragraphs.forEach((paragraph) => {
+        const p = document.createElement("p")
+        p.textContent = paragraph
+        outputDiv.appendChild(p)
+      })
+    }
+  </script>
+</body>
+
 </html>
