@@ -4,110 +4,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Remove Lines and Separate by Dots in HTML</title>
+
+  <title>Nice Format</title>
+
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+  <meta name="msapplication-TileColor" content="#da532c" />
+  <meta name="theme-color" content="#ffffff" />
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+      font-size: 24px;
+      line-height: 1.5rem;
+      font-family: sans-serif;
+      font-weight: 300;
+      line-height: 40px;
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 1rem;
     }
 
-    #resultado div {
-      line-height: 1.5rem;
+    #result {
+      margin-top: 20px;
+      white-space: pre-line;
+    }
+
+    #result div {
       padding: 10px;
+      white-space: pre-line;
+    }
+
+    textarea {
+      font-size: 25px;
+      font-family: sans-serif;
+      font-weight: 300;
+      line-height: 40px;
+      resize: none;
+      height: 10vh;
+      width: 100%;
+      border: 1px solid #3fa5f5;
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+
+    .in {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    h1 {
+      font-size: 0;
     }
   </style>
 </head>
 
 <body>
-  <h1>Remove Lines and Separate by Dots in HTML</h1>
-  <textarea id="textInput" rows="10" cols="50" placeholder="Enter the paragraphs here..."
-    oninput="processText()"></textarea>
-  <br /><br />
-  <label>
-    <input type="checkbox" id="autoProcessCheckbox" checked />
-    Auto process after entering text
-  </label>
-  <br /><br />
-  <label for="maxCharInput">Max characters per paragraph:</label>
-  <input type="range" id="maxCharInput" min="100" max="5000" step="100" value="100" oninput="processText()" />
-  <span id="maxCharValue">500</span>
-  <br /><br />
-  <label for="fontSizeRange">Adjust text size:</label>
-  <input type="range" id="fontSizeRange" min="10" max="100" value="16" oninput="adjustTextSize()" />
-  <span id="fontSizeValue">16px</span>
+  <h1>Separate Paragraphs</h1>
+  <div class="in">
+    <textarea id="text" rows="10" cols="50" placeholder="Enter paragraphs here..."
+      oninput="processParagraphs()"></textarea>
 
-  <h2>Result</h2>
+    <div>
+      <label for="maxCharInput">Max characters per paragraph:</label>
+      <span id="maxCharValue">100</span>
+      <input type="range" id="maxCharInput" min="100" max="5000" step="100" value="100"
+        oninput="updateMaxCharValue(); processParagraphs()" />
+    </div>
+
+    <div>
+      <label for="fontSizeRange">Text size:</label>
+      <span id="fontSizeValue">24px</span>
+      <input type="range" id="fontSizeRange" min="10" max="100" value="24" oninput="adjustTextSize()" />
+    </div>
+  </div>
+
   <div id="result"></div>
 
   <script>
-    function processText() {
-      if (document.getElementById("autoProcessCheckbox").checked) {
-        processParagraphs()
-      }
-    }
-
     function processParagraphs() {
-      const text = document.getElementById("textInput").value
-      const maxChar = parseInt(document.getElementById("maxCharInput").value, 10)
-      const cleanedText = removeLineBreaks(text)
-      const paragraphs = splitTextByDots(cleanedText, maxChar)
-      displayParagraphs(paragraphs)
+      const text = document.getElementById("text").value;
+      const maxChar = parseInt(document.getElementById("maxCharInput").value, 10);
+      const cleanedText = removeLineBreaks(text);
+      const paragraphs = splitTextByDots(cleanedText, maxChar);
+      displayParagraphs(paragraphs);
     }
 
     function removeLineBreaks(text) {
-      const lines = text.split("\n")
-      return lines.map((line) => line.trim() + " ").join("")
+      const lines = text.split("\n");
+      return lines.map((line) => line.trim() + " ").join("");
     }
 
     function splitTextByDots(text, maxChar) {
-      const paragraphs = []
-      let start = 0
+      const paragraphs = [];
+      let start = 0;
 
       while (start < text.length) {
-        let end = start + maxChar
+        let end = start + maxChar;
 
         if (end >= text.length) {
-          paragraphs.push(text.substring(start))
-          break
+          paragraphs.push(text.substring(start));
+          break;
         }
 
-        let nearestDot = text.lastIndexOf(".", end)
+        let nearestDot = text.lastIndexOf(".", end);
         if (nearestDot > start) {
-          end = nearestDot + 1
+          end = nearestDot + 1;
         } else {
-          end = text.indexOf(".", end) + 1
+          end = text.indexOf(".", end) + 1;
           if (end <= start) {
-            end = start + maxChar
+            end = start + maxChar;
           }
         }
 
-        paragraphs.push(text.substring(start, end).trim())
-        start = end
+        paragraphs.push(text.substring(start, end).trim());
+        start = end;
       }
-      return paragraphs
+      return paragraphs;
     }
 
     function displayParagraphs(paragraphs) {
-      const resultDiv = document.getElementById("result")
-      resultDiv.innerHTML = ""
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
       paragraphs.forEach((paragraph) => {
-        const div = document.createElement("div")
-        div.textContent = paragraph
-        resultDiv.appendChild(div)
-      })
+        const div = document.createElement("div");
+        div.textContent = paragraph;
+        resultDiv.appendChild(div);
+      });
     }
 
     function adjustTextSize() {
-      const fontSize = document.getElementById("fontSizeRange").value
-      document.getElementById("fontSizeValue").textContent = fontSize + "px"
-      const resultDiv = document.getElementById("result")
-      resultDiv.style.fontSize = fontSize + "px"
+      const fontSize = document.getElementById("fontSizeRange").value;
+      document.getElementById("fontSizeValue").textContent = fontSize + "px";
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.fontSize = fontSize + "px";
     }
 
-    document.getElementById("maxCharInput").addEventListener("input", function () {
-      document.getElementById("maxCharValue").textContent = this.value
-      processText()
-    })
+    function updateMaxCharValue() {
+      const maxChar = document.getElementById("maxCharInput").value;
+      document.getElementById("maxCharValue").textContent = maxChar;
+    }
   </script>
 </body>
 

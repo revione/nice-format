@@ -29,11 +29,6 @@
       white-space: pre-line;
     }
 
-    #result div {
-      padding: 10px;
-      white-space: pre-line;
-    }
-
     textarea {
       font-size: 25px;
       font-family: sans-serif;
@@ -62,37 +57,29 @@
 <body>
   <h1>Separate Paragraphs</h1>
   <div class="in">
-    <textarea id="text" rows="10" cols="50" placeholder="Enter paragraphs here..."
-      oninput="separateParagraphs()"></textarea>
+    <textarea id="text" rows="10" cols="50" placeholder="Enter paragraphs here..." oninput="processText()"></textarea>
 
     <div>
       <label for="fontSizeRange">Text size:</label>
       <span id="fontSizeValue">24px</span>
       <input type="range" id="fontSizeRange" min="10" max="100" value="24" oninput="adjustTextSize()" />
     </div>
+
   </div>
 
-  <!-- <h2>Result</h2> -->
   <div id="result"></div>
 
   <script>
-    function separateParagraphs() {
-      // Get the text from the textarea
+    function processText() {
+
       var text = document.getElementById("text").value;
-      // Split the text into paragraphs using line breaks
-      var paragraphs = text
-        .split("\n")
-        .filter((paragraph) => paragraph.trim() !== "");
-      // Get the result div
+
+
+      var processedText = text.split("\n").map((line) => line.trim()).join(" ");
+
+
       var result = document.getElementById("result");
-      // Clear previous content
-      result.innerHTML = "";
-      // Create a div for each paragraph and add it to the result
-      paragraphs.forEach((paragraph) => {
-        var div = document.createElement("div");
-        div.textContent = paragraph;
-        result.appendChild(div);
-      });
+      result.innerHTML = processedText;
     }
 
     function adjustTextSize() {
