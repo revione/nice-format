@@ -1,146 +1,107 @@
 <!DOCTYPE html>
-<html lang="unknow">
-  <head>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <meta name="msapplication-TileColor" content="#da532c" />
-    <meta name="theme-color" content="#ffffff" />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nice Format</title>
-    <style>
-      body {
-        font-size: 25px;
-        font-family: sans-serif;
-        font-weight: 300;
-        line-height: 40px;
-        max-width: 850px;
-        margin: 0 auto;
-        padding: 1rem;
-      }
+<html lang="en">
 
-      #resultado {
-        margin-top: 20px;
-        white-space: pre-line;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nice Format</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="msapplication-TileColor" content="#da532c" />
+  <meta name="theme-color" content="#ffffff" />
 
-      textarea {
-        font-size: 25px;
-        font-family: sans-serif;
-        font-weight: 300;
-        line-height: 40px;
-        resize: none;
-        min-height: 20vh;
-        max-height: calc(100vh - 2.5rem);
-        width: 100%;
-        border: 1px solid #3fa5f5;
-        border-radius: 8px;
-        padding: 0.5rem;
-      }
+  <style>
+    body {
+      font-size: 24px;
+      font-family: sans-serif;
+      font-weight: 300;
+      line-height: 40px;
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
 
-      .in {
-        display: flex;
-        gap: 0.5rem;
-      }
+    #result {
+      margin-top: 20px;
+      white-space: pre-line;
+    }
 
-      .in button {
-        display: flex;
-        align-items: center;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0 20px;
-      }
+    #result div {
+      line-height: 1.5rem;
+      padding: 10px;
+      white-space: pre-line;
+    }
 
-      .in button:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-      }
+    textarea {
+      font-size: 25px;
+      font-family: sans-serif;
+      font-weight: 300;
+      line-height: 40px;
+      resize: none;
+      height: 10vh;
+      width: 100%;
+      border: 1px solid #3fa5f5;
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
 
-      .in button svg {
-        position: relative;
-        top: -4%;
-      }
-    </style>
-  </head>
+    .in {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
 
-  <body>
-    <div class="in">
-      <textarea
-        id="textoInput"
-        rows="1"
-        cols="50"
-        oninput="ajustarAltura()"
-        onkeydown="checkEnter(event)"
-      ></textarea>
-      <button onclick="formatearTexto()" id="formatButton" disabled>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          version="1.1"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          width="50"
-          height="50"
-          x="0"
-          y="0"
-          viewBox="0 0 100 100"
-          style="enable-background: new 0 0 512 512"
-          xml:space="preserve"
-        >
-          <g>
-            <linearGradient
-              id="a"
-              x1="15.226"
-              x2="66.614"
-              y1="13.71"
-              y2="44.329"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop offset="0" stop-color="#3fa5f5"></stop>
-              <stop offset="1" stop-color="#00cfff"></stop>
-            </linearGradient>
-            <path
-              fill="url(#a)"
-              d="M36.3 50c0-.8-.3-1.6-.9-2.1L5.1 17.6c-1.2-1.1-3.1-1.1-4.2.1s-1.1 2.9 0 4.1L29 50 .9 78.2c-1.2 1.1-1.3 3-.1 4.2s3 1.3 4.2.1c.1 0 .1-.1.1-.1l30.3-30.3c.6-.5.9-1.3.9-2.1zm31.8 0c0-.8-.3-1.6-.9-2.1L37 17.6c-1.2-1.1-3.1-1.1-4.2.1s-1.1 2.9 0 4.1L60.9 50 32.8 78.2c-1.2 1.2-1.2 3.1 0 4.2.6.6 1.3.9 2.1.9s1.6-.3 2.1-.9l30.2-30.3c.6-.5.9-1.3.9-2.1zm31-2.1L68.8 17.6c-1.1-1.2-3-1.3-4.2-.1s-1.3 3-.1 4.2c0 .1.1.1.1.1L92.8 50 64.6 78.2c-1.2 1.1-1.3 3-.1 4.2 1.1 1.2 3 1.3 4.2.1.1 0 .1-.1.1-.1l30.3-30.3c1.2-1.2 1.2-3 0-4.2z"
-              opacity="1"
-              data-original="url(#a)"
-            ></path>
-          </g>
-        </svg>
-      </button>
+    h1 {
+      font-size: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Separate Paragraphs</h1>
+  <div class="in">
+    <textarea id="text" rows="10" cols="50" placeholder="Enter paragraphs here..."
+      oninput="separateParagraphs()"></textarea>
+
+    <div>
+      <label for="fontSizeRange">Text size:</label>
+      <span id="fontSizeValue">24px</span>
+      <input type="range" id="fontSizeRange" min="10" max="100" value="24" oninput="adjustTextSize()" />
     </div>
+  </div>
 
-    <div id="resultado"></div>
-    <div style="height: 100vh"></div>
+  <!-- <h2>Result</h2> -->
+  <div id="result"></div>
 
-    <script>
-      function formatearTexto() {
-        var boton = document.getElementById("formatButton")
-        boton.disabled = true
-        var textoInput = document.getElementById("textoInput").value
-        var resultadoDiv = document.getElementById("resultado")
-        resultadoDiv.textContent = textoInput
-      }
+  <script>
+    function separateParagraphs() {
+      // Get the text from the textarea
+      var text = document.getElementById("text").value;
+      // Split the text into paragraphs using line breaks
+      var paragraphs = text
+        .split("\n")
+        .filter((paragraph) => paragraph.trim() !== "");
+      // Get the result div
+      var result = document.getElementById("result");
+      // Clear previous content
+      result.innerHTML = "";
+      // Create a div for each paragraph and add it to the result
+      paragraphs.forEach((paragraph) => {
+        var div = document.createElement("div");
+        div.textContent = paragraph;
+        result.appendChild(div);
+      });
+    }
 
-      function ajustarAltura() {
-        var textarea = document.getElementById("textoInput")
-        textarea.rows = textarea.value.split("\n").length
-        actualizarBoton()
-      }
+    function adjustTextSize() {
+      const fontSize = document.getElementById("fontSizeRange").value;
+      document.getElementById("fontSizeValue").textContent = fontSize + "px";
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.fontSize = fontSize + "px";
+    }
+  </script>
+</body>
 
-      function actualizarBoton() {
-        var boton = document.getElementById("formatButton")
-        var textoInput = document.getElementById("textoInput").value
-        boton.disabled = Boolean(textoInput.trim() === "")
-      }
-
-      function checkEnter(event) {
-        if (event.key === "Enter" && !event.shiftKey) {
-          formatearTexto()
-          event.preventDefault()
-        }
-      }
-    </script>
-  </body>
 </html>
