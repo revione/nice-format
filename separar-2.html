@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Nice Format</title>
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <link rel="stylesheet" href="formats.css" />
+  </head>
+
+  <body>
+    <h1>Separate Paragraphs</h1>
+    <div class="in">
+      <textarea
+        id="text"
+        rows="10"
+        cols="50"
+        placeholder="Enter paragraphs here..."
+        oninput="processParagraphs()"
+      ></textarea>
+
+      <div>
+        <label for="maxCharInput">Max characters per paragraph:</label>
+        <span id="maxCharValue">10</span>
+        <input
+          type="range"
+          id="maxCharInput"
+          min="10"
+          max="500"
+          step="10"
+          value="10"
+          oninput="updateMaxCharValue(); processParagraphs()"
+        />
+      </div>
+
+      <div>
+        <label for="fontSizeRange">Text size:</label>
+        <span id="fontSizeValue">24px</span>
+        <input
+          type="range"
+          id="fontSizeRange"
+          min="10"
+          max="100"
+          value="24"
+          oninput="adjustTextSize()"
+        />
+      </div>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+      function processParagraphs() {
+        const text = document.getElementById("text").value
+        const maxChar = parseInt(
+          document.getElementById("maxCharInput").value,
+          10
+        )
+        const cleanedText = removeLineBreaks(text)
+        const paragraphs = splitTextByDelimiters(cleanedText, maxChar)
+        displayParagraphs(paragraphs)
+      }
+
+      function removeLineBreaks(text) {
+        const lines = text.split("\n")
+        return lines.map((line) => line.trim() + " ").join("")
+      }
+
+      function splitTextByDelimiters(text, maxChar) {
+        const paragraphs = []
+        let start = 0
+
+        while (start < text.length) {
+          let end = start + maxChar
+
+          if (end >= text.length) {
+            paragraphs.push(text.substring(start))
+            break
+          }
+
+          let nearestDelimiter = Math.max(
+            text.lastIndexOf(".", end),
+            text.lastIndexOf(",", end)
+          )
+          if (nearestDelimiter > start) {
+            end = nearestDelimiter + 1
+          } else {
+            let nextDelimiter = Math.min(
+              text.indexOf(".", end) + 1,
+              text.indexOf(",", end) + 1
+            )
+            if (nextDelimiter <= start || nextDelimiter === 0) {
+              end = start + maxChar
+            } else {
+              end = nextDelimiter
+            }
+          }
+
+          paragraphs.push(text.substring(start, end).trim())
+          start = end
+        }
+        return paragraphs
+      }
+
+      function displayParagraphs(paragraphs) {
+        const resultDiv = document.getElementById("result")
+        resultDiv.innerHTML = ""
+        paragraphs.forEach((paragraph) => {
+          const div = document.createElement("div")
+          div.textContent = paragraph
+          resultDiv.appendChild(div)
+        })
+      }
+
+      function adjustTextSize() {
+        const fontSize = document.getElementById("fontSizeRange").value
+        document.getElementById("fontSizeValue").textContent = fontSize + "px"
+        const resultDiv = document.getElementById("result")
+        resultDiv.style.fontSize = fontSize + "px"
+      }
+
+      function updateMaxCharValue() {
+        const maxChar = document.getElementById("maxCharInput").value
+        document.getElementById("maxCharValue").textContent = maxChar
+      }
+    </script>
+  </body>
+</html>
