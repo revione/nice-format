@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toggle Text Area</title>
+    <link rel="stylesheet" href="formats.css" />
+    <style>
+      body {
+        justify-content: center;
+        align-items: center;
+        background-color: #f4f4f4;
+      }
+      .container {
+        width: 80%;
+        min-height: 80%;
+      }
+      .text-display,
+      .text-edit {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background: white;
+        cursor: pointer;
+        min-height: 50px;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+      }
+      .text-edit {
+        display: none;
+        resize: none;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="container">
+      <div id="textDisplay" class="text-display">Haz clic para editar...</div>
+      <textarea id="textEdit" class="text-edit"></textarea>
+    </div>
+
+    <script>
+      const textDisplay = document.getElementById("textDisplay");
+      const textEdit = document.getElementById("textEdit");
+      const container = document.getElementById("container");
+      let resizeEnabled = false;
+
+      function adjustHeight(element) {
+        element.style.height = "auto";
+        element.style.height = element.scrollHeight + "px";
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          if (textEdit.style.display === "block") {
+            textDisplay.innerText = textEdit.value;
+            textEdit.style.display = "none";
+            textDisplay.style.display = "block";
+          } else {
+            textEdit.value = textDisplay.innerText;
+            textDisplay.style.display = "none";
+            textEdit.style.display = "block";
+            textEdit.focus();
+            adjustHeight(textEdit);
+          }
+        }
+
+        if (event.key === "1") {
+          resizeEnabled = !resizeEnabled;
+        }
+      });
+
+      textEdit.addEventListener("input", () => adjustHeight(textEdit));
+
+      function adjustWidth(delta) {
+        if (!resizeEnabled) return;
+        let currentWidth = parseFloat(window.getComputedStyle(container).width);
+        let newWidth = Math.max(100, currentWidth + delta);
+        container.style.width = newWidth + "px";
+      }
+
+      container.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        adjustWidth(event.deltaY * -0.5);
+      });
+    </script>
+  </body>
+</html>
