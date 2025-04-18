@@ -3,18 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Toggle Text Area</title>
+    <title>Formatter</title>
     <style>
+      body.dark {
+        background-color: #1a1a1a;
+        color: #e0e0ea;
+      }
+
+      body.dark .formatter {
+        background-color: #2a2a2a;
+        border-color: #555;
+      }
+
       body {
+        background-color: #2effbb08;
+
         font-size: 24px;
         line-height: 1.5rem;
         font-family: sans-serif;
         font-weight: 300;
 
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+
+        margin: 0;
+        margin-top: 1vh;
+        margin-bottom: 100vh;
+
         align-items: center;
-        background-color: #f4f4f4;
         min-height: 100vh;
       }
       .formatter {
@@ -24,6 +41,7 @@
         resize: both;
         width: 80%;
         height: 80vh;
+        overflow: hidden;
       }
     </style>
   </head>
@@ -36,6 +54,9 @@
         if (event.key === "Escape") {
           formatter.toggleAttribute("contenteditable");
         }
+        if (event.key.toLowerCase() === "c") {
+          document.body.classList.toggle("dark");
+        }
       });
     };
 
@@ -43,6 +64,10 @@
   </script>
 
   <body>
+    <div>
+      <div>Esc to update the text</div>
+      <div>C to change the theme</div>
+    </div>
     <div id="formatter" class="formatter" contenteditable="true">
       Escribe...
     </div>
