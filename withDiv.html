@@ -28,7 +28,7 @@
         gap: 15px;
 
         margin: 0;
-        margin-top: 1vh;
+        margin-top: 4vh;
         margin-bottom: 100vh;
 
         align-items: center;
@@ -39,7 +39,7 @@
         border-radius: 4px;
         padding: 10px;
         resize: both;
-        width: 80%;
+        width: 70%;
         height: 80vh;
         overflow-x: hidden;
       }
@@ -61,7 +61,8 @@
         if (event.key === "Escape") {
           formatter.toggleAttribute("contenteditable");
         }
-        if (event.key.toLowerCase() === "c") {
+        if (event.key === "1" && event.metaKey) {
+          event.preventDefault();
           document.body.classList.toggle("dark");
         }
       });
@@ -71,10 +72,6 @@
   </script>
 
   <body>
-    <div>
-      <div>Esc to update the text</div>
-      <div>C to change the theme</div>
-    </div>
     <div id="formatter" class="formatter" contenteditable="true">
       Escribe...
     </div>
