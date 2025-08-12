@@ -67,7 +67,7 @@
       };
 
       const ponerSaltosDeLinea = (texto) =>
-        texto.replace(/(\.\.\.|[,\.\-!?\u00A1\u00BF])\s*/g, "$1\n");
+        texto.replace(/(\.\.\.|[,\.\-!?\u00A1\u00BF]|\bund\b)\s*/gi, "$1\n");
 
       window.separateParagraphs = () => {
         const text = document.getElementById("text").value;
