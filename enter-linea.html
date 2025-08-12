@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Nice Format</title>
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <link rel="stylesheet" href="formats.css" />
+  </head>
+
+  <body>
+    <h1>Separate Paragraphs</h1>
+    <div class="in">
+      <textarea
+        id="text"
+        rows="10"
+        cols="50"
+        placeholder="Enter paragraphs here..."
+        oninput="separateParagraphs()"
+      ></textarea>
+
+      <div>
+        <label for="fontSizeRange">Text size:</label>
+        <span id="fontSizeValue">24px</span>
+        <input
+          type="range"
+          id="fontSizeRange"
+          min="10"
+          max="100"
+          value="24"
+          oninput="adjustTextSize()"
+        />
+        <button
+          style="
+            font-size: 20px;
+            border: none;
+            background: transparent;
+            color: #4c56af;
+            cursor: pointer;
+            transition: background-color 0.3s;
+          "
+          onmouseover="this.style.color='#2aaac6'"
+          onmouseout="this.style.color='#4c56af'"
+          onclick="copyModifiedText()"
+        >
+          📋 Copiar
+        </button>
+      </div>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+      window.copyModifiedText = () => {
+        const resultDiv = document.getElementById("result");
+        const textToCopy = Array.from(resultDiv.children)
+          .map((div) => div.textContent)
+          .join("\n");
+
+        navigator.clipboard.writeText(textToCopy);
+      };
+
+      const ponerSaltosDeLinea = (texto) =>
+        texto.replace(/(\.\.\.|[,\.\-!?\u00A1\u00BF])\s*/g, "$1\n");
+
+      window.separateParagraphs = () => {
+        const text = document.getElementById("text").value;
+        const formattedText = ponerSaltosDeLinea(text);
+
+        const paragraphs = formattedText
+          .split("\n")
+          .filter((p) => p.trim() !== "");
+
+        const result = document.getElementById("result");
+        result.innerHTML = "";
+        paragraphs.forEach((p) => {
+          const div = document.createElement("div");
+          div.textContent = p;
+          result.appendChild(div);
+        });
+      };
+
+      window.adjustTextSize = () => {
+        const fontSize = document.getElementById("fontSizeRange").value;
+        document.getElementById("fontSizeValue").textContent = fontSize + "px";
+        document.getElementById("result").style.fontSize = fontSize + "px";
+      };
+    </script>
+  </body>
+</html>
