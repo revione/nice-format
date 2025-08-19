@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formatter</title>
+    <style>
+      body.dark {
+        background-color: #1a1a1a;
+        color: #e0e0ea;
+      }
+
+      body.dark #word-count {
+        background-color: #2a2a2a;
+        border-color: #404040;
+        color: #e0e0ea;
+      }
+
+      body.dark #word-count h3 {
+        color: #e0e0ea;
+      }
+
+      body.dark .word-item {
+        background-color: #1a1a1a;
+        border-left-color: #3fa5f5;
+      }
+
+      body.dark .word-text {
+        color: #e0e0ea;
+      }
+
+      body {
+        background-color: #2effbb08;
+
+        font-size: 24px;
+        line-height: 1.5rem;
+        font-family: sans-serif;
+        font-weight: 300;
+
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+
+        margin: 0;
+        margin-top: 4vh;
+        margin-bottom: 100vh;
+
+        align-items: center;
+        min-height: 100vh;
+      }
+      .formatter {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 10px;
+        resize: both;
+        width: 70%;
+        height: 80vh;
+        overflow-x: hidden;
+      }
+      .formatter:not([contenteditable]) {
+        cursor: default;
+      }
+      p,
+      div {
+        background: transparent !important;
+        color: unset !important;
+      }
+
+      .formatter p {
+        font-size: inherit !important;
+        line-height: inherit !important;
+        font-family: inherit !important;
+        font-weight: inherit !important;
+        margin: 0.5em 0;
+      }
+
+      .formatter {
+        font-size: 24px; /* Tamaño por defecto */
+      }
+
+      /* Estilos específicos de esta página */
+      .copy-button {
+        font-size: 20px;
+        border: none;
+        background: transparent;
+        color: #4c56af;
+        cursor: pointer;
+        transition: color 0.3s;
+        margin-left: 10px;
+      }
+
+      .copy-button:hover {
+        color: #2aaac6;
+      }
+
+      #word-count {
+        width: 70%;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+      }
+
+      #word-count h3 {
+        margin-top: 0;
+        color: #495057;
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .word-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 10px;
+        margin: 2px 0;
+        background-color: white;
+        border-radius: 4px;
+        border-left: 3px solid #3fa5f5;
+      }
+
+      .word-text {
+        font-weight: 500;
+        color: #2c3e50;
+      }
+
+      .word-count-number {
+        background-color: #3fa5f5;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.9em;
+        font-weight: bold;
+      }
+
+      .total-words {
+        font-size: 0.9em;
+        color: #666;
+        font-weight: normal;
+      }
+
+      .instructions {
+        width: 70%;
+        padding: 10px;
+        background-color: #e8f4fd;
+        border-radius: 4px;
+        border: 1px solid #b3d9ff;
+        font-size: 0.9em;
+        color: #2c5aa0;
+        text-align: center;
+      }
+
+      body.dark .instructions {
+        background-color: #1a2332;
+        border-color: #2c5aa0;
+        color: #6ba3d6;
+      }
+
+      .controls {
+        width: 70%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+        margin-bottom: 10px;
+      }
+
+      body.dark .controls {
+        background-color: #2a2a2a;
+        border-color: #404040;
+      }
+
+      .font-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .controls label {
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      body.dark .controls label {
+        color: #b0b0b0;
+      }
+
+      #fontSizeValue {
+        font-weight: bold;
+        color: #3fa5f5;
+        min-width: 40px;
+      }
+
+      #fontSizeRange {
+        width: 120px;
+      }
+    </style>
+  </head>
+
+  <script>
+    const app = () => {
+      const formatter = document.getElementById("formatter");
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          formatter.toggleAttribute("contenteditable");
+        }
+        if (event.key === "1" && event.metaKey) {
+          event.preventDefault();
+          document.body.classList.toggle("dark");
+        }
+      });
+    };
+
+    document.addEventListener("DOMContentLoaded", app);
+  </script>
+
+  <script>
+    const repetidor = () => {
+      window.copyFormatterText = () => {
+        const formatter = document.getElementById("formatter");
+        const textToCopy = formatter.textContent || formatter.innerText;
+        navigator.clipboard.writeText(textToCopy);
+      };
+
+      const countWords = (text) => {
+        // Limpiar el texto y convertir a minúsculas, manteniendo caracteres alemanes y españoles
+        const cleanText = text
+          .toLowerCase()
+          // Mantener letras, números y caracteres especiales de alemán y español
+          .replace(/[^\w\säöüßáéíóúüñç]/g, " ")
+          // Reemplazar múltiples espacios con uno solo
+          .replace(/\s+/g, " ")
+          .trim();
+
+        if (!cleanText) return {};
+
+        const words = cleanText.split(" ").filter((word) => word.length > 1); // Filtrar palabras de 1 letra
+        const wordCount = {};
+
+        words.forEach((word) => {
+          wordCount[word] = (wordCount[word] || 0) + 1;
+        });
+
+        return wordCount;
+      };
+
+      const displayWordCount = (wordCount) => {
+        const wordCountDiv = document.getElementById("word-count");
+        const wordListDiv = document.getElementById("word-list");
+        const totalWordsSpan = document.getElementById("total-words");
+
+        const totalWords = Object.values(wordCount).reduce(
+          (sum, count) => sum + count,
+          0
+        );
+        const uniqueWords = Object.keys(wordCount).length;
+
+        if (uniqueWords === 0) {
+          wordCountDiv.style.display = "none";
+          return;
+        }
+
+        // Actualizar el total de palabras
+        totalWordsSpan.textContent = `${totalWords} palabras totales, ${uniqueWords} únicas`;
+
+        // Ordenar palabras por frecuencia (de mayor a menor)
+        const sortedWords = Object.entries(wordCount).sort(
+          ([, a], [, b]) => b - a
+        );
+
+        wordListDiv.innerHTML = "";
+
+        sortedWords.forEach(([word, count]) => {
+          const wordItem = document.createElement("div");
+          wordItem.className = "word-item";
+
+          wordItem.innerHTML = `
+            <span class="word-text">${word}</span>
+            <span class="word-count-number">${count}</span>
+          `;
+
+          wordListDiv.appendChild(wordItem);
+        });
+
+        wordCountDiv.style.display = "block";
+      };
+
+      const updateWordCount = () => {
+        const formatter = document.getElementById("formatter");
+        const text = formatter.textContent || formatter.innerText || "";
+
+        const wordCount = countWords(text);
+        displayWordCount(wordCount);
+      };
+
+      window.adjustFormatterFontSize = () => {
+        const fontSize = document.getElementById("fontSizeRange").value;
+        document.getElementById("fontSizeValue").textContent = fontSize + "px";
+        const formatter = document.getElementById("formatter");
+        formatter.style.fontSize = fontSize + "px";
+
+        // También aplicar a todos los p dentro del formatter
+        const paragraphs = formatter.querySelectorAll("p");
+        paragraphs.forEach((p) => {
+          p.style.fontSize = fontSize + "px";
+        });
+      };
+
+      // Configurar los event listeners para detectar cambios en el div editable
+      const setupEventListeners = () => {
+        const formatter = document.getElementById("formatter");
+
+        // Eventos para detectar cambios en tiempo real
+        formatter.addEventListener("input", updateWordCount);
+        formatter.addEventListener("paste", () => {
+          // Delay para permitir que el contenido se pegue antes de contar
+          setTimeout(updateWordCount, 100);
+        });
+        formatter.addEventListener("keyup", updateWordCount);
+
+        // Actualizar cuando se enfoca/desenfoca
+        formatter.addEventListener("focus", updateWordCount);
+        formatter.addEventListener("blur", updateWordCount);
+      };
+
+      // Inicializar cuando el DOM esté listo
+      setupEventListeners();
+      updateWordCount(); // Contar palabras iniciales
+    };
+
+    document.addEventListener("DOMContentLoaded", repetidor);
+  </script>
+
+  <body>
+    <div class="instructions">
+      💡 <strong>Instrucciones:</strong> Presiona <kbd>Escape</kbd> para
+      alternar edición | <kbd>Cmd+1</kbd> para modo oscuro
+    </div>
+
+    <div class="controls">
+      <div class="font-controls">
+        <label for="fontSizeRange">Tamaño de fuente:</label>
+        <span id="fontSizeValue">24px</span>
+        <input
+          type="range"
+          id="fontSizeRange"
+          min="12"
+          max="48"
+          value="24"
+          oninput="adjustFormatterFontSize()"
+        />
+      </div>
+      <button class="copy-button" onclick="copyFormatterText()">
+        📋 Copiar Texto
+      </button>
+    </div>
+
+    <div id="formatter" class="formatter" contenteditable="true">
+      Escribe aquí tu texto... Se contarán las palabras automáticamente.
+    </div>
+
+    <div id="word-count" style="display: none">
+      <h3>
+        📊 Frecuencia de Palabras
+        <span class="total-words" id="total-words"></span>
+      </h3>
+      <div id="word-list"></div>
+    </div>
+  </body>
+</html>

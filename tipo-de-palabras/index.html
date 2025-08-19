@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formatter</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body>
+    <div class="instructions">
+      💡 <strong>Instrucciones:</strong> Presiona <kbd>Escape</kbd> para
+      alternar edición | <kbd>Cmd+1</kbd> para modo oscuro
+    </div>
+
+    <div class="controls">
+      <div class="font-controls">
+        <label for="fontSizeRange">Tamaño de fuente:</label>
+        <span id="fontSizeValue">24px</span>
+        <input
+          type="range"
+          id="fontSizeRange"
+          min="12"
+          max="48"
+          value="24"
+          oninput="adjustFormatterFontSize()"
+        />
+      </div>
+      <button class="copy-button" onclick="copyFormatterText()">
+        📋 Copiar Texto
+      </button>
+    </div>
+
+    <div id="formatter" class="formatter" contenteditable="true">
+      Escribe aquí tu texto... Se contarán las palabras automáticamente.
+    </div>
+
+    <div id="colored-text" style="display: none">
+      <h3>🎨 Texto Analizado</h3>
+      <div class="learn-instructions">
+        💡 <strong>Hover sobre una palabra y presiona:</strong>
+        <kbd>J</kbd> para agregar a lista de aprender | <kbd>K</kbd> para quitar
+        de lista de aprender
+      </div>
+      <div id="colored-content"></div>
+    </div>
+
+    <div id="learn-words" style="display: none">
+      <h3>
+        📚 Palabras para Aprender
+        <span class="total-words" id="learn-count">(0 palabras)</span>
+      </h3>
+      <div id="learn-word-list"></div>
+    </div>
+
+    <div id="word-count" style="display: none">
+      <h3>
+        📊 Frecuencia de Palabras
+        <span class="total-words" id="total-words"></span>
+      </h3>
+
+      <div class="filter-checkboxes">
+        <div class="filter-controls">
+          <div class="filter-buttons">
+            <button class="filter-control-btn" onclick="selectAllFilters()">
+              ✅ Seleccionar todos
+            </button>
+            <button class="filter-control-btn" onclick="clearAllFilters()">
+              ❌ Limpiar todos
+            </button>
+          </div>
+          <div class="filter-status" id="filter-status">
+            Mostrando: 0 palabras (0 tipos seleccionados)
+          </div>
+        </div>
+
+        <div class="filter-item">
+          <input type="checkbox" id="filter-verb" data-type="verb" checked />
+          <label for="filter-verb" id="label-verb">🔴 Verbos (0)</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="filter-noun" data-type="noun" checked />
+          <label for="filter-noun" id="label-noun">🔵 Sustantivos (0)</label>
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-article"
+            data-type="article"
+            checked
+          />
+          <label for="filter-article" id="label-article"
+            >🟡 Artículos (0)</label
+          >
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-adjective"
+            data-type="adjective"
+            checked
+          />
+          <label for="filter-adjective" id="label-adjective"
+            >🟠 Adjetivos (0)</label
+          >
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-pronoun"
+            data-type="pronoun"
+            checked
+          />
+          <label for="filter-pronoun" id="label-pronoun"
+            >🟢 Pronombres (0)</label
+          >
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-preposition"
+            data-type="preposition"
+            checked
+          />
+          <label for="filter-preposition" id="label-preposition"
+            >🟣 Preposiciones (0)</label
+          >
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-conjunction"
+            data-type="conjunction"
+            checked
+          />
+          <label for="filter-conjunction" id="label-conjunction"
+            >🟤 Conjunciones (0)</label
+          >
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-adverb"
+            data-type="adverb"
+            checked
+          />
+          <label for="filter-adverb" id="label-adverb">🟪 Adverbios (0)</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="filter-other" data-type="other" checked />
+          <label for="filter-other" id="label-other">⚫ Otras (0)</label>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <small
+            >💡 Usa los filtros arriba para mostrar/ocultar tipos de
+            palabras</small
+          >
+        </div>
+      </div>
+
+      <div id="word-list"></div>
+    </div>
+
+    <script>
+      // Control de temas y edición
+      const app = () => {
+        const formatter = document.getElementById("formatter");
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            formatter.toggleAttribute("contenteditable");
+          }
+          if (event.key === "1" && event.metaKey) {
+            event.preventDefault();
+            document.body.classList.toggle("dark");
+          }
+        });
+      };
+
+      document.addEventListener("DOMContentLoaded", app);
+    </script>
+
+    <script type="module">
+      import { identifyWordType, WORD_TYPES } from "./identifyWordType.js";
+
+      // Analizador morfológico DEFINITIVO para alemán
+      const repetidor = () => {
+        // Estado global para palabras a aprender
+        let wordsToLearn = new Set();
+        let currentActiveWord = null;
+
+        // Función para copiar texto
+        window.copyFormatterText = () => {
+          const formatter = document.getElementById("formatter");
+          const textToCopy = formatter.textContent || formatter.innerText;
+          navigator.clipboard.writeText(textToCopy);
+        };
+
+        // Mostrar lista de palabras para aprender
+        const displayLearnWords = () => {
+          const learnWordsDiv = document.getElementById("learn-words");
+          const learnWordListDiv = document.getElementById("learn-word-list");
+          const learnCountSpan = document.getElementById("learn-count");
+
+          if (wordsToLearn.size === 0) {
+            learnWordsDiv.style.display = "none";
+            return;
+          }
+
+          learnCountSpan.textContent = `(${wordsToLearn.size} palabras)`;
+
+          learnWordListDiv.innerHTML = "";
+
+          // Convertir a array y ordenar alfabéticamente
+          const wordsArray = Array.from(wordsToLearn).sort();
+
+          wordsArray.forEach((wordData) => {
+            const [word, type] = wordData.split("|");
+
+            const getTypeStyle = (typeId) => {
+              const typeObj = Object.values(WORD_TYPES).find(
+                (t) => t.id === typeId
+              );
+              return typeObj || WORD_TYPES.OTHER;
+            };
+
+            const typeStyle = getTypeStyle(type);
+
+            const wordItem = document.createElement("div");
+            wordItem.className = "learn-word-item";
+
+            wordItem.innerHTML = `
+              <div>
+                <span class="learn-word-text">
+                  <span style="margin-right: 8px;" title="${typeStyle.label}">${typeStyle.emoji}</span>
+                  ${word}
+                </span>
+                <span class="learn-word-type">${typeStyle.label}</span>
+              </div>
+              <button class="remove-word-btn" onclick="removeWordToLearn('${word}', '${type}')" title="Quitar de lista">
+                ×
+              </button>
+            `;
+
+            learnWordListDiv.appendChild(wordItem);
+          });
+
+          learnWordsDiv.style.display = "block";
+        };
+
+        // Agregar palabra a lista de aprender
+        const addWordToLearn = (word, type) => {
+          const wordKey = `${word}|${type}`;
+          wordsToLearn.add(wordKey);
+          displayLearnWords();
+          updateWordHighlights();
+        };
+
+        // Quitar palabra de lista de aprender
+        window.removeWordToLearn = (word, type) => {
+          const wordKey = `${word}|${type}`;
+          wordsToLearn.delete(wordKey);
+          displayLearnWords();
+          updateWordHighlights();
+        };
+
+        // Actualizar destacado de palabras
+        const updateWordHighlights = () => {
+          const coloredWords = document.querySelectorAll(".word-colored");
+          coloredWords.forEach((span) => {
+            const word = span.textContent.toLowerCase();
+            const type = span.className.match(/word-(\w+)/)?.[1];
+            const wordKey = `${word}|${type}`;
+
+            if (wordsToLearn.has(wordKey)) {
+              span.classList.add("word-learning");
+            } else {
+              span.classList.remove("word-learning");
+            }
+          });
+        };
+
+        // Manejar teclas J y K
+        const handleKeyPress = (event) => {
+          if (!currentActiveWord) return;
+
+          if (event.key.toLowerCase() === "j") {
+            event.preventDefault();
+            const word = currentActiveWord.textContent.toLowerCase();
+            const type = currentActiveWord.className.match(/word-(\w+)/)?.[1];
+            if (word && type) {
+              addWordToLearn(word, type);
+            }
+          } else if (event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            const word = currentActiveWord.textContent.toLowerCase();
+            const type = currentActiveWord.className.match(/word-(\w+)/)?.[1];
+            if (word && type) {
+              window.removeWordToLearn(word, type);
+            }
+          }
+        };
+
+        const countWords = (text) => {
+          if (!text.trim()) return {};
+
+          const originalWords = text
+            .replace(/([.!?;:])\s*([A-ZÄÖÜ])/g, "$1 $2")
+            .replace(/[-–—]/g, " ")
+            .split(/\s+/)
+            .map((word) => word.replace(/[^\w\säöüßáéíóúüñç]/g, ""))
+            .filter((word) => word.length > 1);
+
+          const wordCount = {};
+
+          originalWords.forEach((originalWord) => {
+            const lowerWord = originalWord.toLowerCase();
+            const type = identifyWordTypeWithCase(lowerWord, originalWord);
+
+            if (!wordCount[lowerWord]) {
+              wordCount[lowerWord] = { count: 0, type: type };
+            }
+            wordCount[lowerWord].count++;
+          });
+
+          return wordCount;
+        };
+
+        const identifyWordTypeWithCase = (lowerWord, originalWord) => {
+          // Casos especiales que dependen de mayúsculas
+          if (lowerWord === "wolle") {
+            // Si la palabra original empezaba con mayúscula = sustantivo (Wolle = lana)
+            // Si empezaba con minúscula = verbo (wolle = subjuntivo de wollen)
+            return originalWord[0] === originalWord[0].toUpperCase()
+              ? "noun"
+              : "verb";
+          }
+
+          // Para el resto de palabras, usar la función normal con la versión en minúsculas
+          return identifyWordType(lowerWord);
+        };
+
+        // Obtener filtros activos
+        const getActiveFilters = () => {
+          const checkboxes = document.querySelectorAll(
+            '.filter-checkboxes input[type="checkbox"]:checked'
+          );
+          return Array.from(checkboxes).map((cb) => cb.dataset.type);
+        };
+
+        // Crear texto coloreado con subrayado FILTRADO
+        const createColoredText = (text) => {
+          const coloredTextDiv = document.getElementById("colored-text");
+          const coloredContentDiv = document.getElementById("colored-content");
+
+          if (!text.trim()) {
+            coloredTextDiv.style.display = "none";
+            return;
+          }
+
+          // Obtener filtros activos
+          const activeFilters = getActiveFilters();
+
+          // Procesar el texto palabra por palabra
+          const words = text.split(/(\s+)/); // Mantener los espacios
+          let coloredHTML = "";
+
+          words.forEach((word) => {
+            if (word.trim()) {
+              // Es una palabra (no espacio)
+              const cleanWord = word.replace(/[^\w\säöüßáéíóúüñç]/g, "");
+              if (cleanWord.length > 1) {
+                const lowerWord = cleanWord.toLowerCase();
+                const type = identifyWordTypeWithCase(lowerWord, cleanWord);
+
+                const getTypeStyle = (typeId) => {
+                  const typeObj = Object.values(WORD_TYPES).find(
+                    (t) => t.id === typeId
+                  );
+                  return typeObj || WORD_TYPES.OTHER;
+                };
+
+                const typeStyle = getTypeStyle(type);
+
+                // CLAVE: Solo agregar subrayado si el tipo está en filtros activos
+                if (activeFilters.includes(type)) {
+                  coloredHTML += `<span class="word-colored word-${type}" data-tooltip="${typeStyle.label}: ${cleanWord}" data-word="${lowerWord}" data-type="${type}">${word}</span>`;
+                } else {
+                  // Si no está en filtros activos, mostrar sin subrayado
+                  coloredHTML += word;
+                }
+              } else {
+                coloredHTML += word;
+              }
+            } else {
+              // Es un espacio, mantenerlo
+              coloredHTML += word;
+            }
+          });
+
+          coloredContentDiv.innerHTML = coloredHTML;
+
+          // Agregar event listeners para hover y interactividad
+          const coloredWords =
+            coloredContentDiv.querySelectorAll(".word-colored");
+          coloredWords.forEach((span) => {
+            span.addEventListener("mouseenter", () => {
+              currentActiveWord = span;
+              span.classList.add("word-active");
+            });
+
+            span.addEventListener("mouseleave", () => {
+              currentActiveWord = null;
+              span.classList.remove("word-active");
+            });
+          });
+
+          // Actualizar destacados de palabras ya en lista
+          updateWordHighlights();
+
+          coloredTextDiv.style.display = "block";
+        };
+
+        // Actualizar conteos en los labels y estado general
+        const updateFilterCounts = (wordCount) => {
+          // Contar palabras por tipo
+          const typeCounts = {
+            verb: 0,
+            noun: 0,
+            article: 0,
+            adjective: 0,
+            pronoun: 0,
+            preposition: 0,
+            conjunction: 0,
+            adverb: 0,
+            other: 0,
+          };
+
+          Object.values(wordCount).forEach((item) => {
+            if (typeCounts.hasOwnProperty(item.type)) {
+              typeCounts[item.type] += item.count;
+            }
+          });
+
+          // Actualizar labels con conteos
+          Object.keys(typeCounts).forEach((type) => {
+            const label = document.getElementById(`label-${type}`);
+            if (label) {
+              const emoji = label.textContent.split(" ")[0];
+              const name = label.textContent.split(" ")[1];
+              label.textContent = `${emoji} ${name} (${typeCounts[type]})`;
+            }
+          });
+
+          // Actualizar estado general
+          const activeFilters = getActiveFilters();
+          const totalFilteredWords = Object.entries(wordCount)
+            .filter(([word, data]) => activeFilters.includes(data.type))
+            .reduce((sum, [word, data]) => sum + data.count, 0);
+
+          const statusElement = document.getElementById("filter-status");
+          statusElement.textContent = `Mostrando: ${totalFilteredWords} palabras (${activeFilters.length} tipos seleccionados)`;
+        };
+
+        // Funciones para controlar todos los filtros
+        window.selectAllFilters = () => {
+          const checkboxes = document.querySelectorAll(
+            '.filter-checkboxes input[type="checkbox"]'
+          );
+          checkboxes.forEach((checkbox) => {
+            checkbox.checked = true;
+          });
+          updateWordCount();
+        };
+
+        window.clearAllFilters = () => {
+          const checkboxes = document.querySelectorAll(
+            '.filter-checkboxes input[type="checkbox"]'
+          );
+          checkboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+          });
+          updateWordCount();
+        };
+
+        // Mostrar contador de palabras
+        const displayWordCount = (wordCount, text = "") => {
+          const wordCountDiv = document.getElementById("word-count");
+          const wordListDiv = document.getElementById("word-list");
+          const totalWordsSpan = document.getElementById("total-words");
+
+          const totalWords = Object.values(wordCount).reduce(
+            (sum, item) => sum + item.count,
+            0
+          );
+          const uniqueWords = Object.keys(wordCount).length;
+
+          if (uniqueWords === 0) {
+            wordCountDiv.style.display = "none";
+            return;
+          }
+
+          totalWordsSpan.textContent = `${totalWords} palabras totales, ${uniqueWords} únicas`;
+
+          // Actualizar conteos en filtros
+          updateFilterCounts(wordCount);
+
+          // Crear texto coloreado FILTRADO
+          createColoredText(text);
+
+          const sortedWords = Object.entries(wordCount).sort(
+            ([, a], [, b]) => b.count - a.count
+          );
+
+          // Aplicar filtros
+          const activeFilters = getActiveFilters();
+          const filteredWords = sortedWords.filter(([word, data]) =>
+            activeFilters.includes(data.type)
+          );
+
+          wordListDiv.innerHTML = "";
+
+          filteredWords.forEach(([word, data]) => {
+            const wordItem = document.createElement("div");
+            wordItem.className = "word-item";
+
+            const getTypeStyle = (typeId) => {
+              const type = Object.values(WORD_TYPES).find(
+                (t) => t.id === typeId
+              );
+              return type || WORD_TYPES.OTHER;
+            };
+
+            const typeStyle = getTypeStyle(data.type);
+
+            wordItem.innerHTML = `
+              <span class="word-text">
+                <span style="margin-right: 5px;" title="${typeStyle.label}">${typeStyle.emoji}</span>
+                ${word}
+              </span>
+              <span class="word-count-number" style="background-color: ${typeStyle.color}">
+                ${data.count}
+              </span>
+            `;
+
+            wordListDiv.appendChild(wordItem);
+          });
+
+          wordCountDiv.style.display = "block";
+        };
+
+        // Actualizar contador en tiempo real
+        const updateWordCount = () => {
+          const formatter = document.getElementById("formatter");
+          const text = formatter.textContent || formatter.innerText || "";
+
+          const wordCount = countWords(text);
+          displayWordCount(wordCount, text);
+        };
+
+        // Ajustar tamaño de fuente
+        window.adjustFormatterFontSize = () => {
+          const fontSize = document.getElementById("fontSizeRange").value;
+          document.getElementById("fontSizeValue").textContent =
+            fontSize + "px";
+          const formatter = document.getElementById("formatter");
+          formatter.style.fontSize = fontSize + "px";
+
+          // También aplicar al texto coloreado
+          const coloredText = document.getElementById("colored-text");
+          if (coloredText) {
+            coloredText.style.fontSize = fontSize + "px";
+          }
+
+          const paragraphs = formatter.querySelectorAll("p");
+          paragraphs.forEach((p) => {
+            p.style.fontSize = fontSize + "px";
+          });
+        };
+
+        // Configurar event listeners
+        const setupEventListeners = () => {
+          const formatter = document.getElementById("formatter");
+
+          formatter.addEventListener("input", updateWordCount);
+          formatter.addEventListener("paste", () => {
+            setTimeout(updateWordCount, 100);
+          });
+          formatter.addEventListener("keyup", updateWordCount);
+          formatter.addEventListener("focus", updateWordCount);
+          formatter.addEventListener("blur", updateWordCount);
+
+          // Event listeners para los filtros
+          const filterCheckboxes = document.querySelectorAll(
+            '.filter-checkboxes input[type="checkbox"]'
+          );
+          filterCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener("change", () => {
+              // Re-renderizar tanto la lista como el texto coloreado
+              const formatter = document.getElementById("formatter");
+              const text = formatter.textContent || formatter.innerText || "";
+              const wordCount = countWords(text);
+              displayWordCount(wordCount, text);
+            });
+          });
+
+          // Event listener global para teclas J y K
+          document.addEventListener("keydown", handleKeyPress);
+        };
+
+        // Inicializar
+        setupEventListeners();
+        updateWordCount();
+      };
+
+      document.addEventListener("DOMContentLoaded", repetidor);
+    </script>
+  </body>
+</html>

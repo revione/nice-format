@@ -1,0 +1,532 @@
+/* Tema oscuro */
+body.dark {
+  background-color: #1a1a1a;
+  color: #e0e0ea;
+}
+
+body.dark #word-count {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0ea;
+}
+
+body.dark #word-count h3 {
+  color: #e0e0ea;
+}
+
+body.dark .word-item {
+  background-color: #1a1a1a;
+  border-left-color: #3fa5f5;
+}
+
+body.dark .word-text {
+  color: #e0e0ea;
+}
+
+body.dark .controls {
+  background-color: #2a2a2a;
+  border-color: #404040;
+}
+
+body.dark .controls label {
+  color: #b0b0b0;
+}
+
+body.dark .instructions {
+  background-color: #1a2332;
+  border-color: #2c5aa0;
+  color: #6ba3d6;
+}
+
+body.dark .legend {
+  background-color: #333;
+}
+
+body.dark .filter-checkboxes {
+  background-color: #1a2332;
+  border-color: #2c5aa0;
+}
+
+body.dark .filter-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark .filter-controls {
+  background-color: #0f1419;
+  border-color: #1a2b3a;
+}
+
+body.dark .filter-status {
+  color: #b0b0b0;
+}
+
+body.dark #colored-text {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0ea;
+}
+
+body.dark #colored-text h3 {
+  color: #e0e0ea;
+}
+
+/* Estilos base */
+body {
+  background-color: #2effbb08;
+  font-size: 24px;
+  line-height: 1.5rem;
+  font-family: sans-serif;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 0;
+  margin-top: 4vh;
+  margin-bottom: 100vh;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.formatter {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  resize: both;
+  width: 70%;
+  height: 80vh;
+  overflow-x: hidden;
+  font-size: 24px;
+}
+
+.formatter:not([contenteditable]) {
+  cursor: default;
+}
+
+.formatter p {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  margin: 0.5em 0;
+  background: transparent !important;
+  color: unset !important;
+}
+
+p,
+div {
+  background: transparent !important;
+  color: unset !important;
+}
+
+/* Instrucciones */
+.instructions {
+  width: 70%;
+  padding: 10px;
+  background-color: #e8f4fd;
+  border-radius: 4px;
+  border: 1px solid #b3d9ff;
+  font-size: 0.9em;
+  color: #2c5aa0;
+  text-align: center;
+}
+
+/* Controles */
+.controls {
+  width: 70%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 10px;
+}
+
+.font-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.controls label {
+  font-size: 0.9em;
+  color: #666;
+}
+
+#fontSizeValue {
+  font-weight: bold;
+  color: #3fa5f5;
+  min-width: 40px;
+}
+
+#fontSizeRange {
+  width: 120px;
+}
+
+.copy-button {
+  font-size: 20px;
+  border: none;
+  background: transparent;
+  color: #4c56af;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.copy-button:hover {
+  color: #2aaac6;
+}
+
+/* Contador de palabras */
+#word-count {
+  width: 70%;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+#word-count h3 {
+  margin-top: 0;
+  color: #495057;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Filtros por checkboxes */
+.filter-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #e8f4fd;
+  border-radius: 6px;
+  border: 1px solid #b3d9ff;
+}
+
+.filter-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: #f0f8ff;
+  border-radius: 4px;
+  border: 1px solid #d1e7ff;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-status {
+  font-size: 0.8em;
+  color: #666;
+  font-weight: 500;
+}
+
+.filter-control-btn {
+  padding: 4px 8px;
+  font-size: 0.75em;
+  border: 1px solid #3fa5f5;
+  background-color: transparent;
+  color: #3fa5f5;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-control-btn:hover {
+  background-color: #3fa5f5;
+  color: white;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85em;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.filter-item:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.filter-item input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.filter-item label {
+  cursor: pointer;
+  margin: 0;
+  user-select: none;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f1f3f4;
+  border-radius: 6px;
+  font-size: 0.85em;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.word-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  margin: 2px 0;
+  background-color: white;
+  border-radius: 4px;
+  border-left: 3px solid #3fa5f5;
+}
+
+.word-text {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.word-count-number {
+  background-color: #3fa5f5;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.total-words {
+  font-size: 0.9em;
+  color: #666;
+  font-weight: normal;
+}
+
+/* Texto coloreado con subrayado */
+#colored-text {
+  width: 70%;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  line-height: 1.8;
+  font-size: 24px;
+}
+
+#colored-text h3 {
+  margin-top: 0;
+  color: #495057;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+}
+
+/* Lista de palabras para aprender */
+#learn-words {
+  width: 70%;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f0f8ff;
+  border-radius: 8px;
+  border: 1px solid #d1e7ff;
+}
+
+#learn-words h3 {
+  margin-top: 0;
+  color: #2c5aa0;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.learn-word-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 3px 0;
+  background-color: white;
+  border-radius: 6px;
+  border-left: 3px solid #3fa5f5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.learn-word-text {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.learn-word-type {
+  font-size: 0.85em;
+  color: #666;
+  font-style: italic;
+}
+
+.remove-word-btn {
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.remove-word-btn:hover {
+  background: #ff3838;
+  transform: scale(1.1);
+}
+
+.learn-instructions {
+  background-color: #e8f4fd;
+  border: 1px solid #b3d9ff;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  font-size: 0.85em;
+  color: #2c5aa0;
+}
+
+/* Destacar palabra activa */
+.word-active {
+  background-color: rgba(63, 165, 245, 0.2) !important;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+/* Palabra ya en lista de aprender */
+.word-learning {
+  background-color: rgba(0, 208, 132, 0.15) !important;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+/* Tema oscuro para nuevas secciones */
+body.dark #learn-words {
+  background-color: #1a2332;
+  border-color: #2c5aa0;
+}
+
+body.dark #learn-words h3 {
+  color: #6ba3d6;
+}
+
+body.dark .learn-word-item {
+  background-color: #2a2a2a;
+  border-left-color: #3fa5f5;
+  color: #e0e0ea;
+}
+
+body.dark .learn-word-text {
+  color: #e0e0ea;
+}
+
+body.dark .learn-word-type {
+  color: #b0b0b0;
+}
+
+body.dark .learn-instructions {
+  background-color: #1a2332;
+  border-color: #2c5aa0;
+  color: #6ba3d6;
+}
+
+/* SOLUCIÓN PARA TOOLTIPS INSTANTÁNEOS */
+.word-colored {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 5px;
+  cursor: help;
+  position: relative;
+  display: inline;
+  transition: all 0.1s ease;
+}
+
+.word-colored:hover {
+  text-decoration-thickness: 4px;
+  filter: brightness(1.1);
+  outline: none;
+}
+
+.word-colored::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s ease, visibility 0.1s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.word-colored:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.word-verb {
+  text-decoration-color: #e74c3c;
+}
+.word-noun {
+  text-decoration-color: #3498db;
+}
+.word-article {
+  text-decoration-color: #f39c12;
+}
+.word-adjective {
+  text-decoration-color: #ff9500;
+}
+.word-pronoun {
+  text-decoration-color: #00d084;
+}
+.word-preposition {
+  text-decoration-color: #9b59b6;
+}
+.word-conjunction {
+  text-decoration-color: #8b4513;
+}
+.word-adverb {
+  text-decoration-color: #8a2be2;
+}
+.word-other {
+  text-decoration-color: #95a5a6;
+}
