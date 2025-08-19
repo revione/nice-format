@@ -307,7 +307,15 @@
         const countWords = (text) => {
           if (!text.trim()) return {};
 
-          const originalWords = text
+          // PASO 1: PRIMERO reemplazar TODOS los saltos de línea por espacios
+          let cleanText = text
+            .replace(/\r?\n/g, " ") // Saltos de línea → espacios
+            .replace(/\r/g, " ") // Retornos → espacios
+            .replace(/\s+/g, " ") // Múltiples espacios → un espacio
+            .trim(); // Quitar espacios del inicio/final
+
+          // PASO 2: Ahora procesar como texto normal en una línea
+          const originalWords = cleanText
             .replace(/([.!?;:])\s*([A-ZÄÖÜ])/g, "$1 $2")
             .replace(/[-–—]/g, " ")
             .split(/\s+/)
