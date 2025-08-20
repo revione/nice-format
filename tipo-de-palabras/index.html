@@ -31,9 +31,9 @@
       </button>
     </div>
 
-    <div id="formatter" class="formatter" contenteditable="true">
-      Escribe aquí tu texto... Se contarán las palabras automáticamente.
-    </div>
+    <textarea id="formatter" class="formatter">
+Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach unten neigt.</textarea
+    >
 
     <div id="colored-text" style="display: none">
       <h3>🎨 Texto Analizado</h3>
@@ -70,7 +70,7 @@
             </button>
           </div>
           <div class="filter-status" id="filter-status">
-            Mostrando: 0 palabras (0 tipos seleccionados)
+            Mostrando: 0 palabras únicas (0 tipos seleccionados)
           </div>
         </div>
 
@@ -147,6 +147,26 @@
           <label for="filter-adverb" id="label-adverb">🟪 Adverbios (0)</label>
         </div>
         <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-number"
+            data-type="number"
+            checked
+          />
+          <label for="filter-number" id="label-number">🔢 Números (0)</label>
+        </div>
+        <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-foreign"
+            data-type="foreign"
+            checked
+          />
+          <label for="filter-foreign" id="label-foreign"
+            >🌍 Extranjeros (0)</label
+          >
+        </div>
+        <div class="filter-item">
           <input type="checkbox" id="filter-other" data-type="other" checked />
           <label for="filter-other" id="label-other">⚫ Otras (0)</label>
         </div>
@@ -155,8 +175,8 @@
       <div class="legend">
         <div class="legend-item">
           <small
-            >💡 Usa los filtros arriba para mostrar/ocultar tipos de
-            palabras</small
+            >💡 Usa los filtros arriba para mostrar/ocultar tipos de palabras
+            (conteo de palabras únicas)</small
           >
         </div>
       </div>
@@ -170,9 +190,6 @@
         const formatter = document.getElementById("formatter");
 
         document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape") {
-            formatter.toggleAttribute("contenteditable");
-          }
           if (event.key === "1" && event.metaKey) {
             event.preventDefault();
             document.body.classList.toggle("dark");
@@ -195,7 +212,7 @@
         // Función para copiar texto
         window.copyFormatterText = () => {
           const formatter = document.getElementById("formatter");
-          const textToCopy = formatter.textContent || formatter.innerText;
+          const textToCopy = formatter.value;
           navigator.clipboard.writeText(textToCopy);
         };
 
@@ -283,18 +300,17 @@
           });
         };
 
-        // Manejar teclas J y K
         const handleKeyPress = (event) => {
           if (!currentActiveWord) return;
 
-          if (event.key.toLowerCase() === "j") {
+          if (event.key.toLowerCase() === "d") {
             event.preventDefault();
             const word = currentActiveWord.textContent.toLowerCase();
-            const type = currentActiveWord.className.match(/word-(\w+)/)?.[1];
+            const type = currentActiveWord.dataset.type;
             if (word && type) {
               addWordToLearn(word, type);
             }
-          } else if (event.key.toLowerCase() === "k") {
+          } else if (event.key.toLowerCase() === "f") {
             event.preventDefault();
             const word = currentActiveWord.textContent.toLowerCase();
             const type = currentActiveWord.className.match(/word-(\w+)/)?.[1];
@@ -434,7 +450,7 @@
 
         // Actualizar conteos en los labels y estado general
         const updateFilterCounts = (wordCount) => {
-          // Contar palabras por tipo
+          // Contar TIPOS ÚNICOS por categoría (no frecuencia total)
           const typeCounts = {
             verb: 0,
             noun: 0,
@@ -444,16 +460,19 @@
             preposition: 0,
             conjunction: 0,
             adverb: 0,
+            number: 0,
+            foreign: 0,
             other: 0,
           };
 
-          Object.values(wordCount).forEach((item) => {
-            if (typeCounts.hasOwnProperty(item.type)) {
-              typeCounts[item.type] += item.count;
+          // Contar palabras únicas por tipo (no la frecuencia)
+          Object.entries(wordCount).forEach(([word, data]) => {
+            if (typeCounts.hasOwnProperty(data.type)) {
+              typeCounts[data.type] += 1; // +1 por cada palabra única, no por su count
             }
           });
 
-          // Actualizar labels con conteos
+          // Actualizar labels con conteos de tipos únicos
           Object.keys(typeCounts).forEach((type) => {
             const label = document.getElementById(`label-${type}`);
             if (label) {
@@ -463,14 +482,14 @@
             }
           });
 
-          // Actualizar estado general
+          // Actualizar estado general con tipos únicos
           const activeFilters = getActiveFilters();
-          const totalFilteredWords = Object.entries(wordCount)
-            .filter(([word, data]) => activeFilters.includes(data.type))
-            .reduce((sum, [word, data]) => sum + data.count, 0);
+          const totalFilteredUniqueWords = Object.entries(wordCount).filter(
+            ([word, data]) => activeFilters.includes(data.type)
+          ).length; // Contar entradas únicas, no la suma de counts
 
           const statusElement = document.getElementById("filter-status");
-          statusElement.textContent = `Mostrando: ${totalFilteredWords} palabras (${activeFilters.length} tipos seleccionados)`;
+          statusElement.textContent = `Mostrando: ${totalFilteredUniqueWords} palabras únicas (${activeFilters.length} tipos seleccionados)`;
         };
 
         // Funciones para controlar todos los filtros
@@ -563,7 +582,7 @@
         // Actualizar contador en tiempo real
         const updateWordCount = () => {
           const formatter = document.getElementById("formatter");
-          const text = formatter.textContent || formatter.innerText || "";
+          const text = formatter.value || "";
 
           const wordCount = countWords(text);
           displayWordCount(wordCount, text);
@@ -582,11 +601,6 @@
           if (coloredText) {
             coloredText.style.fontSize = fontSize + "px";
           }
-
-          const paragraphs = formatter.querySelectorAll("p");
-          paragraphs.forEach((p) => {
-            p.style.fontSize = fontSize + "px";
-          });
         };
 
         // Configurar event listeners
@@ -609,7 +623,7 @@
             checkbox.addEventListener("change", () => {
               // Re-renderizar tanto la lista como el texto coloreado
               const formatter = document.getElementById("formatter");
-              const text = formatter.textContent || formatter.innerText || "";
+              const text = formatter.value || "";
               const wordCount = countWords(text);
               displayWordCount(wordCount, text);
             });
