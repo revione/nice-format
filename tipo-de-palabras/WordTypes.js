@@ -560,6 +560,11 @@ export const commonNouns = [
   "sinne",
   "gesichtsausdrücke",
   "hootsum",
+
+  "Lippen", // labios (plural de Lippe)
+  "Lächeln", // sonrisa (sustantivo derivado del verbo)
+  "Selbstvertrauen", // autoconfianza
+  "Stufenschnitt", // corte en capas
 ];
 
 // === VERBOS EN INFINITIVO Y CONJUGADOS ===
@@ -799,6 +804,14 @@ export const basicAdjectives = [
   "mutig",
   "sicher",
   "unsicher",
+
+  "ausgerichtet", // alineado (part. usado como adj.)
+  "gekämmt", // peinado (part. usado como adj.)
+  "proportioniert", // proporcionado (part. usado como adj.)
+
+  "natürlich",
+  "oval",
+  "sanft",
 ];
 
 export const declinedAdjectives = [
@@ -896,6 +909,12 @@ export const declinedAdjectives = [
   "zerbrechliches",
   "fröhliches",
   "tägliches",
+
+  "ausgeprägten", // pronunciados/marcados
+  "geraden", // recta/derecha (forma declinada)
+  "mittleren", // medio/mediano (forma declinada)
+  "natürlichen",
+  "ovale",
 ];
 
 export const adjectivesEndingInT = [
@@ -1176,6 +1195,9 @@ export const specialCases = {
   zeihhan: "foreign", // error de transcripción
   zeihanon: "foreign", // error de transcripción
   any: "foreign", // palabra inglesa
+
+  ersten: "adjective", // primer/primera
+  verleiht: "verb", // otorga (3ª persona)
 };
 
 export const ambiguousWords = {

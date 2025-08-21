@@ -32,14 +32,14 @@
     </div>
 
     <textarea id="formatter" class="formatter">
-Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach unten neigt.</textarea
+Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen und entspannten Lächeln. Ihr Gesicht hat eine ovale Form mit sanft ausgeprägten Wangenknochen. Sie hat mittelbraunes Haar von mittlerer Länge, das ihr etwa bis zu den Schultern reicht, mit einem Stufenschnitt, der ihr Volumen verleiht.</textarea
     >
 
     <div id="colored-text" style="display: none">
       <h3>🎨 Texto Analizado</h3>
       <div class="learn-instructions">
         💡 <strong>Hover sobre una palabra y presiona:</strong>
-        <kbd>J</kbd> para agregar a lista de aprender | <kbd>K</kbd> para quitar
+        <kbd>D</kbd> para agregar a lista de aprender | <kbd>F</kbd> para quitar
         de lista de aprender
       </div>
       <div id="colored-content"></div>
@@ -167,6 +167,17 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
           >
         </div>
         <div class="filter-item">
+          <input
+            type="checkbox"
+            id="filter-ambiguous"
+            data-type="ambiguous"
+            checked
+          />
+          <label for="filter-ambiguous" id="label-ambiguous"
+            >🔶 Ambiguas (0)</label
+          >
+        </div>
+        <div class="filter-item">
           <input type="checkbox" id="filter-other" data-type="other" checked />
           <label for="filter-other" id="label-other">⚫ Otras (0)</label>
         </div>
@@ -201,9 +212,24 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
     </script>
 
     <script type="module">
-      import { identifyWordType, WORD_TYPES } from "./identifyWordType.js";
+      import {
+        identifyWordType,
+        identifyWord,
+        classifyTokens,
+        WORD_TYPES,
+      } from "./identifyWordType.js";
 
-      // Analizador morfológico DEFINITIVO para alemán
+      // Agregar soporte para palabras ambiguas si no existe
+      if (!WORD_TYPES.AMBIGUOUS) {
+        WORD_TYPES.AMBIGUOUS = {
+          id: "ambiguous",
+          color: "#ff6b35",
+          emoji: "🔶",
+          label: "ambigua",
+        };
+      }
+
+      // Analizador morfológico MEJORADO para alemán
       const repetidor = () => {
         // Estado global para palabras a aprender
         let wordsToLearn = new Set();
@@ -320,51 +346,67 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
           }
         };
 
-        const countWords = (text) => {
-          if (!text.trim()) return {};
-
-          // PASO 1: PRIMERO reemplazar TODOS los saltos de línea por espacios
-          let cleanText = text
-            .replace(/\r?\n/g, " ") // Saltos de línea → espacios
-            .replace(/\r/g, " ") // Retornos → espacios
-            .replace(/\s+/g, " ") // Múltiples espacios → un espacio
-            .trim(); // Quitar espacios del inicio/final
-
-          // PASO 2: Ahora procesar como texto normal en una línea
-          const originalWords = cleanText
-            .replace(/([.!?;:])\s*([A-ZÄÖÜ])/g, "$1 $2")
-            .replace(/[-–—]/g, " ")
-            .split(/\s+/)
-            .map((word) => word.replace(/[^\w\säöüßáéíóúüñç]/g, ""))
-            .filter((word) => word.length > 1);
-
-          const wordCount = {};
-
-          originalWords.forEach((originalWord) => {
-            const lowerWord = originalWord.toLowerCase();
-            const type = identifyWordTypeWithCase(lowerWord, originalWord);
-
-            if (!wordCount[lowerWord]) {
-              wordCount[lowerWord] = { count: 0, type: type };
-            }
-            wordCount[lowerWord].count++;
-          });
-
-          return wordCount;
-        };
-
-        const identifyWordTypeWithCase = (lowerWord, originalWord) => {
+        // FUNCIÓN MEJORADA: Identificar tipo con contexto
+        const identifyWordTypeWithCase = (
+          lowerWord,
+          originalWord,
+          isFirstWord = false
+        ) => {
           // Casos especiales que dependen de mayúsculas
           if (lowerWord === "wolle") {
-            // Si la palabra original empezaba con mayúscula = sustantivo (Wolle = lana)
-            // Si empezaba con minúscula = verbo (wolle = subjuntivo de wollen)
             return originalWord[0] === originalWord[0].toUpperCase()
               ? "noun"
               : "verb";
           }
 
-          // Para el resto de palabras, usar la función normal con la versión en minúsculas
-          return identifyWordType(lowerWord);
+          // NUEVO: Usar la función mejorada con contexto de inicio de oración
+          return identifyWordType(originalWord, {
+            atSentenceStart: isFirstWord,
+          });
+        };
+
+        // FUNCIÓN MEJORADA: Contar palabras con contexto de oración
+        const countWords = (text) => {
+          if (!text.trim()) return {};
+
+          // Limpiar texto
+          let cleanText = text
+            .replace(/\r?\n/g, " ")
+            .replace(/\r/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+          // Dividir en oraciones para detectar inicio de oración
+          const sentences = cleanText.split(/[.!?]+/);
+          const wordCount = {};
+
+          sentences.forEach((sentence) => {
+            if (!sentence.trim()) return;
+
+            const words = sentence
+              .trim()
+              .replace(/[-–—]/g, " ")
+              .split(/\s+/)
+              .map((word) => word.replace(/[^\w\säöüßáéíóúüñç]/g, ""))
+              .filter((word) => word.length > 1);
+
+            words.forEach((originalWord, index) => {
+              const lowerWord = originalWord.toLowerCase();
+              const isFirstWord = index === 0; // Primera palabra de la oración
+              const type = identifyWordTypeWithCase(
+                lowerWord,
+                originalWord,
+                isFirstWord
+              );
+
+              if (!wordCount[lowerWord]) {
+                wordCount[lowerWord] = { count: 0, type: type };
+              }
+              wordCount[lowerWord].count++;
+            });
+          });
+
+          return wordCount;
         };
 
         // Obtener filtros activos
@@ -375,7 +417,7 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
           return Array.from(checkboxes).map((cb) => cb.dataset.type);
         };
 
-        // Crear texto coloreado con subrayado FILTRADO
+        // FUNCIÓN MEJORADA: Crear texto coloreado con contexto de oración
         const createColoredText = (text) => {
           const coloredTextDiv = document.getElementById("colored-text");
           const coloredContentDiv = document.getElementById("colored-content");
@@ -385,44 +427,62 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
             return;
           }
 
-          // Obtener filtros activos
           const activeFilters = getActiveFilters();
 
-          // Procesar el texto palabra por palabra
-          const words = text.split(/(\s+)/); // Mantener los espacios
+          // Dividir en oraciones para mantener contexto
+          const sentences = text.split(/([.!?]+)/);
           let coloredHTML = "";
 
-          words.forEach((word) => {
-            if (word.trim()) {
-              // Es una palabra (no espacio)
-              const cleanWord = word.replace(/[^\w\säöüßáéíóúüñç]/g, "");
-              if (cleanWord.length > 1) {
-                const lowerWord = cleanWord.toLowerCase();
-                const type = identifyWordTypeWithCase(lowerWord, cleanWord);
+          sentences.forEach((sentence) => {
+            if (/[.!?]+/.test(sentence)) {
+              // Es puntuación, mantenerla
+              coloredHTML += sentence;
+              return;
+            }
 
-                const getTypeStyle = (typeId) => {
-                  const typeObj = Object.values(WORD_TYPES).find(
-                    (t) => t.id === typeId
+            const words = sentence.split(/(\s+)/);
+            const wordsOnly = words.filter(
+              (w) =>
+                w.trim() && w.replace(/[^\w\säöüßáéíóúüñç]/g, "").length > 1
+            );
+            let wordIndex = 0;
+
+            words.forEach((word) => {
+              if (word.trim()) {
+                const cleanWord = word.replace(/[^\w\säöüßáéíóúüñç]/g, "");
+                if (cleanWord.length > 1) {
+                  // Detectar si es primera palabra de la oración
+                  const isFirstWord = wordIndex === 0;
+                  wordIndex++;
+
+                  const lowerWord = cleanWord.toLowerCase();
+                  const type = identifyWordTypeWithCase(
+                    lowerWord,
+                    cleanWord,
+                    isFirstWord
                   );
-                  return typeObj || WORD_TYPES.OTHER;
-                };
 
-                const typeStyle = getTypeStyle(type);
+                  const getTypeStyle = (typeId) => {
+                    const typeObj = Object.values(WORD_TYPES).find(
+                      (t) => t.id === typeId
+                    );
+                    return typeObj || WORD_TYPES.OTHER;
+                  };
 
-                // CLAVE: Solo agregar subrayado si el tipo está en filtros activos
-                if (activeFilters.includes(type)) {
-                  coloredHTML += `<span class="word-colored word-${type}" data-tooltip="${typeStyle.label}: ${cleanWord}" data-word="${lowerWord}" data-type="${type}">${word}</span>`;
+                  const typeStyle = getTypeStyle(type);
+
+                  if (activeFilters.includes(type)) {
+                    coloredHTML += `<span class="word-colored word-${type}" data-tooltip="${typeStyle.label}: ${cleanWord}" data-word="${lowerWord}" data-type="${type}">${word}</span>`;
+                  } else {
+                    coloredHTML += word;
+                  }
                 } else {
-                  // Si no está en filtros activos, mostrar sin subrayado
                   coloredHTML += word;
                 }
               } else {
                 coloredHTML += word;
               }
-            } else {
-              // Es un espacio, mantenerlo
-              coloredHTML += word;
-            }
+            });
           });
 
           coloredContentDiv.innerHTML = coloredHTML;
@@ -442,9 +502,7 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
             });
           });
 
-          // Actualizar destacados de palabras ya en lista
           updateWordHighlights();
-
           coloredTextDiv.style.display = "block";
         };
 
@@ -462,6 +520,7 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
             adverb: 0,
             number: 0,
             foreign: 0,
+            ambiguous: 0,
             other: 0,
           };
 
@@ -629,7 +688,7 @@ Und das heißt im Grunde, dass man etwas oder sich selbst nach vorne oder nach u
             });
           });
 
-          // Event listener global para teclas J y K
+          // Event listener global para teclas D y F
           document.addEventListener("keydown", handleKeyPress);
         };
 
