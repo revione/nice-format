@@ -116,6 +116,11 @@ const ARTICLE_FORMS = new Set(
     "unters",
     "hinters",
     "vors",
+    "beim",
+    "vorm",
+    "unterm",
+    "hinterm",
+    "überm",
   ].map(normalize)
 );
 
@@ -184,6 +189,8 @@ const DIRECTIONAL_ADVERBS = new Set(
 
 // Números
 const NUMERIC_RE = /^\d+([.,]\d+)?$/;
+const ROMAN_NUMERAL_RE =
+  /^(?=[ivxlcdm]+$)m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/i;
 
 // Adverbios irregulares adicionales
 const IRREGULAR_ADVERBS = new Set(
@@ -204,6 +211,8 @@ const IRREGULAR_ADVERBS = new Set(
     "doch",
     "ja",
     "nein",
+    "später",
+    "früher",
   ].map(normalize)
 );
 
@@ -486,6 +495,8 @@ export function identifyWord(raw, opts = {}) {
   // 1) números y ordinales
   if (NUMERIC_RE.test(original)) return { type: "number", rule: "numeric" };
   if (ORDINAL_RE.test(w)) return { type: "number", rule: "ordinal" };
+  if (ROMAN_NUMERAL_RE.test(w))
+    return { type: "number", rule: "roman-numeral" };
   if (D.special[w] === "number")
     return { type: "number", rule: "special-number" };
 

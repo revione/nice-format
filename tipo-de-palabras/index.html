@@ -230,7 +230,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
         WORD_TYPES,
       } from "./identifyWordType.js";
 
-      // Agregar soporte para palabras ambiguas si no existe
       if (!WORD_TYPES.AMBIGUOUS) {
         WORD_TYPES.AMBIGUOUS = {
           id: "ambiguous",
@@ -240,8 +239,7 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
         };
       }
 
-      // Analizador morfológico MEJORADO para alemán
-      const repetidor = () => {
+      const MorphologicalAnalyzer = () => {
         // Estado global para palabras a aprender
         let wordsToLearn = new Set();
         let currentActiveWord = null;
@@ -398,14 +396,15 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           sentences.forEach((sentence) => {
             if (!sentence.trim()) return;
 
-            const rawWords = sentence
-              .trim()
-              .replace(/[-–—]/g, " ")
-              .split(/\s+/);
+            const rawWords = sentence.trim().replace(/[–—]/g, " ").split(/\s+/);
 
-            const tokensForSentence = rawWords
-              .map((w) => w.replace(/[^\p{L}\p{N}\s-]/gu, ""))
-              .filter((w) => w.length >= 1);
+            const tokensForSentence = rawWords.map((w) => {
+              const keep = w
+                .replace(/(?<=\d)[,:.](?=\d)/g, "\uE000") // marca temporal
+                .replace(/[^\p{L}\p{N}\s.\u{E000}-]/gu, "") // limpia resto
+                .replace(/\uE000/g, (m) => m); // restaura
+              return keep;
+            });
 
             let idx = 0;
 
@@ -519,7 +518,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
 
           coloredContentDiv.innerHTML = coloredHTML;
 
-          // Agregar event listeners para hover y interactividad
           const coloredWords =
             coloredContentDiv.querySelectorAll(".word-colored");
           coloredWords.forEach((span) => {
@@ -538,9 +536,7 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           coloredTextDiv.style.display = "block";
         };
 
-        // Actualizar conteos en los labels y estado general
         const updateFilterCounts = (wordCount) => {
-          // Contar TIPOS ÚNICOS por categoría (no frecuencia total)
           const typeCounts = {
             verb: 0,
             noun: 0,
@@ -729,7 +725,7 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
         updateWordCount();
       };
 
-      document.addEventListener("DOMContentLoaded", repetidor);
+      document.addEventListener("DOMContentLoaded", MorphologicalAnalyzer);
     </script>
   </body>
 </html>

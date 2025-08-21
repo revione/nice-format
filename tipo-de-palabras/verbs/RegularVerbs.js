@@ -26,6 +26,7 @@ export const BLOCK_REGULARS = {
     "ordnen", // ordenar / organizar
     "sparen", // ahorrar
     "feiern", // celebrar
+    "öffnen", // abrir
   ],
 
   // --- Hogar ---

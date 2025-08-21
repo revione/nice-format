@@ -60,6 +60,12 @@ const ARTICLE_TOKENS = new Set(
     "unters",
     "hinters",
     "vors",
+
+    "beim",
+    "vorm",
+    "unterm",
+    "hinterm",
+    "überm",
   ].map((x) => x.toLowerCase())
 );
 
@@ -350,7 +356,7 @@ function analyzeContext(word, context, readings) {
 
   // Para participios, determinar rol probable
   if (readings.some((r) => r.form === "participle")) {
-    if (contextInfo.hasAuxiliaryBefore) {
+    if (contextInfo.hasAuxiliaryBefore || contextInfo.hasAuxiliaryAfter) {
       contextInfo.likelyRole = "verb";
     } else if (contextInfo.hasArticleBefore) {
       contextInfo.likelyRole = "adjective";
@@ -425,17 +431,11 @@ function determineVerbLikelihood(readings, contextInfo) {
 
   // Participios → depende del contexto sintáctico
   if (readings.some((r) => r.form === "participle")) {
-    // Con auxiliar antes → claramente verbo
-    if (contextInfo.hasAuxiliaryBefore) {
+    if (contextInfo.hasAuxiliaryBefore || contextInfo.hasAuxiliaryAfter)
       return true;
-    }
 
-    // Con artículo antes → probablemente adjetivo
-    if (contextInfo.hasArticleBefore) {
-      return false;
-    }
+    if (contextInfo.hasArticleBefore) return false;
 
-    // Sin contexto claro → puede ser ambos, defaultear a verbo
     return true;
   }
 

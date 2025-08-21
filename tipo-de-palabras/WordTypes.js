@@ -90,6 +90,11 @@ export const prepositions = [
   "am",
   "aus",
   "ab",
+  "beim",
+  "vorm",
+  "unterm",
+  "hinterm",
+  "überm",
 ];
 
 // === PRONOMBRES ===
