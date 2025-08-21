@@ -56,4 +56,8 @@ export const nonGermanWords = [
   "unavailable",
   "zeihhan",
   "zeihanon",
+
+  "later",
+  "okay",
+  "finish",
 ];

@@ -533,3 +533,12 @@ body.dark .learn-instructions {
 .word-other {
   text-decoration-color: #95a5a6;
 }
+.word-number {
+  text-decoration-color: #17a2b8;
+} /* 🔢 */
+.word-foreign {
+  text-decoration-color: #ff6b6b;
+} /* 🌍 */
+.word-ambiguous {
+  text-decoration-color: #ff6b35;
+} /* 🔶 */

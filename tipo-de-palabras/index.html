@@ -9,8 +9,8 @@
 
   <body>
     <div class="instructions">
-      💡 <strong>Instrucciones:</strong> Presiona <kbd>Escape</kbd> para
-      alternar edición | <kbd>Cmd+1</kbd> para modo oscuro
+      💡 <strong>Instrucciones:</strong> Presiona <kbd>Cmd+1</kbd> para modo
+      oscuro
     </div>
 
     <div class="controls">
@@ -32,7 +32,18 @@
     </div>
 
     <textarea id="formatter" class="formatter">
-Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen und entspannten Lächeln. Ihr Gesicht hat eine ovale Form mit sanft ausgeprägten Wangenknochen. Sie hat mittelbraunes Haar von mittlerer Länge, das ihr etwa bis zu den Schultern reicht, mit einem Stufenschnitt, der ihr Volumen verleiht.</textarea
+Am frühen Morgen, während des Frühstücks und beim Aufräumen im Wohnzimmer, bemerkte die Frau, dass ihr neues Foto vom gestern aufgenommenen Garten schon im Album ist, obwohl der Drucker wieder nicht funktioniert. Sie hatte am Vortag durchs Fenster ein aufgenommenes Bild gemacht und danach ein freundliches, hellgrünes Kleidungsstück fürs heutige Treffen ausgewählt. Zum zweiten Mal in dieser Woche war sie pünktlich gewesen, und trotz der lauten Werbung im Radio blieb sie ruhig; sowohl der Kaffee als auch die Musik waren warm, entweder sie arbeitet jetzt oder sie wartet noch kurz ab—nicht nur die Ordnung, sondern auch die Übersicht hilft.
+
+Wir sehen hier das Gesehene: ein aufgenommenes Bild, das weder unscharf noch schief ist, sondern klar, ruhig und technisch sauber ausgerichtet. Die mittleren Farbtöne wirken natürlich, die Form des ovalen Gesichts mit ausgeprägten Wangenknochen passt gut zum sanften Lächeln; man sieht einige der oberen Zähne, die gut ausgerichtet zu sein scheinen. Neben der Person liegt eine kleine Umhängetasche, vorm Plakat steht ein ausdrucksstarkes Herzsymbol, das jemand nachts hingelegt hat. Im Hintergrund erkennt man eine Grünfläche mit weitläufiger Vegetation, die sich bis zum Winkel des Gartentors erstreckt; dorthin geht sie gleich, hinein mit der Kamera, später wieder heraus. Das Fenster ist geöffnet (Zustandspassiv), wird aber gleich geschlossen (Vorgangspassiv); zuvor war es schon geöffnet worden.
+
+Erst gegen 10:30 Uhr kommt ihr Bruder, der Hubsan-Drohnen mag, vor das Haus. Er fragt: „Sehen wir uns die neuen Aufnahmen später an, oder gehst du lieber hinauf ins Zimmer, um zu arbeiten?“ Sie antwortet: „Nein, lieber nicht—ich will erst die 30. Datei sortieren und die zweite Serie ergänzen; danach gehe ich eher hinaus, weil das Licht jetzt besser ist. Wenn ich mehr Zeit hätte, würde ich heute die hundertste Aufnahme prüfen; könnte ich, würde ich auch die Farben neu kalibrieren.“ In der Mailbox blinkt eine E-Mail, deren Betreff „okay, finish later“ lautet, womit sie sich später beschäftigt.
+
+Später geht sie hinunter in den Keller, wo ein Lesesessel in der Leseecke steht; dort schreibt sie eine kurze Notiz auf Deutsch und eine englische Randbemerkung („okay, finish later“) — die sie vielleicht löscht. Nachdem sie die Aufgaben geordnet hatte, wurde das Fenster geöffnet und wieder geschlossen; das geöffnete Fenster lässt frische Luft hinein, während der Computer im Arbeitszimmer weiter rechnet. Als ob sie gestern nichts erledigt hätte, erinnert sie sich doch daran, dass sie bereits zweimal produktiv gewesen ist. Öffne die Mappe, speichere die Änderungen, drucke die Testseite! notiert sie für sich als kleine To-do-Liste.
+
+Draußen geht sie ein paar Schritte hinüber zum Schuppen, kommt dann herüber, holt die Kamera heraus, legt sie hinein und nimmt sie später wieder heraus; sie steht auf, räumt auf und macht weiter. Sie mag das Licht, will fertig werden, muss aber noch warten: Sie wird die Serie morgen abschließen (Futur I) und bis dahin alles sortiert haben (Futur II). Das Ergebnis ist besser, vielleicht am besten am späten Nachmittag; die größere Datei ist 3,5 MB schwer, die kleinste kaum 120 kB. Kein Besucher, keine Störung und keinem Gerät fehlt heute etwas.
+
+Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, eine Entscheidung, eine Beschreibung, ein Ergebnis—alles Neue neben manchem Alten. Sie bekommt Hilfe, versteht die Einstellungen und bezahlt die Lizenz; später entwirft sie einen Plan, zerlegt ein Problem in Schritte und erreicht schließlich, was sie erreichen wollte. Wegen des Wetters bleibt sie drinnen, innerhalb der nächsten Stunde sortiert sie weiter; außerhalb des Hauses wird es leiser, unterm Tisch schnurrt der Rechner. „Doch, es ist wirklich ziemlich gut geworden—und morgen wird es wohl noch besser werden“, sagt sie leise und würde, wenn es sein müsste, alles noch einmal machen, ohne unnötig zurückzugehen, statt zuzusehen, um die Serie abzuschließen—und dann vielleicht das Paket abzuholen.
+</textarea
     >
 
     <div id="colored-text" style="display: none">
@@ -346,11 +357,13 @@ Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen 
           }
         };
 
-        // FUNCIÓN MEJORADA: Identificar tipo con contexto
         const identifyWordTypeWithCase = (
           lowerWord,
           originalWord,
-          isFirstWord = false
+          isFirstWord,
+          tokens,
+          currentIndex,
+          sentence
         ) => {
           // Casos especiales que dependen de mayúsculas
           if (lowerWord === "wolle") {
@@ -359,13 +372,15 @@ Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen 
               : "verb";
           }
 
-          // NUEVO: Usar la función mejorada con contexto de inicio de oración
-          return identifyWordType(originalWord, {
+          // Usa el identificador con TODO el contexto
+          return identifyWord(originalWord, {
             atSentenceStart: isFirstWord,
-          });
+            tokens,
+            currentIndex,
+            sentence,
+          }).type;
         };
 
-        // FUNCIÓN MEJORADA: Contar palabras con contexto de oración
         const countWords = (text) => {
           if (!text.trim()) return {};
 
@@ -383,26 +398,37 @@ Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen 
           sentences.forEach((sentence) => {
             if (!sentence.trim()) return;
 
-            const words = sentence
+            const rawWords = sentence
               .trim()
               .replace(/[-–—]/g, " ")
-              .split(/\s+/)
-              .map((word) => word.replace(/[^\w\säöüßáéíóúüñç]/g, ""))
-              .filter((word) => word.length > 1);
+              .split(/\s+/);
 
-            words.forEach((originalWord, index) => {
-              const lowerWord = originalWord.toLowerCase();
-              const isFirstWord = index === 0; // Primera palabra de la oración
-              const type = identifyWordTypeWithCase(
-                lowerWord,
-                originalWord,
-                isFirstWord
-              );
+            const tokensForSentence = rawWords
+              .map((w) => w.replace(/[^\p{L}\p{N}\s-]/gu, ""))
+              .filter((w) => w.length >= 1);
 
-              if (!wordCount[lowerWord]) {
-                wordCount[lowerWord] = { count: 0, type: type };
+            let idx = 0;
+
+            rawWords.forEach((originalWord) => {
+              const clean = originalWord.replace(/[^\p{L}\p{N}\s-]/gu, "");
+              if (clean.length >= 1) {
+                const lower = clean.toLowerCase();
+                const isFirst = idx === 0;
+
+                const type = identifyWordTypeWithCase(
+                  lower,
+                  clean,
+                  isFirst,
+                  tokensForSentence,
+                  idx,
+                  sentence
+                );
+
+                if (!wordCount[lower]) wordCount[lower] = { count: 0, type };
+                wordCount[lower].count++;
+
+                idx++;
               }
-              wordCount[lowerWord].count++;
             });
           });
 
@@ -417,7 +443,6 @@ Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen 
           return Array.from(checkboxes).map((cb) => cb.dataset.type);
         };
 
-        // FUNCIÓN MEJORADA: Crear texto coloreado con contexto de oración
         const createColoredText = (text) => {
           const coloredTextDiv = document.getElementById("colored-text");
           const coloredContentDiv = document.getElementById("colored-content");
@@ -441,26 +466,33 @@ Auf dem ersten Bild sehen wir eine Frau mittleren Alters mit einem natürlichen 
             }
 
             const words = sentence.split(/(\s+)/);
-            const wordsOnly = words.filter(
-              (w) =>
-                w.trim() && w.replace(/[^\w\säöüßáéíóúüñç]/g, "").length > 1
-            );
-            let wordIndex = 0;
+
+            // Tokens para ANÁLISIS (incluye cortas como "zu", "im", "am")
+            const analysisTokens = words
+              .filter((w) => w.trim())
+              .map((w) => w.replace(/[^\p{L}\p{N}\s-]/gu, ""))
+              .filter((w) => w.length >= 1);
+
+            let analysisIndex = 0;
 
             words.forEach((word) => {
               if (word.trim()) {
-                const cleanWord = word.replace(/[^\w\säöüßáéíóúüñç]/g, "");
-                if (cleanWord.length > 1) {
+                const cleanWord = word.replace(/[^\p{L}\p{N}\s-]/gu, "");
+                if (cleanWord.length >= 1) {
                   // Detectar si es primera palabra de la oración
-                  const isFirstWord = wordIndex === 0;
-                  wordIndex++;
-
+                  const isFirstWord = analysisIndex === 0;
                   const lowerWord = cleanWord.toLowerCase();
+
                   const type = identifyWordTypeWithCase(
                     lowerWord,
                     cleanWord,
-                    isFirstWord
+                    isFirstWord,
+                    analysisTokens, // ← tokens
+                    analysisIndex, // ← índice
+                    sentence // ← oración completa
                   );
+
+                  analysisIndex++; // ¡solo cuando clasificamos una palabra real!
 
                   const getTypeStyle = (typeId) => {
                     const typeObj = Object.values(WORD_TYPES).find(
