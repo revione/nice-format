@@ -1,4 +1,4 @@
-// identifyWordType.js — Clasificador por reglas y prioridad (compat con tu API)
+// identifyWordType.js
 
 import {
   articles,
@@ -18,12 +18,22 @@ import {
 import { nonGermanWords } from "./nonGermanWords.js";
 
 // ------------------------- Utils y Diccionarios -------------------------
-const toSet = (arr) => new Set(arr.map((w) => w.toLowerCase()));
-const lc = (w) => w.toLowerCase();
+const toSet = (arr) => new Set(arr.map((w) => normalize(w.toLowerCase())));
 const endsWithAny = (w, arr) => arr.some((s) => w.endsWith(s));
 const isCapitalized = (w) => /^[A-ZÄÖÜ]/.test(w);
 
-// Diccionarios en minúsculas
+// Función de normalización mejorada
+const normalize = (s) => {
+  if (!s) return "";
+  return s
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss");
+};
+
+// Diccionarios normalizados
 const D = {
   articles: toSet(articles),
   preps: toSet(prepositions),
@@ -37,9 +47,9 @@ const D = {
   adjT: toSet(adjectivesEndingInT),
   adjEn: toSet(adjectivesEndingInEn),
   nonDE: toSet(nonGermanWords),
-  // normalizamos specialCases a minúscula
+  // normalizamos specialCases
   special: Object.fromEntries(
-    Object.entries(specialCases).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries(specialCases).map(([k, v]) => [normalize(k), v])
   ),
 };
 
@@ -49,9 +59,9 @@ const NOUN_SUFFIXES = [
   "heit",
   "keit",
   "schaft",
-  "tät",
+  "taet",
   "tion",
-  "ität",
+  "itaet",
   "ment",
   "ismus",
   "ist",
@@ -66,21 +76,20 @@ const NOUN_SUFFIXES = [
   "ur",
   "eur",
   "ion",
-  // compuestos frecuentes de tu dominio
-  "büschel",
+  "bueschel",
   "ecke",
   "zimmer",
   "ausdruck",
   "finger",
   "schuhe",
   "tasche",
-  "fläche",
+  "flaeche",
   "grund",
   "teil",
   "winkel",
   "symbol",
   "foto",
-  "werb",
+  "werbung", // corregido de "werb" a "werbung"
 ];
 
 // Terminaciones típicas de adjetivo declinado
@@ -90,29 +99,133 @@ const ADJ_ENDINGS = ["e", "en", "em", "er", "es"];
 const PART_PREF = ["ge", "be", "ver", "zer", "ent", "er"];
 
 // Contracciones/artículos frecuentes
-const ARTICLE_FORMS = new Set([
-  "am",
-  "im",
-  "ins",
-  "ans",
-  "zum",
-  "zur",
-  "vom",
-  "aufs",
-  "durchs",
-  "fürs",
-  "ums",
-  "übers",
-  "unters",
-  "hinters",
-  "vors",
-]);
+const ARTICLE_FORMS = new Set(
+  [
+    "am",
+    "im",
+    "ins",
+    "ans",
+    "zum",
+    "zur",
+    "vom",
+    "aufs",
+    "durchs",
+    "fuers",
+    "ums",
+    "uebers",
+    "unters",
+    "hinters",
+    "vors",
+  ].map(normalize)
+);
+
+// Auxiliares verbales para detección de participios
+const VERBAL_AUXILIARIES = new Set(
+  [
+    "wurde",
+    "wurden",
+    "wird",
+    "werden",
+    "hat",
+    "haben",
+    "hatte",
+    "hatten",
+    "ist",
+    "sind",
+    "war",
+    "waren",
+    "sein",
+    "gewesen",
+  ].map(normalize)
+);
+
+// Artículos y determinantes
+const ARTICLES_AND_DETERMINANTS = new Set(
+  [
+    "der",
+    "die",
+    "das",
+    "ein",
+    "eine",
+    "einer",
+    "einem",
+    "einen",
+    "den",
+    "dem",
+    "des",
+    "dieser",
+    "diese",
+    "dieses",
+    "jener",
+    "jene",
+    "jenes",
+    "welcher",
+    "welche",
+    "welches",
+    "alle",
+    "viele",
+    "einige",
+    "manche",
+    "solche",
+    "keine",
+    "keiner",
+    "keinem",
+    "keinen",
+  ].map(normalize)
+);
+
+// Adverbios direccionales conocidos
+const DIRECTIONAL_ADVERBS = new Set(
+  [
+    "hin",
+    "her",
+    "dahin",
+    "dorthin",
+    "hierhin",
+    "wohin",
+    "daher",
+    "hierher",
+    "woher",
+    "hinein",
+    "herein",
+    "hinaus",
+    "heraus",
+    "hinauf",
+    "herauf",
+    "hinunter",
+    "herunter",
+    "hinueber",
+    "herueber",
+  ].map(normalize)
+);
 
 // Números
 const NUMERIC_RE = /^\d+([.,]\d+)?$/;
+// Adverbios irregulares adicionales
+const IRREGULAR_ADVERBS = new Set(
+  [
+    "gern",
+    "gerne",
+    "kaum",
+    "schon",
+    "eben",
+    "mal",
+    "wohl",
+    "etwa",
+    "fast",
+    "ziemlich",
+    "ganz",
+    "recht",
+    "eher",
+    "doch",
+    "ja",
+    "nein",
+  ].map(normalize)
+);
 
+// Números ordinales - expresión regular mejorada
 const ORDINAL_RE =
-  /^(?:\d+\.|(?:(?:nullte|erste|zweite|dritte|vierte|fünfte|sechste|siebte|siebente|achte|neunte|zehnte|elfte|zwölfte|dreizehnte|vierzehnte|fünfzehnte|sechzehnte|siebzehnte|achtzehnte|neunzehnte)|(?:(?:ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)(?:-|)?und(?:zwanzig|drei(?:ß|ss)ig|vierzig|fünfzig|sechzig|siebzig|achtzig|neunzig)ste|(?:zwanzig|drei(?:ß|ss)ig|vierzig|fünfzig|sechzig|siebzig|achtzig|neunzig)ste)|(?:[a-zäöüß-]*?(?:hundert|tausend|million(?:en)?|milliard(?:e|en)|billion(?:en)?|billiard(?:e|en)|trillion(?:en)?)+(?:[a-zäöüß-]*)?ste)))(?:n|r|m|s|en|er|em|es|ns)?$/iu;
+  /^(?:\d+\.|(?:(?:nullte|erste|zweite|dritte|vierte|f[üu]nfte|sechste|siebte|siebente|achte|neunte|zehnte|elfte|zw[öo]lfte|dreizehnte|vierzehnte|f[üu]nfzehnte|sechzehnte|siebzehnte|achtzehnte|neunzehnte)|(?:(?:ein|zwei|drei|vier|f[üu]nf|sechs|sieben|acht|neun)(?:-|)?und(?:zwanzig|drei(?:ss|ß)ig|vierzig|f[üu]nfzig|sechzig|siebzig|achtzig|neunzig)ste|(?:zwanzig|drei(?:ss|ß)ig|vierzig|f[üu]nfzig|sechzig|siebzig|achtzig|neunzig)ste)|(?:[a-zaeoeuess-]*?(?:hundert|tausend|million(?:en)?|milliard(?:e|en)|billion(?:en)?|billiard(?:e|en)|trillion(?:en)?)+(?:[a-zaeoeuess-]*)?ste)))(?:n|r|m|s|en|er|em|es|ns)?$/iu;
 
 // ------------------------- WORD_TYPES Definition -------------------------
 export const WORD_TYPES = {
@@ -159,14 +272,13 @@ export const WORD_TYPES = {
 function cleanToken(raw) {
   if (!raw) return "";
   let w = String(raw).trim();
-  // recorta signos al borde, conserva letras alemanas
   w = w.replace(/^[^\w\säöüßáéíóúüñç]+|[^\w\säöüßáéíóúüñç]+$/gi, "");
   return w;
 }
 
-// ------------------------- Heurísticas -------------------------
+// ------------------------- Heurísticas Mejoradas -------------------------
 function looksLikeNoun(word, { atSentenceStart = false } = {}) {
-  const w = lc(word);
+  const w = normalize(word);
   return (
     D.nouns.has(w) ||
     (!atSentenceStart && isCapitalized(word)) ||
@@ -175,7 +287,7 @@ function looksLikeNoun(word, { atSentenceStart = false } = {}) {
 }
 
 function looksLikeAdj(word) {
-  const w = lc(word);
+  const w = normalize(word);
   return (
     D.adjBasic.has(w) ||
     D.adjDecl.has(w) ||
@@ -183,76 +295,185 @@ function looksLikeAdj(word) {
     D.adjEn.has(w) ||
     (PART_PREF.some((p) => w.startsWith(p)) &&
       (w.endsWith("t") || w.endsWith("en"))) ||
-    // Formas declinadas de adjetivos conocidos
     isDeclinedForm(w)
   );
 }
 
-// Nueva función para detectar formas declinadas de adjetivos
+// Función mejorada para detectar adverbios
+function looksLikeAdverb(word) {
+  const w = normalize(word);
+
+  // Adverbios irregulares específicos
+  if (IRREGULAR_ADVERBS.has(w)) return true;
+
+  // Adverbios direccionales específicos
+  if (DIRECTIONAL_ADVERBS.has(w)) return true;
+
+  // Sufijos típicos de adverbios alemanes
+  if (
+    w.endsWith("lich") ||
+    w.endsWith("weise") ||
+    w.endsWith("mals") ||
+    w.endsWith("waerts")
+  ) {
+    return true;
+  }
+
+  // Solo "hin" o "her" exactos, no como sufijo
+  if (w === "hin" || w === "her") return true;
+
+  return false;
+}
+
+// Función mejorada para detectar formas declinadas
 function isDeclinedForm(word) {
+  const endings = ["en", "er", "em", "es", "e"];
+  const w = normalize(word);
+
+  // Stems conocidos corregidos y normalizados
   const commonAdjStems = [
     "direkt",
     "ober",
     "unter",
     "freundlich",
-    "hellgrün",
+    "hellgruen",
     "dunkelblau",
     "wichtig",
-    "möglich",
+    "moeglich",
     "verschieden",
     "besonder",
     "eigen",
-  ];
-
-  const endings = ["en", "er", "em", "es", "e"];
+    "natuerlich",
+    "oval",
+    "sanft",
+    "ausgepraegt",
+    "mittler",
+    "entspannt", // corregido "ausgepragt"
+  ].map(normalize);
 
   for (const stem of commonAdjStems) {
     for (const ending of endings) {
-      if (word === stem + ending) return true;
+      if (w === stem + ending) return true;
     }
   }
+
+  // Verificar si la raíz existe en diccionarios de adjetivos
+  for (const ending of endings) {
+    if (w.endsWith(ending)) {
+      const stem = w.slice(0, -ending.length);
+      if (D.adjBasic.has(stem) || D.adjT.has(stem)) {
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
 function looksLikeDeclinedAdj(word) {
-  const w = lc(word);
+  const w = normalize(word);
   return ADJ_ENDINGS.some((end) => w.endsWith(end)) || isDeclinedForm(w);
 }
 
 function looksLikeFiniteVerb(word) {
-  const w = lc(word);
-  // evita adverbios/sustantivos/adj conocidos
+  const w = normalize(word);
+
+  // Evita categorías conocidas
   if (D.adv.has(w) || D.nouns.has(w) || D.adjBasic.has(w) || D.adjDecl.has(w))
     return false;
 
-  // Evita formas declinadas de adjetivos
+  if (looksLikeAdverb(word)) return false;
   if (isDeclinedForm(w)) return false;
 
-  // sufijos finitos muy comunes: -e, -st, -t, -en, -te, -et
   return /(e|st|t|en|te|et)$/.test(w) || D.verbsInf.has(w);
 }
 
 // Función para detectar "noch" como conjunción en "weder...noch"
 function isNochConjunction(word, sentence) {
-  if (lc(word) !== "noch") return false;
+  if (normalize(word) !== "noch") return false;
   return /\bweder\b/i.test(sentence);
+}
+
+// Funciones auxiliares para detección de contexto
+function hasAuxiliaryBefore(tokens, index) {
+  // mira hasta 3 palabras atrás
+  for (let i = index - 1; i >= 0 && i >= index - 3; i--) {
+    const w = normalize(tokens[i]);
+    if (VERBAL_AUXILIARIES.has(w)) return true;
+  }
+  return false;
+}
+
+function hasArticleBefore(tokens, index) {
+  // mira 1–2 palabras atrás
+  for (let i = index - 1; i >= 0 && i >= index - 2; i--) {
+    const w = normalize(tokens[i]);
+    if (ARTICLES_AND_DETERMINANTS.has(w) || ARTICLE_FORMS.has(w)) return true;
+  }
+  return false;
+}
+
+// Función para detectar ambigüedad con contexto mejorado
+function detectAmbiguity(word, opts = {}) {
+  const matches = [];
+  const w = normalize(word);
+
+  if (looksLikeNoun(word, opts)) matches.push("noun");
+  if (looksLikeAdj(word)) matches.push("adjective");
+  if (looksLikeFiniteVerb(word)) matches.push("verb");
+  if (looksLikeAdverb(word)) matches.push("adverb");
+
+  if (matches.length < 2) return null;
+
+  // Sistema de prioridad con contexto
+  let primary = matches[0];
+  const { tokens, currentIndex } = opts;
+
+  // Contexto: auxiliar antes + participio → priorizar verb
+  if (
+    matches.includes("verb") &&
+    matches.includes("adjective") &&
+    tokens &&
+    hasAuxiliaryBefore(tokens, currentIndex)
+  ) {
+    primary = "verb";
+  }
+  // Sin auxiliar: participios → priorizar adjective
+  else if (matches.includes("adjective") && matches.includes("verb")) {
+    primary = "adjective";
+  }
+
+  // Contexto: artículo antes + ambiguo → priorizar noun
+  if (
+    matches.includes("noun") &&
+    tokens &&
+    hasArticleBefore(tokens, currentIndex)
+  ) {
+    primary = "noun";
+  }
+  // Sin artículo: noun vs verb → usar mayúscula como criterio
+  else if (matches.includes("noun") && matches.includes("verb")) {
+    primary = isCapitalized(word) ? "noun" : "verb";
+  }
+
+  return { matches, primary };
 }
 
 // ------------------------- Núcleo: clasificar -------------------------
 /**
- * identifyWord — versión detallada
- * @param {string} raw
- * @param {object} opts { atSentenceStart?: boolean, sentence?: string }  // marca si es primera palabra de oración y contexto de oración
- * @returns {{ type: string, rule: string, options?: string[], primary?: string }}
+ * identifyWord — versión mejorada con contexto
  */
 export function identifyWord(raw, opts = {}) {
   const atSentenceStart = !!opts.atSentenceStart;
   const sentence = opts.sentence || "";
+  const tokens = opts.tokens || [];
+  const currentIndex = opts.currentIndex || 0;
+
   const cleaned = cleanToken(raw);
   if (!cleaned) return { type: "other", rule: "empty" };
 
-  const original = cleaned; // importante para capitalización
-  const w = lc(cleaned); // clave para diccionarios
+  const original = cleaned;
+  const w = normalize(cleaned);
 
   // 0) no-alemán explícito
   if (D.nonDE.has(w)) return { type: "foreign", rule: "non-german-list" };
@@ -269,6 +490,11 @@ export function identifyWord(raw, opts = {}) {
   // 2.1) "noch" contextual (weder...noch)
   if (isNochConjunction(original, sentence)) {
     return { type: "conjunction", rule: "weder-noch" };
+  }
+
+  // 2.2) adverbios por sufijo y direccionales
+  if (looksLikeAdverb(original)) {
+    return { type: "adverb", rule: "adverb-pattern" };
   }
 
   // 3) coincidencias léxicas (alta prioridad)
@@ -303,7 +529,6 @@ export function identifyWord(raw, opts = {}) {
 
   // 4b) participio/adjetivo
   if (looksLikeAdj(original)) {
-    // si además parece forma verbal → ambiguo (preferimos adjetivo)
     if (looksLikeFiniteVerb(original)) {
       return {
         type: "ambiguous",
@@ -315,12 +540,27 @@ export function identifyWord(raw, opts = {}) {
     return { type: "adjective", rule: "participle-adj" };
   }
 
-  // 4c) adjetivo declinado por terminación (y no claramente verbo)
+  // 4c) adjetivo declinado por terminación
   if (looksLikeDeclinedAdj(original) && !looksLikeFiniteVerb(original)) {
     return { type: "adjective", rule: "declined-adj-ending" };
   }
 
-  // 4d) forma verbal finita por sufijo
+  // 4d) detectar ambigüedad con contexto antes de decidir verbo
+  const ambiguityResult = detectAmbiguity(original, {
+    atSentenceStart,
+    tokens,
+    currentIndex,
+  });
+  if (ambiguityResult) {
+    return {
+      type: "ambiguous",
+      options: ambiguityResult.matches,
+      primary: ambiguityResult.primary,
+      rule: "multiple-weak-matches",
+    };
+  }
+
+  // 4e) forma verbal finita por sufijo
   if (looksLikeFiniteVerb(original)) {
     return { type: "verb", rule: "finite-verb-suffix" };
   }
@@ -330,28 +570,25 @@ export function identifyWord(raw, opts = {}) {
 }
 
 // ------------------------- API compatible: string -------------------------
-/**
- * Mantiene tu API original: devuelve solo el tipo (string)
- */
 export const identifyWordType = (word, opts = {}) =>
   identifyWord(word, opts).type;
 
-// ------------------------- (Opcional) Lote con detección de inicio de oración -------------------------
-/**
- * Clasifica una lista de tokens y marca la primera palabra tras . ! ? como inicio de oración
- */
+// ------------------------- Clasificación de tokens con contexto -------------------------
 export function classifyTokens(tokens) {
   const results = [];
   let atStart = true;
-  const fullSentence = tokens.join(" "); // Para contexto de "weder...noch"
+  const fullSentence = tokens.join(" ");
 
-  for (const tok of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
     const res = identifyWord(tok, {
       atSentenceStart: atStart,
       sentence: fullSentence,
+      tokens: tokens,
+      currentIndex: i,
     });
     results.push({ token: tok, ...res });
-    // actualizar inicio de oración
+
     const trimmed = String(tok || "");
     if (/[.!?]$/.test(trimmed)) atStart = true;
     else if (/\S/.test(trimmed)) atStart = false;
