@@ -533,7 +533,6 @@ export function getAllFormsOf(lemma) {
   return Array.from(generateAllDeclinedForms(lemma));
 }
 
-// Esta función es usada en identifyWordType.js línea 502
 export function getAdjectiveInfo(word, context = {}) {
   const result = isAdjective(word, context);
 

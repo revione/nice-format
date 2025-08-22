@@ -102,11 +102,11 @@ function isNochConjunction(word, sentence) {
   return /\bweder\b/i.test(sentence);
 }
 
-function hasAuxiliaryBefore(tokens, index) {
+function hasAuxiliaryBefore(wordsInASentence, index) {
   const verbDictionaries = getVerbDictionaries();
   let steps = 0;
   for (let i = index - 1; i >= 0 && steps < 6; i--) {
-    const w = normalize((tokens[i] || "").replace(/[.,;:!?()«»"""'''„‚]/g, ""));
+    const w = normalize((wordsInASentence[i] || "").replace(/[.,;:!?()«»"""'''„‚]/g, ""));
     if (!w) continue;
     steps++;
 
@@ -120,9 +120,9 @@ function hasAuxiliaryBefore(tokens, index) {
   return false;
 }
 
-function hasArticleBefore(tokens, index) {
+function hasArticleBefore(wordsInASentence, index) {
   for (let i = index - 1; i >= 0 && i >= index - 2; i--) {
-    const w = normalize(tokens[i] || "");
+    const w = normalize(wordsInASentence[i] || "");
     if (D.articlesAndDeterminants.has(w)) return true;
   }
   return false;
@@ -140,15 +140,15 @@ function detectAmbiguity(word, opts = {}) {
   if (matches.length < 2) return null;
 
   let primary = matches[0];
-  const { tokens, currentIndex } = opts;
+  const { wordsInASentence, index } = opts;
 
-  if (matches.includes("verb") && matches.includes("adjective") && tokens && hasAuxiliaryBefore(tokens, currentIndex)) {
+  if (matches.includes("verb") && matches.includes("adjective") && wordsInASentence && hasAuxiliaryBefore(wordsInASentence, index)) {
     primary = "verb";
   } else if (matches.includes("adjective") && matches.includes("verb")) {
     primary = "adjective";
   }
 
-  if (matches.includes("noun") && tokens && hasArticleBefore(tokens, currentIndex)) {
+  if (matches.includes("noun") && wordsInASentence && hasArticleBefore(wordsInASentence, index)) {
     primary = "noun";
   } else if (matches.includes("noun") && matches.includes("verb")) {
     primary = isCapitalized(word) ? "noun" : "verb";
@@ -161,8 +161,8 @@ function detectAmbiguity(word, opts = {}) {
 export function identifyWord(raw, opts = {}) {
   const atSentenceStart = !!opts.atSentenceStart;
   const sentence = opts.sentence || "";
-  const tokens = opts.tokens || [];
-  const currentIndex = opts.currentIndex || 0;
+  const wordsInASentence = opts.wordsInASentence || [];
+  const index = opts.index || 0;
 
   const cleaned = cleanToken(raw);
   if (!cleaned) return { type: "other", rule: "empty" };
@@ -188,14 +188,14 @@ export function identifyWord(raw, opts = {}) {
 
   // *** SISTEMA DE VERBOS ***
   const verbResult = isVerbFormEnhanced(original, {
-    tokens,
-    currentIndex,
+    wordsInASentence,
+    index,
     atSentenceStart,
   });
 
   if (verbResult?.isVerb) {
     if (verbResult.verbInfo?.readings?.some((r) => r.form === "participle") && verbResult.context?.likelyRole === "adjective") {
-      const nextTok = (opts.tokens?.[opts.currentIndex + 1] || "").toLowerCase();
+      const nextTok = (opts.wordsInASentence?.[opts.index + 1] || "").toLowerCase();
       if (["in", "auf", "an", "für", "mit", "durch", "um", "ohne", "gegen", "zu"].includes(nextTok)) {
         return {
           type: "verb",
@@ -235,8 +235,8 @@ export function identifyWord(raw, opts = {}) {
 
   // *** SISTEMA DE ADJETIVOS MEJORADO ***
   const adjectiveResult = isAdjective(original, {
-    tokens,
-    currentIndex,
+    wordsInASentence,
+    index,
     atSentenceStart,
   });
 
@@ -272,8 +272,8 @@ export function identifyWord(raw, opts = {}) {
   // 4d) Detectar ambigüedad con contexto
   const ambiguityResult = detectAmbiguity(original, {
     atSentenceStart,
-    tokens,
-    currentIndex,
+    wordsInASentence,
+    index,
   });
   if (ambiguityResult) {
     return {
@@ -291,30 +291,4 @@ export function identifyWord(raw, opts = {}) {
 
   // 5) Fallback
   return { type: "other", rule: "fallback" };
-}
-
-// ------------------------- API compatible: string -------------------------
-export const identifyWordType = (word, opts = {}) => identifyWord(word, opts).type;
-
-// ------------------------- Clasificación de tokens con contexto -------------------------
-export function classifyTokens(tokens) {
-  const results = [];
-  let atStart = true;
-  const fullSentence = tokens.join(" ");
-
-  for (let i = 0; i < tokens.length; i++) {
-    const tok = tokens[i];
-    const res = identifyWord(tok, {
-      atSentenceStart: atStart,
-      sentence: fullSentence,
-      tokens: tokens,
-      currentIndex: i,
-    });
-    results.push({ token: tok, ...res });
-
-    const trimmed = String(tok || "");
-    if (/[.!?]$/.test(trimmed)) atStart = true;
-    else if (/\S/.test(trimmed)) atStart = false;
-  }
-  return results;
 }
