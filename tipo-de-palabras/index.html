@@ -122,21 +122,57 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
       <div id="word-list"></div>
     </div>
 
-    <script>
-      const app = () => {
-        const formatter = document.getElementById("formatter");
+    <script src="./front/toggleDark.js"></script>
 
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "1" && event.metaKey) {
-            event.preventDefault();
-            document.body.classList.toggle("dark");
-          }
-        });
+    <script>
+      // Funciones globales que se usan desde el HTML
+      window.copyFormatterText = () => {
+        const formatter = document.getElementById("formatter");
+        const textToCopy = formatter.value;
+        navigator.clipboard.writeText(textToCopy);
       };
 
-      document.addEventListener("DOMContentLoaded", app);
+      window.adjustFormatterFontSize = () => {
+        const fontSize = document.getElementById("fontSizeRange").value;
+        document.getElementById("fontSizeValue").textContent = fontSize + "px";
+        const formatter = document.getElementById("formatter");
+        formatter.style.fontSize = fontSize + "px";
+
+        const coloredText = document.getElementById("colored-text");
+        if (coloredText) {
+          coloredText.style.fontSize = fontSize + "px";
+        }
+      };
+
+      window.selectAllFilters = () => {
+        const checkboxes = document.querySelectorAll('.filter-checkboxes input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = true;
+        });
+        // Llamar a la función de actualización cuando esté disponible
+        if (window.updateWordCount) {
+          window.updateWordCount();
+        }
+      };
+
+      window.clearAllFilters = () => {
+        const checkboxes = document.querySelectorAll('.filter-checkboxes input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        // Llamar a la función de actualización cuando esté disponible
+        if (window.updateWordCount) {
+          window.updateWordCount();
+        }
+      };
+
+      window.removeWordToLearn = (word, type) => {
+        // Esta función será sobrescrita por el módulo principal
+        console.log("removeWordToLearn not yet initialized");
+      };
     </script>
 
+    <!-- Script 3: Módulo principal del analizador morfológico -->
     <script type="module">
       import { identifyWordType, identifyWord, classifyTokens } from "./identifyWord.js";
       import { WORD_TYPES } from "./word-types/types.js";
@@ -144,12 +180,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
       const MorphologicalAnalyzer = () => {
         let wordsToLearn = new Set();
         let currentActiveWord = null;
-
-        window.copyFormatterText = () => {
-          const formatter = document.getElementById("formatter");
-          const textToCopy = formatter.value;
-          navigator.clipboard.writeText(textToCopy);
-        };
 
         const displayLearnWords = () => {
           const learnWordsDiv = document.getElementById("learn-words");
@@ -162,7 +192,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           }
 
           learnCountSpan.textContent = `(${wordsToLearn.size} palabras)`;
-
           learnWordListDiv.innerHTML = "";
 
           const wordsArray = Array.from(wordsToLearn).sort();
@@ -261,6 +290,15 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           }).type;
         };
 
+        // Exponer función global para otros scripts
+        window.updateWordCount = () => {
+          const formatter = document.getElementById("formatter");
+          const text = formatter.value || "";
+          const wordCount = countWords(text);
+          displayWordCount(wordCount, text);
+        };
+
+        // Resto de las funciones del analizador...
         const countWords = (text) => {
           if (!text.trim()) return {};
 
@@ -273,7 +311,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
             if (!sentence.trim()) return;
 
             const rawWords = sentence.trim().replace(/[–—]/g, " ").split(/\s+/);
-
             const tokensForSentence = rawWords.map((w) => w.replace(/[^\p{L}\p{N}\s.\-]/gu, "")).filter((w) => w.length >= 1);
 
             let idx = 0;
@@ -312,7 +349,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           }
 
           const activeFilters = getActiveFilters();
-
           const sentences = text.split(/([.!?]+)/);
           let coloredHTML = "";
 
@@ -323,7 +359,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
             }
 
             const words = sentence.split(/(\s+)/);
-
             const analysisTokens = words
               .filter((w) => w.trim())
               .map((w) => w.replace(/[^\p{L}\p{N}\s-]/gu, ""))
@@ -420,22 +455,6 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           statusElement.textContent = `Mostrando: ${totalFilteredUniqueWords} palabras únicas (${activeFilters.length} tipos seleccionados)`;
         };
 
-        window.selectAllFilters = () => {
-          const checkboxes = document.querySelectorAll('.filter-checkboxes input[type="checkbox"]');
-          checkboxes.forEach((checkbox) => {
-            checkbox.checked = true;
-          });
-          updateWordCount();
-        };
-
-        window.clearAllFilters = () => {
-          const checkboxes = document.querySelectorAll('.filter-checkboxes input[type="checkbox"]');
-          checkboxes.forEach((checkbox) => {
-            checkbox.checked = false;
-          });
-          updateWordCount();
-        };
-
         const displayWordCount = (wordCount, text = "") => {
           const wordCountDiv = document.getElementById("word-count");
           const wordListDiv = document.getElementById("word-list");
@@ -452,11 +471,9 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           totalWordsSpan.textContent = `${totalWords} palabras totales, ${uniqueWords} únicas`;
 
           updateFilterCounts(wordCount);
-
           createColoredText(text);
 
           const sortedWords = Object.entries(wordCount).sort(([, a], [, b]) => b.count - a.count);
-
           const activeFilters = getActiveFilters();
           const filteredWords = sortedWords.filter(([word, data]) => activeFilters.includes(data.type));
 
@@ -489,36 +506,17 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
           wordCountDiv.style.display = "block";
         };
 
-        const updateWordCount = () => {
-          const formatter = document.getElementById("formatter");
-          const text = formatter.value || "";
-
-          const wordCount = countWords(text);
-          displayWordCount(wordCount, text);
-        };
-
-        window.adjustFormatterFontSize = () => {
-          const fontSize = document.getElementById("fontSizeRange").value;
-          document.getElementById("fontSizeValue").textContent = fontSize + "px";
-          const formatter = document.getElementById("formatter");
-          formatter.style.fontSize = fontSize + "px";
-
-          const coloredText = document.getElementById("colored-text");
-          if (coloredText) {
-            coloredText.style.fontSize = fontSize + "px";
-          }
-        };
-
+        // Inicialización del analizador
         const setupEventListeners = () => {
           const formatter = document.getElementById("formatter");
 
-          formatter.addEventListener("input", updateWordCount);
+          formatter.addEventListener("input", window.updateWordCount);
           formatter.addEventListener("paste", () => {
-            setTimeout(updateWordCount, 100);
+            setTimeout(window.updateWordCount, 100);
           });
-          formatter.addEventListener("keyup", updateWordCount);
-          formatter.addEventListener("focus", updateWordCount);
-          formatter.addEventListener("blur", updateWordCount);
+          formatter.addEventListener("keyup", window.updateWordCount);
+          formatter.addEventListener("focus", window.updateWordCount);
+          formatter.addEventListener("blur", window.updateWordCount);
 
           const filterCheckboxes = document.querySelectorAll('.filter-checkboxes input[type="checkbox"]');
           filterCheckboxes.forEach((checkbox) => {
@@ -534,7 +532,7 @@ Im Ordner liegen verschiedene Dokumente: die Möglichkeit, die Freundlichkeit, e
         };
 
         setupEventListeners();
-        updateWordCount();
+        window.updateWordCount();
       };
 
       document.addEventListener("DOMContentLoaded", MorphologicalAnalyzer);
