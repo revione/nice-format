@@ -5,18 +5,12 @@
 // =====================
 import { IRREGULARS } from "./verbs/IrregularVerbs.js";
 import { REGULARS } from "./verbs/RegularVerbs.js";
-
-const AUX_BY_LEMMA = {
-  bleiben: "sein",
-  passieren: "sein",
-  reisen: "sein",
-  // añade aquí cualquier regular que deba llevar "sein"
-};
+import { AUX_BY_LEMMA } from "./verbs/aux_by_lemma.js";
 
 // =====================
 // 2) PREFIJOS SEPARABLES E INSEPARABLES
 // =====================
-const SEPARABLE_PREFIXES = [
+export const SEPARABLE_PREFIXES = [
   "ab",
   "an",
   "auf",
@@ -78,8 +72,9 @@ function buildRegular(lemma) {
   // Para stems que acaban en s/ß/x/z, la terminación de du es -t (no -st)
   const hasSibilant = /[sßxz]$/.test(stem);
 
-  // Ortografía: -t/-d/-m/-n finales → inserta "e" antes de -st/-t
-  const needsE = /[tdmn]$/.test(stem) && !hasSibilant;
+  // Ejemplos: arbeiten → arbeitest, atmen → atmest, pero wohnen → wohnst
+  const needsE =
+    (/[td]$/.test(stem) || /[^aeiouäöüy][mn]$/.test(stem)) && !hasSibilant;
 
   const praesens = {
     ich: stem + "e",
@@ -166,7 +161,6 @@ export function getVerbParadigm(lemma) {
 
 /**
  * Diccionario listo para tu estructura 'palabra': { ... }
-
  */
 export function buildVerbMap(lemmas) {
   const out = {};
@@ -186,28 +180,40 @@ export function generateVerbDictionaries(lemmas) {
   const participles = new Set();
   const imperatives = new Set();
 
+  // LIMPIADO: Solo auxiliares esenciales, sin duplicados innecesarios
   const auxiliaries = new Set(
     [
+      // sein
       "sein",
-      "haben",
-      "werden",
-      "ist",
-      "sind",
-      "war",
-      "waren",
-      "hat",
-      "haben",
-      "hatte",
-      "hatten",
-      "wird",
-      "werden",
-      "wurde",
-      "wurden",
       "bin",
       "bist",
+      "ist",
+      "sind",
+      "seid",
+      "war",
+      "warst",
+      "waren",
+      "wart",
+      // haben
+      "haben",
+      "habe",
+      "hast",
+      "hat",
+      "habt",
+      "hatte",
+      "hattest",
+      "hatten",
+      "hattet",
+      // werden
+      "werden",
       "werde",
       "wirst",
+      "wird",
       "werdet",
+      "wurde",
+      "wurdest",
+      "wurden",
+      "wurdet",
     ].map(normalize)
   );
 
@@ -266,7 +272,7 @@ export function generateVerbDictionaries(lemmas) {
       }
     });
 
-    // Auxiliares específicos del paradigma
+    // Auxiliares específicos del paradigma (añadir sin duplicar)
     if (paradigm.aux === "sein" || paradigm.aux === "haben") {
       auxiliaries.add(normalize(paradigm.aux));
     }
@@ -277,7 +283,7 @@ export function generateVerbDictionaries(lemmas) {
     participles,
     imperatives,
     auxiliaries,
-    formToLemma, // NUEVA: mapa para rendimiento
+    formToLemma, // Mapa para rendimiento
   };
 }
 

@@ -1,52 +1,70 @@
 #!/bin/bash
 
-# Función que concatena todos los archivos del directorio actual en todo.txt
+# Función que concatena archivos y procesa directorios
 concatenar_archivos() {
-    local output_file="todo.txt"
+    local txt_folder="txt"
+    local output_file="$txt_folder/todo.txt"
+    
+    # Crear el directorio txt si no existe
+    mkdir -p "$txt_folder"
     
     # Eliminar el archivo de salida si existe para reescribirlo completamente
     [[ -f "$output_file" ]] && rm "$output_file"
     
-    # Función recursiva para procesar archivos y carpetas
-    procesar_elemento() {
-        local elemento="$1"
-        local nivel="$2"
-        local prefijo=""
+    # Función recursiva para procesar directorios
+    procesar_directorio() {
+        local directorio="$1"
+        local archivo_directorio="$txt_folder/${directorio}.txt"
         
-        # Crear indentación según el nivel
-        for ((i=0; i<nivel; i++)); do
-            prefijo+="  "
+        # Crear el archivo para este directorio
+        > "$archivo_directorio"
+        
+        echo "=== CONTENIDO DEL DIRECTORIO: $directorio ===" >> "$archivo_directorio"
+        echo "" >> "$archivo_directorio"
+        
+        # Procesar todos los elementos dentro del directorio
+        for elemento in "$directorio"/*; do
+            # Verificar que el elemento existe
+            [[ -e "$elemento" ]] || continue
+            
+            local nombre_elemento=$(basename "$elemento")
+            
+            if [[ -f "$elemento" ]]; then
+                # Es un archivo - concatenar su contenido
+                echo "=== $nombre_elemento ===" >> "$archivo_directorio"
+                cat "$elemento" >> "$archivo_directorio"
+                echo "" >> "$archivo_directorio"
+            elif [[ -d "$elemento" ]]; then
+                # Es un subdirectorio - procesarlo recursivamente
+                procesar_directorio "$elemento"
+                echo "=== SUBDIRECTORIO: $nombre_elemento (ver $txt_folder/${elemento}.txt) ===" >> "$archivo_directorio"
+                echo "" >> "$archivo_directorio"
+            fi
         done
         
-        if [[ -f "$elemento" ]]; then
-            # Es un archivo
-            echo "${prefijo}=== $elemento ===" >> "$output_file"
-            cat "$elemento" >> "$output_file"
-            echo "" >> "$output_file"
-        elif [[ -d "$elemento" ]]; then
-            # Es un directorio
-            echo "${prefijo}=== DIRECTORIO: $elemento ===" >> "$output_file"
-            echo "" >> "$output_file"
-            
-            # Procesar contenido del directorio
-            for sub_elemento in "$elemento"/*; do
-                # Verificar que el glob no esté vacío
-                [[ -e "$sub_elemento" ]] || continue
-                procesar_elemento "$sub_elemento" $((nivel + 1))
-            done
-        fi
+        echo "Archivo creado: $archivo_directorio"
     }
     
-    # Iterar sobre todos los elementos en el directorio actual
+    # Procesar todos los elementos del directorio actual
     for elemento in *; do
-        # Verificar que el elemento existe y no sea el archivo de salida ni helper.sh
-        if [[ -e "$elemento" && "$elemento" != "$output_file" && "$elemento" != "helper.sh" ]]; then
-            procesar_elemento "$elemento" 0
+        # Excluir helper.sh y el folder txt
+        if [[ -e "$elemento" && "$elemento" != "helper.sh" && "$elemento" != "$txt_folder" ]]; then
+            if [[ -f "$elemento" ]]; then
+                # Es un archivo - añadir a todo.txt
+                echo "=== $elemento ===" >> "$output_file"
+                cat "$elemento" >> "$output_file"
+                echo "" >> "$output_file"
+            elif [[ -d "$elemento" ]]; then
+                # Es un directorio - crear archivo separado
+                procesar_directorio "$elemento"
+            fi
         fi
     done
     
-    echo "Todos los archivos han sido concatenados en $output_file"
+    echo "Procesamiento completado:"
+    echo "- Archivos individuales → $output_file"
+    echo "- Directorios → archivos separados en $txt_folder/"
 }
 
-# Llamar la función
+# Ejecutar la función
 concatenar_archivos

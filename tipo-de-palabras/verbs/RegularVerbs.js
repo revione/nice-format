@@ -27,6 +27,12 @@ export const BLOCK_REGULARS = {
     "sparen", // ahorrar
     "feiern", // celebrar
     "öffnen", // abrir
+    "funktionieren", // funcionar
+    "passen", // encajar/quedar bien
+    "blinken", // parpadear
+    "lauten", // sonar/ser (para texto/contenido)
+    "fehlen", // faltar
+    "schnurren", // ronronear
   ],
 
   // --- Hogar ---
@@ -697,7 +703,7 @@ export const BLOCK_REGULARS = {
     "dahinbauen", // construir allá
   ],
 
-  // --- Prefijo: hin- (al otro lado)
+  // --- Prefijo: hin- (hacia allá)
   hin: [
     "hinlegen", // poner al otro lado
     "hinstellen", // colocar al otro lado
