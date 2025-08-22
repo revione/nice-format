@@ -18,16 +18,13 @@ const MorphologicalAnalyzer = () => {
 
     const countHtml = count ? `<span class="word-count-number" style="background-color: ${typeStyle.color}">${count}</span>` : "";
 
-    wordElement.innerHTML = `
-      <div>
-        <span class="word-text">
-          <span style="margin-right: ${count ? "5px" : "8px"};" title="${typeStyle.label}">${typeStyle.emoji}</span>
-          ${word}
-        </span>
-        <span class="learn-word-type">${typeStyle.label}</span>
-        ${countHtml}
-      </div>
-    `;
+    const wordEmoji = `<span style="margin-right: ${count ? "5px" : "8px"};" title="${typeStyle.label}">${typeStyle.emoji}</span>`;
+    const wordText = `<span class="word-text">${wordEmoji} ${word}</span>`;
+    // const learnWordType = `<span class="learn-word-type">${typeStyle.label}</span>`;
+    const countHtmlDiv = count ? `<div>${countHtml}</div>` : "";
+
+    // wordElement.innerHTML = ` ${wordText} ${learnWordType} ${countHtmlDiv}`;
+    wordElement.innerHTML = ` ${wordText} ${countHtmlDiv}`;
 
     return wordElement;
   };

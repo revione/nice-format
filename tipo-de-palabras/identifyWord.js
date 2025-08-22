@@ -5,9 +5,9 @@ import { CONJUNCTIONS } from "./word-types/conjunctions.js";
 import { ADVERBS, IRREGULAR_ADVERBS } from "./word-types/adverbs.js";
 import { NOUN_LEMMAS, detectNounBySuffix } from "./word-types/noun.js";
 
-import { isAdjective, enhancedAdjectiveDetection, isLikelyDeclinedAdjective } from "./word-types/adjectives.js";
+import { GermanAdjectives } from "./word-types/adjectives/detection.js";
 
-import { nonGermanWords } from "./nonGermanWords.js";
+import { nonGermanWords } from "./word-types/nonGermanWords.js";
 import { isVerbFormEnhanced, getVerbDictionaries, looksLikeFiniteVerbEnhanced } from "./VerbSystem.js";
 import { specialCases } from "./word-types/specialCases.js";
 
@@ -42,20 +42,20 @@ const NUMERIC_RE = /^\d+([.,]\d+)?$/;
 const ROMAN_NUMERAL_RE = /^(?=[ivxlcdm]+$)m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/i;
 
 // ------------------------- Limpieza -------------------------
-function cleanToken(raw) {
+const cleanToken = (raw) => {
   if (!raw) return "";
   let w = String(raw).trim();
   w = w.replace(/^[^\p{L}\p{N}\s-]+|[^\p{L}\p{N}\s-]+$/gu, "");
   return w;
-}
+};
 
 // ------------------------- Heurísticas para verbos -------------------------
-function looksLikeFiniteVerb(word) {
+const looksLikeFiniteVerb = (word) => {
   return looksLikeFiniteVerbEnhanced(word);
-}
+};
 
 // ------------------------- Heurísticas Mejoradas -------------------------
-function looksLikeNoun(word, { atSentenceStart = false } = {}) {
+const looksLikeNoun = (word, { atSentenceStart = false } = {}) => {
   const w = normalize(word);
 
   // 1. Verificar en diccionario conocido
@@ -69,14 +69,11 @@ function looksLikeNoun(word, { atSentenceStart = false } = {}) {
   if (suffixResult.isNoun) return true;
 
   return false;
-}
+};
 
-function looksLikeAdj(word, context = {}) {
-  const result = enhancedAdjectiveDetection(word, context);
-  return result.isAdjective;
-}
+const looksLikeAdj = (word, context = {}) => GermanAdjectives.isAdjective(word, context);
 
-function looksLikeAdverb(word) {
+const looksLikeAdverb = (word) => {
   const w = normalize(word);
 
   if (D.irregularAdverbs.has(w)) return true;
@@ -84,25 +81,9 @@ function looksLikeAdverb(word) {
   if (w === "hin" || w === "her") return true;
 
   return false;
-}
+};
 
-// Función mejorada para detectar formas declinadas - USANDO FUNCIONES DE ADJECTIVES.JS
-function isDeclinedForm(word) {
-  return isLikelyDeclinedAdjective(word);
-}
-
-function looksLikeDeclinedAdj(word) {
-  const w = normalize(word);
-  return ADJ_ENDINGS.some((end) => w.endsWith(end)) || isDeclinedForm(w);
-}
-
-// Función para detectar "noch" como conjunción en "weder...noch"
-function isNochConjunction(word, sentence) {
-  if (normalize(word) !== "noch") return false;
-  return /\bweder\b/i.test(sentence);
-}
-
-function hasAuxiliaryBefore(wordsInASentence, index) {
+const hasAuxiliaryBefore = (wordsInASentence, index) => {
   const verbDictionaries = getVerbDictionaries();
   let steps = 0;
   for (let i = index - 1; i >= 0 && steps < 6; i--) {
@@ -118,17 +99,17 @@ function hasAuxiliaryBefore(wordsInASentence, index) {
     break;
   }
   return false;
-}
+};
 
-function hasArticleBefore(wordsInASentence, index) {
+const hasArticleBefore = (wordsInASentence, index) => {
   for (let i = index - 1; i >= 0 && i >= index - 2; i--) {
     const w = normalize(wordsInASentence[i] || "");
     if (D.articlesAndDeterminants.has(w)) return true;
   }
   return false;
-}
+};
 
-function detectAmbiguity(word, opts = {}) {
+const detectAmbiguity = (word, opts = {}) => {
   const matches = [];
   const w = normalize(word);
 
@@ -155,10 +136,10 @@ function detectAmbiguity(word, opts = {}) {
   }
 
   return { matches, primary };
-}
+};
 
 // ------------------------- Núcleo: clasificar -------------------------
-export function identifyWord(raw, opts = {}) {
+export const identifyWord = (raw, opts = {}) => {
   const atSentenceStart = !!opts.atSentenceStart;
   const sentence = opts.sentence || "";
   const wordsInASentence = opts.wordsInASentence || [];
@@ -233,10 +214,9 @@ export function identifyWord(raw, opts = {}) {
   if (D.adv.has(w)) return { type: "adverb", rule: "lex-adverb" };
   if (D.nouns.has(w)) return { type: "noun", rule: "lex-noun" };
 
-  // *** SISTEMA DE ADJETIVOS MEJORADO ***
-  const adjectiveResult = isAdjective(original, {
-    wordsInASentence,
-    index,
+  const adjectiveResult = GermanAdjectives.analyze(original, {
+    tokens: wordsInASentence,
+    currentIndex: index,
     atSentenceStart,
   });
 
@@ -291,4 +271,4 @@ export function identifyWord(raw, opts = {}) {
 
   // 5) Fallback
   return { type: "other", rule: "fallback" };
-}
+};

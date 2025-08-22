@@ -5,16 +5,18 @@ concatenar_archivos() {
     local txt_folder="txt"
     local output_file="$txt_folder/todo.txt"
     
-    # Crear el directorio txt si no existe
-    mkdir -p "$txt_folder"
+    # Eliminar la carpeta txt si existe para empezar desde cero
+    [[ -d "$txt_folder" ]] && rm -rf "$txt_folder"
     
-    # Eliminar el archivo de salida si existe para reescribirlo completamente
-    [[ -f "$output_file" ]] && rm "$output_file"
+    # Crear el directorio txt
+    mkdir -p "$txt_folder"
     
     # Función recursiva para procesar directorios
     procesar_directorio() {
         local directorio="$1"
-        local archivo_directorio="$txt_folder/${directorio}.txt"
+        # Reemplazar las barras por guiones bajos para el nombre del archivo
+        local nombre_archivo=$(echo "$directorio" | tr '/' '_')
+        local archivo_directorio="$txt_folder/${nombre_archivo}.txt"
         
         # Crear el archivo para este directorio
         > "$archivo_directorio"
@@ -37,7 +39,8 @@ concatenar_archivos() {
             elif [[ -d "$elemento" ]]; then
                 # Es un subdirectorio - procesarlo recursivamente
                 procesar_directorio "$elemento"
-                echo "=== SUBDIRECTORIO: $nombre_elemento (ver $txt_folder/${elemento}.txt) ===" >> "$archivo_directorio"
+                local nombre_sub_archivo=$(echo "$elemento" | tr '/' '_')
+                echo "=== SUBDIRECTORIO: $nombre_elemento (ver $txt_folder/${nombre_sub_archivo}.txt) ===" >> "$archivo_directorio"
                 echo "" >> "$archivo_directorio"
             fi
         done
