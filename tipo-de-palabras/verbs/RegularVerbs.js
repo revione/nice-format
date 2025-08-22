@@ -714,7 +714,41 @@ export const BLOCK_REGULARS = {
   ],
 };
 
-export const getAllUniqueRegulars = () =>
-  Array.from(new Set(Object.values(BLOCK_REGULARS).flat()));
+export const ADDITIONAL_REGULAR_VERBS = [
+  // Verbos que aparecían como "otras" palabras
+  "bemerken", // notar/darse cuenta
+  "ergänzen", // completar/añadir
+  "beschäftigen", // ocuparse de
+  "erledigen", // terminar/resolver
+  "erinnern", // recordar
+  "bekommen", // recibir/obtener
+  "entwerfen", // diseñar/esbozar
+  "abschließen", // terminar/concluir
+  "abholen", // recoger/buscar
+
+  // Verbos de percepción/cognición
+  "wirken", // actuar/tener efecto/parecer
+  "scheinen", // parecer/brillar
+  "erkennen", // reconocer
+  "erstrecken", // extenderse
+
+  // Verbos de movimiento específicos
+  "hinaufgehen", // subir
+  "hinausgehen", // salir
+  "hinuntergehen", // bajar
+  "hinübergehen", // ir al otro lado
+  "herübergehen", // venir del otro lado
+  "zurückgehen", // volver/regresar
+
+  // Verbos de estado/condición
+  "ordnen", // ordenar/organizar (ya podría estar)
+  "fertigwerden", // terminar/acabar
+
+  // Verbos reflexivos/con se
+  "sich_beschäftigen", // ocuparse
+  "sich_erinnern", // recordarse
+];
+
+export const getAllUniqueRegulars = () => Array.from(new Set(Object.values(BLOCK_REGULARS).flat()));
 
 export const REGULARS = getAllUniqueRegulars();

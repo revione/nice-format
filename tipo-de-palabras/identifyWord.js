@@ -9,7 +9,7 @@ import { isAdjective, enhancedAdjectiveDetection, isLikelyDeclinedAdjective } fr
 
 import { nonGermanWords } from "./nonGermanWords.js";
 import { isVerbFormEnhanced, getVerbDictionaries, looksLikeFiniteVerbEnhanced } from "./VerbSystem.js";
-import { specialCases } from "./WordTypes.js";
+import { specialCases } from "./word-types/specialCases.js";
 
 // ------------------------- Utils y Diccionarios CORREGIDOS -------------------------
 

@@ -169,8 +169,8 @@ export const ADJECTIVES = [
   adj({ lemma: "entspannt", comp: "entspannter", sup: "am entspanntesten", domains: ["emotion", "state"], notes: ["Part. II als Adj."] }),
 
   // Tiempo
-  adj({ lemma: "spät", comp: "später", sup: "am spätesten", domains: ["time"] }),
-  adj({ lemma: "früh", comp: "früher", sup: "am frühesten", domains: ["time"] }),
+  adj({ lemma: "heutig", domains: ["time"], notes: ["'de hoy', 'actual'"] }),
+  adj({ lemma: "nächst", domains: ["time"], notes: ["superlative stem de 'nah'; significado lexicalizado 'próximo/siguiente'"] }),
 
   // Posición
   adj({ lemma: "ober", domains: ["position"], notes: ["upper, used in compounds"] }),
@@ -194,6 +194,21 @@ export const ADJECTIVES = [
   adj({ lemma: "kleinst", domains: ["size"], notes: ["superlative stem"] }),
   adj({ lemma: "leiser", domains: ["sound"], notes: ["comparative of leise"] }),
   adj({ lemma: "lauter", domains: ["sound"], notes: ["comparative of laut"] }),
+
+  // Calidad
+  adj({ lemma: "frisch", comp: "frischer", sup: "am frischesten", domains: ["quality"] }),
+  adj({ lemma: "best", domains: ["quality"], notes: ["superlative stem de 'gut' (attributivo: beste/besten)"] }),
+
+  // Idiomas / gentilicios
+  adj({ lemma: "englisch", domains: ["language"] }),
+
+  // Ordinales (números → adjetivos)
+  adj({ lemma: "erst", domains: ["number"], notes: ["ordinal stem 'primero' + terminaciones"] }),
+  adj({ lemma: "zweit", domains: ["number"], notes: ["ordinal stem 'segundo' + terminaciones"] }),
+  adj({ lemma: "hundertst", domains: ["number"], notes: ["ordinal stem 'centésimo' + terminaciones"] }),
+
+  // Participios como adjetivos
+  adj({ lemma: "aufgenommen", domains: ["state"], notes: ["Part. II als Adj. ('grabado')"] }),
 ];
 
 // ==============================
@@ -230,6 +245,8 @@ export const BLOCKS_ADJ = {
   POSITION: byDomain("position"),
   SPACE: byDomain("space"),
   SOUND: byDomain("sound"),
+  LANGUAGE: byDomain("language"),
+  NUMBER: byDomain("number"),
 };
 
 // ==============================

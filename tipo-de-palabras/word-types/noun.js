@@ -1,5 +1,5 @@
 // ==========================================
-// Sustantivos en alemán — esquema y bloques
+// Sustantivos en alemán — esquema y bloques (extendido)
 // ==========================================
 
 // Géneros
@@ -64,7 +64,6 @@ export const NOUN_SUFFIX_COMPOSITIONAL = [
   "büschel", // Haarbüschel, Blütenbüschel
 ];
 
-// Todos los sufijos juntos para análisis
 export const NOUN_SUFFIXES = [...NOUN_SUFFIX_DERIVATIONAL, ...NOUN_SUFFIX_COMPOSITIONAL];
 
 // ==========================================
@@ -216,9 +215,6 @@ export const NOUNS = [
   noun({ lemma: "leseecke", gender: GENDER.F, plural: "leseecken", domains: ["home"] }),
   noun({ lemma: "esszimmer", gender: GENDER.N, plural: "esszimmer", domains: ["home"] }),
 
-  // [Resto de sustantivos como estaban...]
-  // ... (mantengo solo algunos por brevedad, pero incluirías todos los que tenías)
-
   // --- Tiempo ---
   noun({ lemma: "zeit", gender: GENDER.F, plural: "zeiten", domains: ["time"] }),
   noun({ lemma: "jahr", gender: GENDER.N, plural: "jahre", domains: ["time"] }),
@@ -236,14 +232,98 @@ export const NOUNS = [
   noun({ lemma: "bildung", gender: GENDER.F, plural: "bildungen", domains: ["abstract"] }),
   noun({ lemma: "entwicklung", gender: GENDER.F, plural: "entwicklungen", domains: ["abstract"] }),
   noun({ lemma: "veränderung", gender: GENDER.F, plural: "veränderungen", domains: ["abstract"] }),
+
+  // --- Tecnología / Informática ---
+  noun({ lemma: "datei", gender: GENDER.F, plural: "dateien", domains: ["technology"] }),
+  noun({ lemma: "mb", gender: GENDER.N, plural: "mb", domains: ["technology"], notes: ["megabyte - unidad"] }),
+  noun({ lemma: "kb", gender: GENDER.N, plural: "kb", domains: ["technology"], notes: ["kilobyte - unidad"] }),
+  noun({ lemma: "gb", gender: GENDER.N, plural: "gb", domains: ["technology"], notes: ["gigabyte - unidad"] }),
+  noun({ lemma: "computer", gender: GENDER.M, plural: "computer", domains: ["technology"] }),
+  noun({ lemma: "rechner", gender: GENDER.M, plural: "rechner", domains: ["technology"] }),
+  noun({ lemma: "drucker", gender: GENDER.M, plural: "drucker", domains: ["technology"] }),
+  noun({ lemma: "kamera", gender: GENDER.F, plural: "kameras", domains: ["technology"] }),
+  noun({ lemma: "foto", gender: GENDER.N, plural: "fotos", domains: ["technology", "object"] }),
+  noun({ lemma: "bild", gender: GENDER.N, plural: "bilder", domains: ["object", "abstract"] }),
+  noun({ lemma: "aufnahme", gender: GENDER.F, plural: "aufnahmen", domains: ["technology", "abstract"] }),
+  noun({ lemma: "serie", gender: GENDER.F, plural: "serien", domains: ["abstract"] }),
+  noun({ lemma: "mailbox", gender: GENDER.F, plural: "mailboxes", domains: ["technology"] }),
+  noun({ lemma: "email", gender: GENDER.F, plural: "emails", domains: ["technology"], aliases: ["e-mail", "mail"] }),
+  noun({ lemma: "betreff", gender: GENDER.M, plural: "betreffs", domains: ["technology"] }),
+  noun({ lemma: "album", gender: GENDER.N, plural: "alben", domains: ["object"] }),
+
+  // --- Lugares específicos ---
+  noun({ lemma: "arbeitszimmer", gender: GENDER.N, plural: "arbeitszimmer", domains: ["home", "place"] }),
+  noun({ lemma: "keller", gender: GENDER.M, plural: "keller", domains: ["home", "place"] }),
+  noun({ lemma: "schuppen", gender: GENDER.M, plural: "schuppen", domains: ["place", "object"] }),
+  noun({ lemma: "ordner", gender: GENDER.M, plural: "ordner", domains: ["object"] }),
+  noun({ lemma: "mappe", gender: GENDER.F, plural: "mappen", domains: ["object"] }),
+
+  // --- Objetos del hogar ---
+  noun({ lemma: "kleidungsstück", gender: GENDER.N, plural: "kleidungsstücke", domains: ["object"] }),
+  noun({ lemma: "umhängetasche", gender: GENDER.F, plural: "umhängetaschen", domains: ["object"] }),
+  noun({ lemma: "plakat", gender: GENDER.N, plural: "plakate", domains: ["object"] }),
+  noun({ lemma: "herzsymbol", gender: GENDER.N, plural: "herzsymbole", domains: ["object"] }),
+  noun({ lemma: "grünfläche", gender: GENDER.F, plural: "grünflächen", domains: ["place"] }),
+  noun({ lemma: "vegetation", gender: GENDER.F, plural: null, domains: ["nature"], notes: ["no plural usual"] }),
+  noun({ lemma: "gartentor", gender: GENDER.N, plural: "gartentore", domains: ["object", "place"] }),
+
+  // --- Tiempo específico ---
+  noun({ lemma: "nachmittag", gender: GENDER.M, plural: "nachmittage", domains: ["time"] }),
+  noun({ lemma: "morgen", gender: GENDER.M, plural: "morgen", domains: ["time"], aliases: ["vormittag"] }),
+  noun({ lemma: "vortag", gender: GENDER.M, plural: "vortage", domains: ["time"] }),
+
+  // --- Abstractos ---
+  noun({ lemma: "übersicht", gender: GENDER.F, plural: "übersichten", domains: ["abstract"] }),
+  noun({ lemma: "ordnung", gender: GENDER.F, plural: "ordnungen", domains: ["abstract"] }),
+  noun({ lemma: "aufgabe", gender: GENDER.F, plural: "aufgaben", domains: ["abstract"] }),
+  noun({ lemma: "schritt", gender: GENDER.M, plural: "schritte", domains: ["abstract"] }),
+  noun({ lemma: "problem", gender: GENDER.N, plural: "probleme", domains: ["abstract"] }),
+  noun({ lemma: "plan", gender: GENDER.M, plural: "pläne", domains: ["abstract"] }),
+  noun({ lemma: "ergebnis", gender: GENDER.N, plural: "ergebnisse", domains: ["abstract"] }),
+  noun({ lemma: "änderung", gender: GENDER.F, plural: "änderungen", domains: ["abstract"] }),
+  noun({ lemma: "einstellung", gender: GENDER.F, plural: "einstellungen", domains: ["abstract"] }),
+  noun({ lemma: "lizenz", gender: GENDER.F, plural: "lizenzen", domains: ["abstract"] }),
+  noun({ lemma: "hilfe", gender: GENDER.F, plural: "hilfen", domains: ["abstract"] }),
+  noun({ lemma: "entscheidung", gender: GENDER.F, plural: "entscheidungen", domains: ["abstract"] }),
+  noun({ lemma: "beschreibung", gender: GENDER.F, plural: "beschreibungen", domains: ["abstract"] }),
+  noun({ lemma: "freundlichkeit", gender: GENDER.F, plural: null, domains: ["abstract"], notes: ["no plural usual"] }),
+  noun({ lemma: "notiz", gender: GENDER.F, plural: "notizen", domains: ["object", "abstract"] }),
+  noun({ lemma: "randbemerkung", gender: GENDER.F, plural: "randbemerkungen", domains: ["abstract"] }),
+  noun({ lemma: "liste", gender: GENDER.F, plural: "listen", domains: ["abstract", "object"] }),
+  noun({ lemma: "paket", gender: GENDER.N, plural: "pakete", domains: ["object"] }),
+
+  // --- Colores y características ---
+  noun({ lemma: "farbton", gender: GENDER.M, plural: "farbtöne", domains: ["abstract"] }),
+  noun({ lemma: "farbe", gender: GENDER.F, plural: "farben", domains: ["abstract"] }),
+  noun({ lemma: "form", gender: GENDER.F, plural: "formen", domains: ["abstract"] }),
+  noun({ lemma: "gesicht", gender: GENDER.N, plural: "gesichter", domains: ["body"] }),
+  noun({ lemma: "wangenknochen", gender: GENDER.M, plural: "wangenknochen", domains: ["body"] }),
+
+  // --- Otros ---
+  noun({ lemma: "wetter", gender: GENDER.N, plural: null, domains: ["nature"], notes: ["no plural usual"] }),
+  noun({ lemma: "luft", gender: GENDER.F, plural: null, domains: ["nature"], notes: ["no plural usual"] }),
+  noun({ lemma: "licht", gender: GENDER.N, plural: "lichter", domains: ["abstract", "nature"] }),
+  noun({ lemma: "störung", gender: GENDER.F, plural: "störungen", domains: ["abstract"] }),
+  noun({ lemma: "besucher", gender: GENDER.M, plural: "besucher", domains: ["people"] }),
+  noun({ lemma: "gerät", gender: GENDER.N, plural: "geräte", domains: ["object"] }),
+  noun({ lemma: "dokument", gender: GENDER.N, plural: "dokumente", domains: ["object"] }),
+  noun({ lemma: "testseite", gender: GENDER.F, plural: "testseiten", domains: ["object"] }),
+
+  // --- Familia ---
+  noun({ lemma: "bruder", gender: GENDER.M, plural: "brüder", domains: ["people", "family"] }),
+  noun({ lemma: "schwester", gender: GENDER.F, plural: "schwestern", domains: ["people", "family"] }),
+
+  // --- Marcas/productos específicos ---
+  noun({ lemma: "hubsan", gender: GENDER.F, plural: "hubsans", domains: ["technology"], notes: ["marca de drones"] }),
+  noun({ lemma: "drohne", gender: GENDER.F, plural: "drohnen", domains: ["technology"] }),
+
+  // --- Cuantificadores / Medidas léxicas ---
+  noun({ lemma: "paar", gender: GENDER.N, plural: "paare", domains: ["quantity"], notes: ["como cuantificador: ein paar = unos pocos"] }),
+
+  noun({ lemma: "bescheid", gender: GENDER.M, plural: "bescheide", domains: ["abstract", "time"], notes: ["como cuantificador: ein paar = unos pocos"] }),
 ];
 
-// ==========================================
-// BLOQUES por dominio (útiles para filtros rápidos)
-// ==========================================
-function byDomain(domain) {
-  return NOUNS.filter((n) => n.domains.includes(domain)).map((n) => n.lemma);
-}
+const byDomain = (domain) => NOUNS.filter((n) => n.domains.includes(domain)).map((n) => n.lemma);
 
 export const BLOCKS_NOUNS = {
   PEOPLE: byDomain("people"),
@@ -255,9 +335,17 @@ export const BLOCKS_NOUNS = {
   OBJECT: byDomain("object"),
   ABSTRACT: byDomain("abstract"),
   TIME: byDomain("time"),
-  // ... otros dominios
+  QUANTITY: byDomain("quantity"),
 };
 
 export const NOUN_ALIAS_INDEX = Object.fromEntries(NOUNS.flatMap((n) => (n.aliases || []).map((a) => [a.toLowerCase(), n.lemma])));
 export const NOUN_INDEX = Object.fromEntries(NOUNS.map((n) => [n.lemma, n]));
 export const NOUN_LEMMAS = Array.from(new Set(NOUNS.map((n) => n.lemma)));
+
+export const PRONOUNS = {
+  deren: {
+    pos: "pronoun",
+    features: { case: "gen", number: "pl|sg-fem", source: "die(pl)/sie(fem)" },
+    notes: ["genitivo relativo/posesivo de 'die' (plural) o 'sie' (femenino)"],
+  },
+};

@@ -6,17 +6,7 @@ export const PRON_PERSONAL = {
   nominativ: ["ich", "du", "er", "sie", "es", "wir", "ihr", "sie", "Sie"],
   akkusativ: ["mich", "dich", "ihn", "sie", "es", "uns", "euch", "sie", "Sie"],
   dativ: ["mir", "dir", "ihm", "ihr", "ihm", "uns", "euch", "ihnen", "Ihnen"],
-  genitiv: [
-    "meiner",
-    "deiner",
-    "seiner",
-    "ihrer",
-    "seiner",
-    "unser",
-    "euer",
-    "ihrer",
-    "Ihrer",
-  ],
+  genitiv: ["meiner", "deiner", "seiner", "ihrer", "seiner", "unser", "euer", "ihrer", "Ihrer"],
 };
 
 export const PRON_REFLEXIVE = ["sich"];
@@ -79,6 +69,8 @@ export const PRON_DEMONSTRATIVE = [
   "derjenige",
   "diejenige",
   "dasjenige",
+  "deren", // genitivo de "die" (plural) o "sie"
+  "dessen", // genitivo de "der/das"
 ];
 
 export const PRON_INTERROGATIVE = [
@@ -110,41 +102,13 @@ export const PRON_INDEFINITE = [
   "mancher",
   "manche",
   "manches",
+  "paar", // "ein paar" - cantidad indefinida pequeña
 ];
 
-export const PRON_QUANTIFIERS = [
-  "alle",
-  "viele",
-  "wenige",
-  "viel",
-  "wenig",
-  "sämtliche",
-  "etliche",
-  "zahlreiche",
-];
+export const PRON_QUANTIFIERS = ["alle", "viele", "wenige", "viel", "wenig", "sämtliche", "etliche", "zahlreiche"];
 
-export const PRON_ADVERBIAL = [
-  "dabei",
-  "wo",
-  "worauf",
-  "woraus",
-  "womit",
-  "davon",
-  "darauf", // y muchas más…
-];
+export const PRON_ADVERBIAL = ["dabei", "wo", "worauf", "woraus", "womit", "davon", "darauf"];
 
-// =====================
-// Export conjunto plano
-// =====================
 export const PRONOUNS = Array.from(
-  new Set([
-    ...Object.values(PRON_PERSONAL).flat(),
-    ...PRON_REFLEXIVE,
-    ...PRON_POSESSIVE,
-    ...PRON_DEMONSTRATIVE,
-    ...PRON_INTERROGATIVE,
-    ...PRON_INDEFINITE,
-    ...PRON_QUANTIFIERS,
-    ...PRON_ADVERBIAL,
-  ])
+  new Set([...Object.values(PRON_PERSONAL).flat(), ...PRON_REFLEXIVE, ...PRON_POSESSIVE, ...PRON_DEMONSTRATIVE, ...PRON_INTERROGATIVE, ...PRON_INDEFINITE, ...PRON_QUANTIFIERS, ...PRON_ADVERBIAL])
 );

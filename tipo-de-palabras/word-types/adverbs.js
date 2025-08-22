@@ -1,7 +1,3 @@
-// =====================
-// Adverbios en alemán
-// =====================
-
 export const ADV_PLACE = [
   "hier",
   "dort",
@@ -27,6 +23,17 @@ export const ADV_PLACE = [
   "daran",
   "darauf",
   "daraus",
+  "dorthin",
+  "hinauf",
+  "hinaus",
+  "hinunter",
+  "draußen",
+  "drinnen",
+  "hinüber",
+  "herüber",
+  "dahin",
+  "hinein",
+  "heraus",
 ];
 
 export const ADV_TIME = [
@@ -64,6 +71,8 @@ export const ADV_TIME = [
   "einmal",
   "später",
   "früher",
+  "erst",
+  "wieder",
 ];
 
 export const ADV_MANNER = [
@@ -89,7 +98,10 @@ export const ADV_MANNER = [
   "unnötig",
   "flexibel",
   "angenehm",
-  "recht", // correctamente, bastante
+  "recht",
+  "weiter",
+  "lieber",
+  "fertig",
 ];
 
 export const ADV_DEGREE = [
@@ -117,20 +129,13 @@ export const ADV_DEGREE = [
   "üblicherweise",
   "viel",
   "wenig",
-  "etwa", // aproximadamente
-  "eher", // más bien, antes bien
+  "etwa",
+  "eher",
+  "auch",
+  "nicht",
 ];
 
-export const ADV_MODALITY = [
-  "wahrscheinlich",
-  "vielleicht",
-  "sicher",
-  "bestimmt",
-  "definitiv",
-  "klar",
-  "eigentlich",
-  "wohl", // probablemente
-];
+export const ADV_MODALITY = ["wahrscheinlich", "vielleicht", "sicher", "bestimmt", "definitiv", "klar", "eigentlich", "wohl"];
 
 export const ADV_CONNECTIVE = [
   "dann",
@@ -155,21 +160,8 @@ export const ADV_CONNECTIVE = [
   "also",
 ];
 
-export const ADV_PARTICLES = [
-  "ja",
-  "nein",
-  "oh",
-  "hm",
-  "ok",
-  "na",
-  "super",
-  "danke",
-  "mal", // partícula modal: Komm mal her!
-];
+export const ADV_PARTICLES = ["ja", "nein", "oh", "hm", "ok", "na", "super", "danke", "mal"];
 
-// =====================
-// Export conjunto plano
-// =====================
 export const BLOCKS_ADVERBS = {
   PLACE: ADV_PLACE,
   TIME: ADV_TIME,
@@ -184,53 +176,43 @@ export const ADVERBS = Array.from(new Set([...ADV_PLACE, ...ADV_TIME, ...ADV_MAN
 
 export const IRREGULAR_ADVERBS = [
   "gern",
-  "gerne", // manera: con gusto
-  "kaum", // grado: apenas
-  "schon", // tiempo: ya
-  "eben", // conectivo: precisamente
-  "mal", // partícula: una vez / partícula modal
-  "wohl", // modalidad: probablemente
-  "etwa", // grado: aproximadamente
-  "fast", // grado: casi
-  "ziemlich", // grado: bastante
-  "ganz", // grado: completamente
-  "recht", // manera: correctamente / bastante
-  "eher", // grado: más bien
-  "doch", // conectivo: sin embargo
-  "ja", // partícula: sí
-  "nein", // partícula: no
-  "später", // tiempo: más tarde
-  "früher", // tiempo: antes/más temprano
+  "gerne",
+  "kaum",
+  "schon",
+  "eben",
+  "mal",
+  "wohl",
+  "etwa",
+  "fast",
+  "ziemlich",
+  "ganz",
+  "recht",
+  "eher",
+  "doch",
+  "ja",
+  "nein",
+  "später",
+  "früher",
+  "wieder",
+  "erst",
+  "auch",
+  "nicht",
+  "weiter",
+  "lieber",
+  "fertig",
+  "hinein",
+  "heraus",
+  "dorthin",
+  "hinauf",
+  "hinaus",
+  "hinunter",
+  "draußen",
+  "drinnen",
+  "hinüber",
+  "herüber",
+  "dahin",
 ];
 
-// =====================
-// FUNCIONES ÚTILES
-// =====================
+export const isAdverb = (word) => ADVERBS.includes(String(word).toLowerCase());
 
-/**
- * Verifica si una palabra es un adverbio irregular
- * @param {string} word - palabra a verificar
- * @returns {boolean}
- */
-export function isIrregularAdverb(word) {
-  return IRREGULAR_ADVERBS.includes(word.toLowerCase());
-}
-
-/**
- * Obtiene la categoría de un adverbio
- * @param {string} word - palabra a verificar
- * @returns {string|null} - categoría del adverbio o null
- */
-export function getAdverbCategory(word) {
-  const normalized = word.toLowerCase();
-
-  if (ADV_PLACE.includes(normalized)) return "place";
-  if (ADV_TIME.includes(normalized)) return "time";
-  if (ADV_MANNER.includes(normalized)) return "manner";
-  if (ADV_DEGREE.includes(normalized)) return "degree";
-  if (ADV_MODALITY.includes(normalized)) return "modality";
-  if (ADV_CONNECTIVE.includes(normalized)) return "connective";
-  if (ADV_PARTICLES.includes(normalized)) return "particles";
-
-  return null;
-}
+export const isIrregularAdverb = (word) => IRREGULAR_ADVERBS.includes(String(word).toLowerCase());
