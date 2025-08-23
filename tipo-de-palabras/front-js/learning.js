@@ -1,3 +1,4 @@
+// === learning.js ===
 import { WORD_TYPES } from "../word-types/types.js";
 
 const getTypeStyle = (id) => Object.values(WORD_TYPES).find((t) => t.id === id) || WORD_TYPES.OTHER;
@@ -47,10 +48,17 @@ function renderLearningList(container, counter, store) {
   }
 }
 
+/**
+ * Devuelve info de la selección dentro de `container`.
+ * - items: [{text, type}] por cada span .word-colored dentro del rango
+ * - text: texto unido (para guardar como "frase")
+ * - type: "phrase" si hay >1 ítem o tipos mixtos; o el tipo único si solo hay uno
+ */
 function getSelectionInfo(container) {
   if (!container) return null;
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
+
   const range = sel.getRangeAt(0);
   const within = container.contains(range.commonAncestorContainer) || range.commonAncestorContainer === container;
   if (!within) return null;
@@ -67,16 +75,29 @@ function getSelectionInfo(container) {
   });
 
   if (inRange.length === 0) return null;
-  if (inRange.length === 1) {
-    const s = inRange[0];
-    return { text: s.textContent.toLowerCase(), type: s.dataset.type || "phrase" };
-  }
-  const text = inRange
-    .map((n) => n.textContent)
+
+  const items = inRange.map((n) => ({
+    text: (n.textContent || "").toLowerCase(),
+    type: n.dataset.type || "other",
+  }));
+
+  const joinedText = items
+    .map((i) => i.text)
     .join(" ")
-    .toLowerCase();
-  const types = Array.from(new Set(inRange.map((n) => n.dataset.type).filter(Boolean)));
-  return { text, type: types.length === 1 ? types[0] : "phrase" };
+    .trim();
+  const types = Array.from(new Set(items.map((i) => i.type)));
+  const unifiedType = items.length === 1 ? items[0].type : "phrase"; // ⟵ Fuerza "phrase" si hay varias
+
+  return {
+    items,
+    text: joinedText,
+    type: unifiedType,
+  };
+}
+
+function clearNativeSelection() {
+  const sel = window.getSelection && window.getSelection();
+  if (sel && sel.removeAllRanges) sel.removeAllRanges();
 }
 
 function initLearning() {
@@ -98,33 +119,51 @@ function initLearning() {
   };
 
   document.addEventListener("app:highlight-rendered", reapply);
-
   const refreshLearningUI = () => renderLearningList(list, count, store);
 
   document.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
     if (key !== "d" && key !== "f") return;
 
-    const sel = getSelectionInfo(content);
-    if (sel) {
+    const selInfo = getSelectionInfo(content);
+
+    // ——— Con selección ———
+    if (selInfo) {
       e.preventDefault();
-      if (key === "d") store.add(sel.text, sel.type);
-      if (key === "f") store.remove(sel.text, sel.type);
+
+      const { items, text, type } = selInfo;
+
+      if (items.length > 1) {
+        // Varias palabras: SIEMPRE guardar/quitar como UNA sola "frase"
+        if (key === "d") store.add(text, "phrase");
+        if (key === "f") store.remove(text, "phrase");
+      } else {
+        // Solo una palabra seleccionada: actúa sobre esa palabra
+        const only = items[0];
+        if (key === "d") store.add(only.text, only.type || "other");
+        if (key === "f") store.remove(only.text, only.type || "other");
+      }
+
       refreshLearningUI();
       reapply();
+      clearNativeSelection();
       return;
     }
 
+    // ——— Sin selección: opera sobre la palabra activa (hover) ———
     const active = content.querySelector(".word-colored.word-active");
     if (!active) return;
+
     const word = (active.textContent || "").toLowerCase();
     const type = active.dataset.type || "other";
 
     e.preventDefault();
     if (key === "d") store.add(word, type);
     if (key === "f") store.remove(word, type);
+
     refreshLearningUI();
     reapply();
+    clearNativeSelection();
   });
 
   box.style.display = "none";
