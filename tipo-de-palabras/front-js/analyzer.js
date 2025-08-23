@@ -1,4 +1,4 @@
-import { identifier } from "../identifyWord.js";
+import { identifier } from "../indentifier/index.js";
 import { WORD_TYPES } from "../word-types/types.js";
 
 const getTypeStyle = (id) => Object.values(WORD_TYPES).find((t) => t.id === id) || WORD_TYPES.OTHER;

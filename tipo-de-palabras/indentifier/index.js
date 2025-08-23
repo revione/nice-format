@@ -3,17 +3,18 @@
 // Recibe un objeto plano con destructuring
 // =====================================================
 
-import { ARTICLES, ARTICLES_AND_DETERMINANTS } from "./word-types/articles.js";
-import { PREPOSITIONS } from "./word-types/prepositions.js";
-import { PRONOUNS } from "./word-types/pronouns.js";
-import { CONJUNCTIONS } from "./word-types/conjunctions.js";
-import { ADVERBS, IRREGULAR_ADVERBS } from "./word-types/adverbs.js";
-import { NOUN_LEMMAS, detectNounBySuffix } from "./word-types/noun.js";
-import { GermanAdjectives } from "./word-types/adjectives/detection.js";
-import { nonGermanWords } from "./word-types/nonGermanWords.js";
-import { isVerbFormEnhanced, getVerbDictionaries, looksLikeFiniteVerbEnhanced } from "./verbs/VerbSystem.js";
-import { specialCases } from "./word-types/specialCases.js";
-import { detectNumber } from "./word-types/numbers/recognizer.js";
+import { ARTICLES, ARTICLES_AND_DETERMINANTS } from "../word-types/articles.js";
+import { PREPOSITIONS } from "../word-types/prepositions.js";
+import { PRONOUNS } from "../word-types/pronouns.js";
+import { CONJUNCTIONS } from "../word-types/conjunctions.js";
+import { ADVERBS, IRREGULAR_ADVERBS } from "../word-types/adverbs.js";
+import { NOUN_LEMMAS, detectNounBySuffix } from "../word-types/noun.js";
+import { GermanAdjectives } from "../word-types/adjectives/detection.js";
+import { nonGermanWords } from "../word-types/nonGermanWords.js";
+import { specialCases } from "../word-types/specialCases.js";
+import { detectNumber } from "../word-types/numbers/recognizer.js";
+
+import { isVerbFormEnhanced, getVerbDictionaries, looksLikeFiniteVerbEnhanced } from "../verbs/VerbSystem.js";
 
 // =====================================================
 // MULTI-WORD PHRASES CONFIGURATION
