@@ -2,7 +2,10 @@ import { identifier } from "../identifyWord.js";
 import { WORD_TYPES } from "../word-types/types.js";
 
 const getTypeStyle = (id) => Object.values(WORD_TYPES).find((t) => t.id === id) || WORD_TYPES.OTHER;
-const cleanWord = (w) => w.replace(/[^\p{L}\p{N}\s-]/gu, "");
+const cleanWord = (w) => {
+  const s = w.replace(/[^\p{L}\p{N}\s-]/gu, "");
+  return s === "-" ? "" : s;
+};
 
 function analyzeText(text) {
   const parts = text.split(/(\s+|[–—])/);
@@ -62,7 +65,7 @@ function analyzeText(text) {
     }
 
     const type = res.type || "other";
-    const lemma = res?.multiWordInfo?.lemma || cleaned;
+    const lemma = res?.multiWordInfo?.lemma || res?.numberInfo?.lemma || cleaned;
     const style = getTypeStyle(type);
 
     segments.push({

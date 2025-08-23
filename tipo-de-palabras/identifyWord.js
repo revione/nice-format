@@ -253,7 +253,9 @@ export const identifier = ({ word, words = [], index = 0, atSentenceStart = fals
   // STEP 2: NÚMEROS Y ORDINALES
   // =====================================================
 
-  if (NUMERIC_RE.test(original)) return { type: "number", rule: "numeric" };
+  if (NUMERIC_RE.test(original)) {
+    if (!original.includes(".")) return { type: "number", rule: "numeric" };
+  }
   if (ROMAN_NUMERAL_RE.test(w)) return { type: "number", rule: "roman-numeral" };
   if (specialCases[w] === "number") return { type: "number", rule: "special-number" };
 

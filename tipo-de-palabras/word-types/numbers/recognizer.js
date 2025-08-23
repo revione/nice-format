@@ -37,6 +37,12 @@ const PATTERNS = {
 
   // Entero simple: 123
   integer: /^\d+$/,
+
+  // Hora HH:MM (10:30, 9:05)
+  timeHHMM: /^\d{1,2}:\d{2}$/,
+
+  // Hora HH.MM (10.30, 9.05)
+  timeHHdotMM: /^\d{1,2}\.\d{2}$/,
 };
 
 // =====================================================
@@ -221,6 +227,34 @@ export function detectNumber(word, context = {}) {
   // PATRONES NUMÉRICOS (REGEX)
   // =====================================================
 
+  // Hora HH:MM
+  if (PATTERNS.timeHHMM.test(lower)) {
+    const [hh, mm] = lower.split(":").map((n) => parseInt(n, 10));
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+      result.isNumber = true;
+      result.type = "time";
+      result.subtype = "clock";
+      result.lemma = `${hh}:${String(mm).padStart(2, "0")}`;
+      result.value = { hours: hh, minutes: mm };
+      result.confidence = 0.96;
+      return result;
+    }
+  }
+
+  // Hora HH.MM
+  if (PATTERNS.timeHHdotMM.test(lower)) {
+    const [hh, mm] = lower.split(".").map((n) => parseInt(n, 10));
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+      result.isNumber = true;
+      result.type = "time";
+      result.subtype = "clock";
+      result.lemma = `${hh}.${String(mm).padStart(2, "0")}`;
+      result.value = { hours: hh, minutes: mm };
+      result.confidence = 0.96;
+      return result;
+    }
+  }
+
   // Números decimales alemanes: 3,5 / 1.234,56
   if (PATTERNS.decimal.test(word)) {
     const value = parseGermanNumber(word);
@@ -291,6 +325,18 @@ export function detectNumber(word, context = {}) {
     result.subtype = "numeric";
     result.value = value;
     result.confidence = 0.95;
+    return result;
+  }
+
+  // Entero simple: 123 (cardinal)
+  if (PATTERNS.integer.test(word)) {
+    const value = parseInt(word, 10);
+    result.isNumber = true;
+    result.type = "cardinal";
+    result.subtype = "integer";
+    result.value = value;
+    result.lemma = lower;
+    result.confidence = 0.9;
     return result;
   }
 
@@ -382,7 +428,19 @@ function tokenize(sentence) {
   // - Ordinales: 30.
   // - Porcentajes: 50%
   // - Rangos: 10-20
-  const regex = /[A-Za-zÄÖÜäöüß]+(?:-[A-Za-zÄÖÜäöüß]+)*|\d+(?:\.\d{3})*(?:,\d+)?%?|\d+\.|\d+\/\d+|\d+[-–—]\d+|[^\s]/g;
+  const regex = new RegExp(
+    String.raw`
+      [A-Za-zÄÖÜäöüß]+(?:-[A-Za-zÄÖÜäöüß]+)*|      # palabras (con guiones)
+      \d{1,2}:\d{2}|                               # HH:MM
+      \d+(?:\.\d{3})*(?:,\d+)?%?|                  # 1.234,56  o  50%
+      \d+\.|                                       # 30.
+      \d+\/\d+|                                    # 1/2
+      \d+[-–—]\d+|                                 # 10-20
+      \d+|                                         # entero
+      [^\s]                                        # símbolo suelto
+    `,
+    "g"
+  );
 
   let match;
   while ((match = regex.exec(sentence)) !== null) {
