@@ -5,6 +5,7 @@ export const TOUCH_SOFTNESS = {
   glatt: { comp: "glatter", sup: "glattest" },
   grob: { comp: "gröber", sup: "gröbst", irregularities: ["umlaut"] },
   fein: { comp: "feiner", sup: "feinst" },
+  sanft: { comp: "sanfter", sup: "sanftest" },
 };
 
 export const TOUCH_SURFACE = {

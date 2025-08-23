@@ -712,6 +712,22 @@ export const BLOCK_REGULARS = {
     "hinmalen", // pintar al otro lado
     "hinbauen", // construir al otro lado
   ],
+
+  grupo_por_definir: [
+    "ergänzen", // completar/añadir
+    "beschäftigen", // ocuparse de
+    "erledigen", // terminar/resolver
+    "erinnern", // recordar
+    "bekommen", // recibir/obtener
+    "entwerfen", // diseñar/esbozar
+    "abholen", // recoger/buscar
+
+    // separables
+    "zurückgehen", // volver/regresar
+    "zusehen", // mirar/observar
+    "abschließen", // terminar/concluir
+    "abholen", // recoger/buscar
+  ],
 };
 
 export const ADDITIONAL_REGULAR_VERBS = [
@@ -749,6 +765,4 @@ export const ADDITIONAL_REGULAR_VERBS = [
   "sich_erinnern", // recordarse
 ];
 
-export const getAllUniqueRegulars = () => Array.from(new Set(Object.values(BLOCK_REGULARS).flat()));
-
-export const REGULARS = getAllUniqueRegulars();
+export const REGULARS = Array.from(new Set(Object.values(BLOCK_REGULARS).flat()));

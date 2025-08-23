@@ -1,6 +1,7 @@
-import { IRREGULARS } from "./verbs/IrregularVerbs.js";
-import { REGULARS } from "./verbs/RegularVerbs.js";
-import { generateVerbDictionaries, getVerbParadigm } from "./VerbForms.js";
+import { IRREGULARS } from "./lemmas/IrregularVerbs.js";
+import { REGULARS } from "./lemmas/RegularVerbs.js";
+import { INSEPARABLE_PREFIXES, SEPARABLE_PREFIXES } from "./lemmas/prefixes.js";
+import { AUX_BY_LEMMA } from "./lemmas/aux_by_lemma.js";
 
 const normalize = (word) => word.toLowerCase();
 
@@ -8,6 +9,195 @@ const normalize = (word) => word.toLowerCase();
 // CACHE GLOBAL DE DICCIONARIOS
 // =====================
 let verbDictionaries = null;
+
+function buildRegular(lemma) {
+  // Solo -en o -n
+  const m = lemma.match(/^(.*?)(en|n)$/);
+  if (!m) return null;
+
+  let stem = m[1];
+
+  // Para stems que acaban en s/ß/x/z, la terminación de du es -t (no -st)
+  const hasSibilant = /[sßxz]$/.test(stem);
+
+  // Ejemplos: arbeiten → arbeitest, atmen → atmest, pero wohnen → wohnst
+  const needsE = (/[td]$/.test(stem) || /[^aeiouäöüy][mn]$/.test(stem)) && !hasSibilant;
+
+  const praesens = {
+    ich: stem + "e",
+    du: hasSibilant ? stem + "t" : stem + (needsE ? "est" : "st"),
+    "er/sie/es": stem + (needsE ? "et" : "t"),
+    wir: lemma,
+    ihr: stem + (needsE ? "et" : "t"),
+    "sie/Sie": lemma,
+  };
+
+  const präteritum = {
+    ich: stem + "te",
+    du: stem + (needsE ? "etest" : "test"),
+    "er/sie/es": stem + "te",
+    wir: stem + "ten",
+    ihr: stem + (needsE ? "etet" : "tet"),
+    "sie/Sie": stem + "ten",
+  };
+
+  let partizip2;
+
+  // Verificar si tiene prefijo inseparable
+  const hasInseparablePrefix = INSEPARABLE_PREFIXES.some((p) => lemma.startsWith(p));
+
+  if (hasInseparablePrefix) {
+    partizip2 = stem + "t";
+  } else {
+    // Verificar prefijo separable
+    const separablePrefix = SEPARABLE_PREFIXES.find((p) => lemma.startsWith(p));
+    if (separablePrefix) {
+      const baseStem = lemma.slice(separablePrefix.length);
+      const baseMatch = baseStem.match(/^(.*?)(en|n)$/);
+      if (baseMatch) {
+        partizip2 = separablePrefix + "ge" + baseMatch[1] + "t";
+      } else {
+        partizip2 = "ge" + stem + "t"; // fallback
+      }
+    } else {
+      partizip2 = "ge" + stem + "t";
+    }
+  }
+
+  const aux = AUX_BY_LEMMA[lemma] || "haben";
+
+  return {
+    lemma,
+    aux,
+    praesens,
+    präteritum,
+    partizip2,
+    imperativ: {
+      du: stem + (needsE ? "e" : ""),
+      ihr: stem + (needsE ? "et" : "t"),
+      Sie: lemma + " Sie",
+    },
+    zuInfinitiv: "zu " + lemma,
+  };
+}
+
+export function getVerbParadigm(lemma) {
+  const key = normalize(lemma);
+  if (IRREGULARS[key]) return IRREGULARS[key];
+  return buildRegular(lemma);
+}
+
+export function generateVerbDictionaries(lemmas) {
+  const finite = new Set();
+  const participles = new Set();
+  const imperatives = new Set();
+
+  // LIMPIADO: Solo auxiliares esenciales, sin duplicados innecesarios
+  const auxiliaries = new Set(
+    [
+      // sein
+      "sein",
+      "bin",
+      "bist",
+      "ist",
+      "sind",
+      "seid",
+      "war",
+      "warst",
+      "waren",
+      "wart",
+      // haben
+      "haben",
+      "habe",
+      "hast",
+      "hat",
+      "habt",
+      "hatte",
+      "hattest",
+      "hatten",
+      "hattet",
+      // werden
+      "werden",
+      "werde",
+      "wirst",
+      "wird",
+      "werdet",
+      "wurde",
+      "wurdest",
+      "wurden",
+      "wurdet",
+    ].map(normalize)
+  );
+
+  const formToLemma = new Map();
+
+  for (const lemma of lemmas) {
+    const paradigm = getVerbParadigm(lemma);
+    if (!paradigm) continue;
+
+    const normalizedLemma = normalize(lemma);
+
+    // Función auxiliar para registrar forma→lema
+    const registerForm = (form, category) => {
+      if (!form) return;
+      const normalizedForm = normalize(form);
+
+      // Añadir a diccionario correspondiente
+      if (category === "finite") finite.add(normalizedForm);
+      else if (category === "participle") participles.add(normalizedForm);
+      else if (category === "imperative") imperatives.add(normalizedForm);
+
+      // Registrar en mapa forma→lema
+      if (!formToLemma.has(normalizedForm)) {
+        formToLemma.set(normalizedForm, []);
+      }
+      if (!formToLemma.get(normalizedForm).includes(normalizedLemma)) {
+        formToLemma.get(normalizedForm).push(normalizedLemma);
+      }
+    };
+
+    // Formas finitas (presente y pretérito)
+    Object.values(paradigm.praesens || {}).forEach((form) => {
+      registerForm(form, "finite");
+    });
+    Object.values(paradigm.präteritum || {}).forEach((form) => {
+      registerForm(form, "finite");
+    });
+
+    // Konjunktiv II si existe
+    if (paradigm.konjunktiv2) {
+      Object.values(paradigm.konjunktiv2).forEach((form) => {
+        registerForm(form, "finite");
+      });
+    }
+
+    // Participios
+    if (paradigm.partizip2) {
+      registerForm(paradigm.partizip2, "participle");
+    }
+
+    // Imperativos
+    Object.values(paradigm.imperativ || {}).forEach((form) => {
+      if (form && !form.includes(" ")) {
+        // excluir "machen Sie" etc.
+        registerForm(form, "imperative");
+      }
+    });
+
+    // Auxiliares específicos del paradigma (añadir sin duplicar)
+    if (paradigm.aux === "sein" || paradigm.aux === "haben") {
+      auxiliaries.add(normalize(paradigm.aux));
+    }
+  }
+
+  return {
+    finite,
+    participles,
+    imperatives,
+    auxiliaries,
+    formToLemma, // Mapa para rendimiento
+  };
+}
 
 /**
  * Genera y cachea los diccionarios de verbos

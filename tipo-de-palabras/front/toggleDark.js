@@ -1,4 +1,4 @@
-const app = () => {
+const toggleDark = () => {
   document.addEventListener("keydown", (event) => {
     if (event.key === "1" && event.metaKey) {
       event.preventDefault();
@@ -7,4 +7,4 @@ const app = () => {
   });
 };
 
-document.addEventListener("DOMContentLoaded", app);
+document.addEventListener("DOMContentLoaded", toggleDark);

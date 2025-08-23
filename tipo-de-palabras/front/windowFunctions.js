@@ -16,15 +16,17 @@ window.adjustFormatterFontSize = () => {
   }
 };
 
+const broadcastFilters = () => {
+  const activeTypes = Array.from(document.querySelectorAll('.filter-checkboxes input[type="checkbox"]:checked')).map((cb) => cb.dataset.type);
+  document.dispatchEvent(new CustomEvent("app:filters-changed", { detail: { activeTypes } }));
+};
+
 window.selectAllFilters = () => {
   const checkboxes = document.querySelectorAll('.filter-checkboxes input[type="checkbox"]');
   checkboxes.forEach((checkbox) => {
     checkbox.checked = true;
   });
-
-  if (window.updateWordCount) {
-    window.updateWordCount();
-  }
+  broadcastFilters();
 };
 
 window.clearAllFilters = () => {
@@ -32,12 +34,5 @@ window.clearAllFilters = () => {
   checkboxes.forEach((checkbox) => {
     checkbox.checked = false;
   });
-
-  if (window.updateWordCount) {
-    window.updateWordCount();
-  }
-};
-
-window.removeWordToLearn = (word, type) => {
-  console.log("removeWordToLearn not yet initialized");
+  broadcastFilters();
 };

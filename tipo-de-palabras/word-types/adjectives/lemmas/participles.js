@@ -6,4 +6,5 @@ export const ADJECTIVES_PARTICIPLES = {
   geöffnet: {},
   geschlossen: {},
   aufgenommen: {}, // “grabado”
+  geordnet: {},
 };
