@@ -18,9 +18,10 @@ const BLOCKS_AUX_BY_LEMMA = {
     umsteigen: "sein",
     zurückkehren: "sein",
     eintreten: "sein",
-    weggehen: "sein",
     ankommen: "sein",
     ausgehen: "sein",
+    zurückgehen: "sein",
+    weggehen: "sein",
 
     // Cambio de estado
     werden: "sein",
@@ -94,6 +95,10 @@ const BLOCKS_AUX_BY_LEMMA = {
     lieben: "haben",
     hoffen: "haben",
     gewinnen: "haben",
+    abholen: "haben",
+    abschließen: "haben",
+    zusehen: "haben",
+    helfen: "haben",
   },
 };
 

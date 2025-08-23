@@ -374,7 +374,6 @@ export const BLOCK_REGULARS = {
   ab: [
     "abmachen", // acordar / quitar
     "abbauen", // desmontar / reducir
-    "abholen", // recoger
     "abschalten", // apagar / desconectar
     "abstellen", // estacionar / apagar / colocar
     "abdecken", // cubrir / destapar
@@ -386,6 +385,7 @@ export const BLOCK_REGULARS = {
     "abzeichnen", // bosquejar / copiar un dibujo
     "abgrenzen", // delimitar / separar
     "abtrennen", // separar / cortar
+    "abholen", // traer
   ],
 
   // --- Prefijo: her- ---
@@ -720,13 +720,11 @@ export const BLOCK_REGULARS = {
     "erinnern", // recordar
     "bekommen", // recibir/obtener
     "entwerfen", // diseñar/esbozar
-    "abholen", // recoger/buscar
 
     // separables
     "zurückgehen", // volver/regresar
     "zusehen", // mirar/observar
     "abschließen", // terminar/concluir
-    "abholen", // recoger/buscar
   ],
 };
 
@@ -740,7 +738,6 @@ export const ADDITIONAL_REGULAR_VERBS = [
   "bekommen", // recibir/obtener
   "entwerfen", // diseñar/esbozar
   "abschließen", // terminar/concluir
-  "abholen", // recoger/buscar
 
   // Verbos de percepción/cognición
   "wirken", // actuar/tener efecto/parecer

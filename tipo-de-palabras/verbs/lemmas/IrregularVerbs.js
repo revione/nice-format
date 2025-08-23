@@ -90,7 +90,10 @@ export const IRREGULARS = {
       ihr: "würdet",
       "sie/Sie": "würden",
     },
-    partizip2: "geworden",
+    partizip2: {
+      aktiv: "geworden",
+      passiv: "worden",
+    },
     imperativ: { du: "werde", ihr: "werdet", Sie: "werden Sie" },
     zuInfinitiv: "zu werden",
   },
@@ -455,7 +458,6 @@ export const IRREGULARS = {
     zuInfinitiv: "zu geben",
   },
 
-  // Añadimos más verbos irregulares comunes
   fahren: {
     lemma: "fahren",
     aux: "sein", // cuando implica movimiento
@@ -753,7 +755,7 @@ export const IRREGULARS = {
       du: "schreibst",
       "er/sie/es": "schreibt",
       wir: "schreiben",
-      ihr: "schriebt",
+      ihr: "schreibt",
       "sie/Sie": "schreiben",
     },
     präteritum: {
@@ -935,5 +937,57 @@ export const IRREGULARS = {
     partizip2: "erstreckt",
     imperativ: { du: "erstreck", ihr: "erstreckt", Sie: "erstrecken Sie" },
     zuInfinitiv: "zu erstrecken",
+  },
+
+  abschließen: {
+    lemma: "abschließen",
+    aux: "haben",
+    praesens: {
+      ich: "schließe ab",
+      du: "schließt ab",
+      "er/sie/es": "schließt ab",
+      wir: "schließen ab",
+      ihr: "schließt ab",
+      "sie/Sie": "schließen ab",
+    },
+    präteritum: {
+      ich: "schloss ab",
+      du: "schlossest ab",
+      "er/sie/es": "schloss ab",
+      wir: "schlossen ab",
+      ihr: "schlosst ab",
+      "sie/Sie": "schlossen ab",
+    },
+    partizip2: "abgeschlossen",
+    imperativ: {
+      du: "schließ ab",
+      ihr: "schließt ab",
+      Sie: "schließen Sie ab",
+    },
+    zuInfinitiv: "abzuschließen",
+  },
+
+  entwerfen: {
+    lemma: "entwerfen",
+    aux: "haben",
+    praesens: {
+      ich: "entwerfe",
+      du: "entwirfst",
+      "er/sie/es": "entwirft",
+      wir: "entwerfen",
+      ihr: "entwerft",
+      "sie/Sie": "entwerfen",
+    },
+    präteritum: {
+      ich: "entwarf",
+      du: "entwarfst",
+      "er/sie/es": "entwarf",
+      wir: "entwarfen",
+      ihr: "entwarft",
+      "sie/Sie": "entwarfen",
+    },
+    partizip2: "entworfen",
+    imperativ: { du: "entwirf", ihr: "entwerft", Sie: "entwerfen Sie" },
+    zuInfinitiv: "zu entwerfen",
   },
 };

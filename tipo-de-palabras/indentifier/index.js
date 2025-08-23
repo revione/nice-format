@@ -1,8 +1,4 @@
-// =====================================================
-// CLEAN identifier() API - DESTRUCTURING DIRECTO
-// Recibe un objeto plano con destructuring
-// =====================================================
-
+import { detectMultiWordPhrase } from "./multiWord.js";
 import { ARTICLES, ARTICLES_AND_DETERMINANTS } from "../word-types/articles.js";
 import { PREPOSITIONS } from "../word-types/prepositions.js";
 import { PRONOUNS } from "../word-types/pronouns.js";
@@ -13,82 +9,61 @@ import { GermanAdjectives } from "../word-types/adjectives/detection.js";
 import { nonGermanWords } from "../word-types/nonGermanWords.js";
 import { specialCases } from "../word-types/specialCases.js";
 import { detectNumber } from "../word-types/numbers/recognizer.js";
+import { isVerb } from "../verbs/recognizer.js";
 
-import { isVerbFormEnhanced, getVerbDictionaries, looksLikeFiniteVerbEnhanced } from "../verbs/VerbSystem.js";
+const _cache = new Map();
+const MAX_CACHE_SIZE = 10000;
+let _cacheStats = { hits: 0, misses: 0, evictions: 0 };
 
-// =====================================================
-// MULTI-WORD PHRASES CONFIGURATION
-// =====================================================
+/**
+ * Genera contexto hash solo de palabras relevantes alrededor
+ * Evita invalidar cache por cambios irrelevantes en la oración
+ */
+const getContextHash = (words, index) => {
+  if (!words || words.length === 0) return "nocontext";
 
-const MULTI_WORD_PHRASES = {
-  "ein paar": {
-    words: ["ein", "paar"],
-    type: "number",
-    subtype: "collective",
-    confidence: 0.95,
-    rule: "multi-word-collective",
-  },
+  // Solo las 2 palabras antes y 1 después (relevantes para contexto)
+  const start = Math.max(0, index - 2);
+  const end = Math.min(words.length, index + 2);
+  const contextWindow = words.slice(start, end);
 
-  "eine menge": {
-    words: ["eine", "menge"],
-    type: "number",
-    subtype: "collective",
-    confidence: 0.85,
-    rule: "multi-word-collective",
-  },
-
-  "peinlich berührt": {
-    words: ["peinlich", "berührt"],
-    type: "adjective",
-    subtype: "emotional",
-    confidence: 0.9,
-    rule: "multi-word-adjective",
-  },
+  // Normalizar y unir
+  return contextWindow.map((w) => w?.toLowerCase() || "").join("|");
 };
 
-// =====================================================
-// MULTI-WORD DETECTION
-// =====================================================
+/**
+ * Genera key de cache optimizada
+ */
+const getCacheKey = (word, words, index, atSentenceStart, flags) => {
+  const contextHash = getContextHash(words, index);
+  const flagsStr = `${flags.enableMultiWord ? "M" : ""}${flags.enableDeepAnalysis ? "D" : ""}${flags.fallbackToHeuristics ? "H" : ""}`;
 
-const detectMultiWordPhrase = ({ word, words, index, enableMultiWord = true }) => {
-  if (!enableMultiWord || !words || index === undefined) return null;
+  return `${word}#${contextHash}#${atSentenceStart ? "S" : ""}#${flagsStr}`;
+};
 
-  const normalizedWord = word.toLowerCase();
+/**
+ * Limpia cache cuando excede el límite (LRU simple)
+ */
+const evictOldEntries = () => {
+  if (_cache.size <= MAX_CACHE_SIZE) return;
 
-  for (const [phrase, config] of Object.entries(MULTI_WORD_PHRASES)) {
-    const phraseWords = config.words;
+  // Eliminar las primeras 1000 entradas (más antiguas)
+  const keysToDelete = Array.from(_cache.keys()).slice(0, 1000);
+  keysToDelete.forEach((key) => _cache.delete(key));
+  _cacheStats.evictions += keysToDelete.length;
+};
 
-    if (normalizedWord === phraseWords[0]) {
-      if (index + phraseWords.length > words.length) continue;
+/**
+ * Exporta estadísticas de cache para debugging
+ */
+export const getCacheStats = () => ({ ..._cacheStats, size: _cache.size });
 
-      let matches = true;
-      for (let i = 1; i < phraseWords.length; i++) {
-        const nextWord = words[index + i]?.toLowerCase();
-        if (nextWord !== phraseWords[i]) {
-          matches = false;
-          break;
-        }
-      }
-
-      if (matches) {
-        return {
-          type: config.type,
-          rule: config.rule,
-          confidence: config.confidence,
-          multiWordInfo: {
-            phrase: phrase,
-            lemma: phrase,
-            length: phraseWords.length,
-            subtype: config.subtype,
-            isMultiWord: true,
-            words: phraseWords,
-          },
-        };
-      }
-    }
-  }
-
-  return null;
+/**
+ * Limpia el cache manualmente
+ */
+export const clearCache = () => {
+  _cache.clear();
+  _cacheStats = { hits: 0, misses: 0, evictions: 0 };
 };
 
 // =====================================================
@@ -115,18 +90,12 @@ const D = {
   irregularAdverbs: new Set(IRREGULAR_ADVERBS.map(normalize)),
 };
 
-const NUMERIC_RE = /^\d+([.,]\d+)?$/;
-const ROMAN_NUMERAL_RE = /^(?=[ivxlcdm]+$)m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/i;
-
 const cleanToken = (raw) => {
   if (!raw) return "";
   let w = String(raw).trim();
   w = w.replace(/^[^\p{L}\p{N}\s-]+|[^\p{L}\p{N}\s-]+$/gu, "");
   return w;
 };
-
-// Heurísticas simplificadas
-const looksLikeFiniteVerb = (word) => looksLikeFiniteVerbEnhanced(word);
 
 const looksLikeNoun = (word, atSentenceStart = false) => {
   const w = normalize(word);
@@ -147,24 +116,6 @@ const looksLikeAdverb = (word) => {
   return false;
 };
 
-const hasAuxiliaryBefore = (words, index) => {
-  const verbDictionaries = getVerbDictionaries();
-  let steps = 0;
-  for (let i = index - 1; i >= 0 && steps < 6; i--) {
-    const w = normalize((words[i] || "").replace(/[.,;:!?()«»"""'''„‚]/g, ""));
-    if (!w) continue;
-    steps++;
-
-    if (verbDictionaries?.auxiliaries?.has(w)) return true;
-
-    if (["nicht", "schon", "noch", "auch", "nur", "sehr", "wirklich", "eben", "gerade", "vielleicht", "wohl"].includes(w)) {
-      continue;
-    }
-    break;
-  }
-  return false;
-};
-
 const hasArticleBefore = (words, index) => {
   for (let i = index - 1; i >= 0 && i >= index - 2; i--) {
     const w = normalize(words[i] || "");
@@ -175,11 +126,9 @@ const hasArticleBefore = (words, index) => {
 
 const detectAmbiguity = ({ word, words, index, atSentenceStart }) => {
   const matches = [];
-  const w = normalize(word);
 
   if (looksLikeNoun(word, atSentenceStart)) matches.push("noun");
   if (looksLikeAdj(word, { words, index })) matches.push("adjective");
-  if (looksLikeFiniteVerb(word)) matches.push("verb");
   if (looksLikeAdverb(word)) matches.push("adverb");
 
   if (matches.length < 2) return null;
@@ -187,16 +136,10 @@ const detectAmbiguity = ({ word, words, index, atSentenceStart }) => {
   let primary = matches[0];
 
   if (words && index !== undefined) {
-    if (matches.includes("verb") && matches.includes("adjective") && hasAuxiliaryBefore(words, index)) {
-      primary = "verb";
-    } else if (matches.includes("adjective") && matches.includes("verb")) {
-      primary = "adjective";
-    }
-
     if (matches.includes("noun") && hasArticleBefore(words, index)) {
       primary = "noun";
-    } else if (matches.includes("noun") && matches.includes("verb")) {
-      primary = isCapitalized(word) ? "noun" : "verb";
+    } else if (matches.includes("noun") && matches.includes("adjective")) {
+      primary = isCapitalized(word) ? "noun" : "adjective";
     }
   }
 
@@ -204,28 +147,17 @@ const detectAmbiguity = ({ word, words, index, atSentenceStart }) => {
 };
 
 // =====================================================
-// FUNCIÓN PRINCIPAL identifier() CON DESTRUCTURING LIMPIO
+// FUNCIÓN PRINCIPAL identifier()
 // =====================================================
 
 /**
- * Identifica el tipo o las de una frase
+ * Identifica el tipo de palabra alemana
  * @param {Object} params - Parámetros con destructuring
- * @param {string} params.word - La palabra a identificar
- * @param {string[]} [params.words] - Array de palabras de la oración
- * @param {number} [params.index] - Índice de la palabra actual
- * @param {boolean} [params.atSentenceStart=false] - Si es la primera palabra
- * @param {string} [params.sentence] - Texto completo de la oración
- * @param {boolean} [params.enableMultiWord=true] - Detectar frases multi-palabra
- * @param {boolean} [params.enableDeepAnalysis=true] - Análisis profundo
- * @param {boolean} [params.fallbackToHeuristics=true] - Usar heurísticas como fallback
  * @returns {Object} Resultado de la identificación
  */
-export const identifier = ({ word, words = [], index = 0, atSentenceStart = false, sentence = "", enableMultiWord = true, enableDeepAnalysis = true, fallbackToHeuristics = true }) => {
-  const cleaned = cleanToken(word);
-  if (!cleaned) return { type: "other", rule: "empty" };
-
-  const original = cleaned;
-  const w = normalize(cleaned);
+const _identifierImpl = ({ word, words = [], index = 0, atSentenceStart = false, sentence = "", enableMultiWord = true, enableDeepAnalysis = true, fallbackToHeuristics = true }) => {
+  const original = word;
+  const w = normalize(word);
 
   // =====================================================
   // STEP 0: MULTI-WORD DETECTION - MÁXIMA PRIORIDAD
@@ -251,16 +183,9 @@ export const identifier = ({ word, words = [], index = 0, atSentenceStart = fals
   if (D.nonDE.has(w)) return { type: "foreign", rule: "non-german-list" };
 
   // =====================================================
-  // STEP 2: NÚMEROS Y ORDINALES
+  // STEP 2: NÚMEROS
   // =====================================================
 
-  if (NUMERIC_RE.test(original)) {
-    if (!original.includes(".")) return { type: "number", rule: "numeric" };
-  }
-  if (ROMAN_NUMERAL_RE.test(w)) return { type: "number", rule: "roman-numeral" };
-  if (specialCases[w] === "number") return { type: "number", rule: "special-number" };
-
-  // Detección de números usando recognizer
   const numberResult = detectNumber(original, {
     wordsInASentence: words,
     index,
@@ -292,15 +217,13 @@ export const identifier = ({ word, words = [], index = 0, atSentenceStart = fals
   // STEP 4: ADVERBIOS POR SUFIJO Y DIRECCIONALES
   // =====================================================
 
-  if (looksLikeAdverb(original)) {
-    return { type: "adverb", rule: "adverb-pattern" };
-  }
+  if (looksLikeAdverb(original)) return { type: "adverb", rule: "adverb-pattern" };
 
   // =====================================================
   // STEP 5: SISTEMA DE VERBOS
   // =====================================================
 
-  const verbResult = isVerbFormEnhanced(original, {
+  const verbResult = isVerb(original, {
     wordsInASentence: words,
     index,
     atSentenceStart,
@@ -412,28 +335,67 @@ export const identifier = ({ word, words = [], index = 0, atSentenceStart = fals
         rule: "multiple-weak-matches",
       };
     }
-
-    // =====================================================
-    // STEP 10: FORMA VERBAL FINITA POR SUFIJO
-    // =====================================================
-
-    if (looksLikeFiniteVerb(original)) {
-      return { type: "verb", rule: "finite-verb-suffix" };
-    }
   }
 
   // =====================================================
-  // STEP 11: FALLBACK
+  // STEP 10: FALLBACK
   // =====================================================
 
   return { type: "other", rule: "fallback" };
 };
 
+/**
+ * Identifica el tipo de palabra alemana (WRAPPER CON CACHING)
+ * @param {Object} params - Parámetros con destructuring
+ * @param {string} params.word - La palabra a identificar
+ * @param {string[]} [params.words] - Array de palabras de la oración
+ * @param {number} [params.index] - Índice de la palabra actual
+ * @param {boolean} [params.atSentenceStart=false] - Si es la primera palabra
+ * @param {string} [params.sentence] - Texto completo de la oración
+ * @param {boolean} [params.enableMultiWord=true] - Detectar frases multi-palabra
+ * @param {boolean} [params.enableDeepAnalysis=true] - Análisis profundo
+ * @param {boolean} [params.fallbackToHeuristics=true] - Usar heurísticas como fallback
+ * @returns {Object} Resultado de la identificación
+ */
+export const identifier = (params) => {
+  const { word, words = [], index = 0, atSentenceStart = false, enableMultiWord = true, enableDeepAnalysis = true, fallbackToHeuristics = true, ...rest } = params;
+
+  // Limpieza inicial
+  const cleaned = cleanToken(word);
+  if (!cleaned) return { type: "other", rule: "empty" };
+
+  // Generar key de cache
+  const cacheKey = getCacheKey(cleaned, words, index, atSentenceStart, {
+    enableMultiWord,
+    enableDeepAnalysis,
+    fallbackToHeuristics,
+  });
+
+  // Buscar en cache
+  const cached = _cache.get(cacheKey);
+  if (cached) {
+    _cacheStats.hits++;
+    return cached;
+  }
+
+  // Cache miss - ejecutar análisis
+  _cacheStats.misses++;
+  const result = _identifierImpl({
+    word: cleaned,
+    words,
+    index,
+    atSentenceStart,
+    enableMultiWord,
+    enableDeepAnalysis,
+    fallbackToHeuristics,
+    ...rest,
+  });
+
+  // Guardar en cache
+  _cache.set(cacheKey, result);
+  evictOldEntries();
+
+  return result;
+};
+
 export const getWordType = ({ word, words, index, atSentenceStart, ...options }) => identifier({ word, words, index, atSentenceStart, ...options }).type;
-
-// const testIdentifier = () => {
-//   const result = identifier(); "ein paar"
-//   console.log(result);
-// };
-
-// testIdentifier();
