@@ -15,7 +15,11 @@ export const applyReverseStemHeuristics = (stem) => {
 };
 
 // ---------- utils ----------
-const BASE_SET = new Set(ADJECTIVES.map((a) => a.de));
+const BASE_SET = new Set(ADJECTIVES.filter((a) => a.form === "base").map((a) => a.de));
+
+// ae/oe/ue <-> ä/ö/ü helpers
+const TO_UMLAUT = (s) => s.replace(/ae/g, "ä").replace(/oe/g, "ö").replace(/ue/g, "ü").replace(/Ae/g, "Ä").replace(/Oe/g, "Ö").replace(/Ue/g, "Ü");
+const FROM_UMLAUT = (s) => s.replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/Ä/g, "Ae").replace(/Ö/g, "Oe").replace(/Ü/g, "Ue");
 
 const stripDeclensionEnding = (form) => {
   const endings = ["en", "er", "es", "em", "e"];
@@ -28,7 +32,12 @@ const stripDeclensionEnding = (form) => {
 
 const reverseUmlaut = (s) => s.replace(/[ÄÖÜäöü]/g, (m) => ({ ä: "a", ö: "o", ü: "u", Ä: "A", Ö: "O", Ü: "U" }[m] ?? m));
 const peelComparative = (core) => (/er$/i.test(core) ? core.slice(0, -2) : null);
-const peelSuperlative = (core) => (/est$/i.test(core) ? core.slice(0, -3) : /st$/i.test(core) ? core.slice(0, -2) : null);
+const peelSuperlative = (core) => {
+  if (/est$/i.test(core)) return core.slice(0, -3);
+  if (/ßt$/i.test(core)) return core.slice(0, -1); // deja 'größ' (no elimina la ß)
+  if (/st$/i.test(core)) return core.slice(0, -2);
+  return null;
+};
 const isBase = (s) => BASE_SET.has(s);
 const isGradable = (s) => ADJ_GRADABLE.get(String(s).toLowerCase()) !== false;
 
@@ -44,6 +53,16 @@ const tryResolveBaseFromStem = (stem) => {
   // 1) Directo + variantes ß↔ss
   for (const cand of ssEszettVariants(stem)) {
     if (isBase(cand)) return cand;
+  }
+
+  // 1.1) Probar con grafías ae/oe/ue → ä/ö/ü
+  {
+    const uml = TO_UMLAUT(stem);
+    if (uml !== stem) {
+      for (const cand of ssEszettVariants(uml)) {
+        if (isBase(cand)) return cand;
+      }
+    }
   }
 
   // 2) Heurísticas (p. ej., höh→hoch, fitt→fit) + variantes
@@ -67,6 +86,18 @@ const tryResolveBaseFromStem = (stem) => {
   if (fixedDeU) {
     for (const cand of ssEszettVariants(fixedDeU)) {
       if (isBase(cand)) return cand;
+    }
+  }
+
+  // 5) Adjs en -el / -er que pierden la -e en el tema del comp/sup:
+  //    dunkel → dunkler (stem "dunkl"), teuer → teurer (stem "teur")
+  {
+    // inserta 'e' antes de la última consonante
+    const plusE = stem.replace(/([bcdfghjklmnpqrstvwxyz])$/i, "e$1");
+    for (const cand of [plusE, TO_UMLAUT(plusE)]) {
+      for (const v of ssEszettVariants(cand)) {
+        if (isBase(v)) return v;
+      }
     }
   }
 
@@ -228,8 +259,10 @@ export const analyzeAdjective = (inputRaw) => {
     }
   }
 
-  // fallback: si no hubo análisis y era 'er', reintenta
-  if (!analysed && stripA.ending === "er") {
+  // fallbacks:
+  // 1) si no hubo análisis y era 'er', ya reintentamos arriba
+  // 2) reintento GENERAL sin pelar la terminación (útil p. ej. para participios base en -en: 'gelungen')
+  if (!analysed) {
     analysed = tryPath(norm, "", "grado→(sin decl)");
   }
 

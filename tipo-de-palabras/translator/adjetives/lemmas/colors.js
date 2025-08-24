@@ -108,7 +108,10 @@ export const INDECLINABLE_COLORS_FORMS = [
   { base: { de: "jeans", es: "vaquero / denim" }, gradable: false },
 ];
 
-export const EXTRA_COLOR_COMPOUNDS = [{ base: { de: "orangefarben", es: "color naranja" }, gradable: false }];
+export const EXTRA_COLOR_COMPOUNDS = [
+  { base: { de: "orangefarben", es: "color naranja" }, gradable: false },
+  { base: { de: "khakifarben", es: "color caqui" }, gradable: false },
+];
 
 export const COLOR_PREFIXES_FORMS = [
   // Como prefijos, no generamos comp/sup

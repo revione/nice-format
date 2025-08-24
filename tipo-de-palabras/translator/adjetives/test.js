@@ -107,9 +107,50 @@ const RARE_CASES_EXPECT = [
   ["verheiratet", null, "verheiratet"],
 ];
 
+const RARE_CASES_EXPECT_2 = [
+  // umlaut irregulares menos típicos
+  ["gesünder", "comp", "gesund"],
+  ["gesündesten", "sup", "gesund"],
+  ["jüngst", "sup", "jung"], // forma lexicalizada
+
+  // adjetivos en -el que pierden la -e
+  ["edelster", "sup", "edel"],
+  ["dunkler", "comp", "dunkel"],
+
+  // adjetivos en -er con comparación irregular
+  ["teurer", "comp", "teuer"],
+  ["teuersten", "sup", "teuer"],
+
+  // participiales/adjetivos perfectivos raros
+  ["bekannt", null, "bekannt"],
+  ["interessiert", null, "interessiert"],
+
+  // colores de préstamo/invariables
+  ["beige", null, "beige"],
+  ["khakifarben", null, "khakifarben"],
+
+  // supletivos menos obvios
+  ["weniger", "comp", "wenig"],
+  ["wenigsten", "sup", "wenig"],
+  ["mehr", "comp", "viel"], // comparativo ya lexicalizado
+  ["meist", "sup", "viel"], // idem
+
+  // compuestos
+  ["heller", "comp", "hell"],
+  ["hellsten", "sup", "hell"],
+  ["hochmodern", null, "hochmodern"],
+
+  // capitalizados que no son sustantivados claros
+  ["Schön", "base", "schön"],
+
+  // edge cases con grafía
+  ["groesser", "comp", "groß"], // sin ß
+  ["GRÖßTE", "sup", "groß"], // mayúsculas con ß
+];
+
 const runExpect = () => {
   let fails = 0;
-  for (const [word, degree, base] of RARE_CASES_EXPECT) {
+  for (const [word, degree, base] of RARE_CASES_EXPECT_2) {
     const g = analyzeAdjective(word);
     const ok = g.degree === degree && g.base === base;
     console.log(word, g);

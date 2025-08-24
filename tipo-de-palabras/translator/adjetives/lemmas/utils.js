@@ -111,10 +111,10 @@ export const flattenBlocks = (blocks) => {
   if (!Array.isArray(blocks)) throw new TypeError("flattenBlocks: se esperaba un array");
 
   const out = [];
-  for (const { base, comp, sup } of blocks) {
-    if (base && typeof base === "object") out.push({ ...base });
-    if (comp && typeof comp === "object") out.push({ ...comp });
-    if (sup && typeof sup === "object") out.push({ ...sup });
+  for (const { base, comp, sup, gradable } of blocks) {
+    if (base && typeof base === "object") out.push({ ...base, form: "base", gradable });
+    if (comp && typeof comp === "object") out.push({ ...comp, form: "comp", gradable });
+    if (sup && typeof sup === "object") out.push({ ...sup, form: "sup", gradable });
   }
   return out;
 };

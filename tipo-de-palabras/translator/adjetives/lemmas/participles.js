@@ -11,6 +11,8 @@ export const ADJECTIVES_PARTICIPLES_FORMS = [
   { base: { de: "geordnet", es: "ordenado/a" }, gradable: false },
   { base: { de: "gelungen", es: "logrado" }, gradable: false },
   { base: { de: "verheiratet", es: "casado/a" }, gradable: false },
+  { base: { de: "bekannt", es: "conocido/a" }, gradable: false },
+  { base: { de: "interessiert", es: "interesado/a" }, gradable: false },
 ];
 
 export const ADJECTIVES_PARTICIPLES = flatteAdj(ADJECTIVES_PARTICIPLES_FORMS);

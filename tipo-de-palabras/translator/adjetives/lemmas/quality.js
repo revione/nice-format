@@ -109,6 +109,7 @@ export const COMMON_MISC_FORMS = [
   { base: { de: "nötig", es: "necesario/a" } },
   { base: { de: "gefährlich", es: "peligroso/a" } },
   { base: { de: "sicher", es: "seguro/a" } },
+  { base: { de: "hochmodern", es: "ultramoderno/a" }, gradable: false },
 ];
 
 // --- colección final ---
