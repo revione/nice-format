@@ -33,6 +33,7 @@ export const BRIGHTNESS_FORMS = [{ base: { de: "hell", es: "claro/a, luminoso/a"
 export const TEMPERATURE_FORMS = [
   { base: { de: "warm", es: "cálido/a" }, irregularities: ["umlaut"] },
   { base: { de: "kalt", es: "frío/a" }, irregularities: ["umlaut"] },
+  { base: { de: "heiß", es: "caliente" } },
 ];
 
 // --- nature/tech ---
@@ -45,6 +46,7 @@ export const VISIBILITY_FORMS = [
   { base: { de: "klar", es: "claro/a" } },
   { base: { de: "sauber", es: "limpio/a" } },
   { base: { de: "frisch", es: "fresco/a" } },
+  { base: { de: "spitz", es: "puntiagudo/a" } },
 ];
 
 // --- importance/modality ---
@@ -93,6 +95,11 @@ export const CHARACTER_ATTITUDE_FORMS = [
   { base: { de: "ernst", es: "serio/a" } },
   { base: { de: "lustig", es: "divertido/a" } },
   { base: { de: "brav", es: "bueno/a (portado)" } },
+  { base: { de: "dumm", es: "tonto/a" }, irregularities: ["umlaut"] },
+  { base: { de: "klug", es: "listo/a" }, irregularities: ["umlaut"] },
+  { base: { de: "fleißig", es: "aplicado/a, trabajador/a" } },
+  { base: { de: "nett", es: "agradable, majo/a" } },
+  { base: { de: "arm", es: "pobre" }, irregularities: ["umlaut"] },
 ];
 
 // --- common/misc ---

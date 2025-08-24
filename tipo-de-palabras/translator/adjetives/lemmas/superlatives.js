@@ -5,13 +5,14 @@
 export const SUPPLETIVE_COMPARATIVES = {
   gut: "besser",
   viel: "mehr",
-  // gern lo dejamos fuera (adverbio)
+  gern: "lieber",
 };
 
 /** Supletivos verdaderos (superlativo “de otra raíz”). */
 export const SUPPLETIVE_SUPERLATIVES = {
   gut: "best",
   viel: "meist",
+  gern: "liebst",
 };
 
 /** Irregulares NO supletivos (cambios de tema). */

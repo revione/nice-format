@@ -1,7 +1,7 @@
 // translator/adjetives/adj_guess.js
 import { DECLENSIONS } from "./declensions.js";
 import { REVERSE_COMPARATIVES, REVERSE_SUPERLATIVES } from "./lemmas/superlatives.js";
-import { ADJECTIVES } from "./lemmas/index.js";
+import { ADJECTIVES, ADJ_GRADABLE } from "./lemmas/index.js";
 
 /** Heurísticas de stems raros (comparativo/superlativo ya “pelados”) */
 const REVERSE_STEM_FIXES = [
@@ -30,13 +30,46 @@ const reverseUmlaut = (s) => s.replace(/[ÄÖÜäöü]/g, (m) => ({ ä: "a", ö:
 const peelComparative = (core) => (/er$/i.test(core) ? core.slice(0, -2) : null);
 const peelSuperlative = (core) => (/est$/i.test(core) ? core.slice(0, -3) : /st$/i.test(core) ? core.slice(0, -2) : null);
 const isBase = (s) => BASE_SET.has(s);
+const isGradable = (s) => ADJ_GRADABLE.get(String(s).toLowerCase()) !== false;
+
+const ssEszettVariants = (s) => {
+  const withSS = s.replace(/ß/g, "ss");
+  const withEszett = s.replace(/ss/g, "ß");
+  return new Set([s, withSS, withEszett]);
+};
 
 const tryResolveBaseFromStem = (stem) => {
-  if (isBase(stem)) return stem;
+  if (!stem) return null;
+
+  // 1) Directo + variantes ß↔ss
+  for (const cand of ssEszettVariants(stem)) {
+    if (isBase(cand)) return cand;
+  }
+
+  // 2) Heurísticas (p. ej., höh→hoch, fitt→fit) + variantes
   const fixed = applyReverseStemHeuristics(stem);
-  if (fixed && isBase(fixed)) return fixed;
+  if (fixed) {
+    for (const cand of ssEszettVariants(fixed)) {
+      if (isBase(cand)) return cand;
+    }
+  }
+
+  // 3) Revertir umlaut (größ → gross) + variantes (→ groß)
   const deU = reverseUmlaut(stem);
-  if (isBase(deU)) return deU;
+  if (deU && deU !== stem) {
+    for (const cand of ssEszettVariants(deU)) {
+      if (isBase(cand)) return cand;
+    }
+  }
+
+  // 4) Heurísticas después de revertir umlaut (por si aplica)
+  const fixedDeU = applyReverseStemHeuristics(deU);
+  if (fixedDeU) {
+    for (const cand of ssEszettVariants(fixedDeU)) {
+      if (isBase(cand)) return cand;
+    }
+  }
+
   return null;
 };
 
@@ -72,56 +105,143 @@ export const explainDeclensionMatch = ({ det, case: kase, gender }) => `${DET_LA
  * { input, form:{core, ending}, degree:'base'|'comp'|'sup'|null, base:string|null, confidence:number, notes:string[] }
  */
 export const analyzeAdjective = (inputRaw) => {
-  const input = String(inputRaw || "").trim();
+  const input = String(inputRaw ?? "").trim();
   const notes = [];
   if (!input) {
-    return { input, form: { core: "", ending: "" }, degree: null, base: null, confidence: 0, notes: ["Entrada vacía"] };
+    return {
+      input,
+      form: { core: "", ending: "" },
+      degree: null,
+      base: null,
+      confidence: 0,
+      notes: ["Entrada vacía"],
+    };
   }
 
-  const stripA = stripDeclensionEnding(input);
+  // Trabajamos en minúsculas para el matching, pero preservamos `input` para reportar.
+  const norm = input.toLowerCase();
+  const stripA = stripDeclensionEnding(norm);
 
   const tryPath = (core, ending, tag) => {
-    // 1) base exacta
-    if (isBase(core)) {
-      return { input, form: { core, ending }, degree: "base", base: core, confidence: 1 - (ending ? 0.05 : 0), notes: [...notes, `Base exacta [${tag}]`] };
-    }
-    // 2) supletivos/irregulares sin declinación
+    // 1) supletivos/irregulares (forma exacta del comparativo/superlativo)
     if (REVERSE_COMPARATIVES[core]) {
-      return { input, form: { core, ending }, degree: "comp", base: REVERSE_COMPARATIVES[core], confidence: 0.95, notes: [...notes, `Comparativo supletivo/irregular [${tag}]`] };
+      const base = REVERSE_COMPARATIVES[core];
+      const deg = isGradable(base) ? "comp" : null;
+      return {
+        input,
+        form: { core, ending },
+        degree: deg,
+        base,
+        confidence: deg ? 0.95 : 0.8,
+        notes: [...notes, deg ? `Comparativo supletivo/irregular [${tag}]` : `Comparativo supletivo/irregular de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
+      };
     }
     if (REVERSE_SUPERLATIVES[core]) {
-      return { input, form: { core, ending }, degree: "sup", base: REVERSE_SUPERLATIVES[core], confidence: 0.95, notes: [...notes, `Superlativo supletivo/irregular [${tag}]`] };
+      const base = REVERSE_SUPERLATIVES[core];
+      const deg = isGradable(base) ? "sup" : null;
+      return {
+        input,
+        form: { core, ending },
+        degree: deg,
+        base,
+        confidence: deg ? 0.95 : 0.8,
+        notes: [...notes, deg ? `Superlativo supletivo/irregular [${tag}]` : `Superlativo supletivo/irregular de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
+      };
     }
-    // 3) comparativo regular
+
+    // 2) comparativo regular (−er)
     const compStem = peelComparative(core);
     if (compStem) {
-      let base = tryResolveBaseFromStem(compStem) || tryResolveBaseFromStem(reverseUmlaut(compStem)) || REVERSE_COMPARATIVES[core];
-      if (base) return { input, form: { core, ending }, degree: "comp", base, confidence: 0.9, notes: [...notes, `Comparativo detectado [${tag}]`] };
+      const base = tryResolveBaseFromStem(compStem) || tryResolveBaseFromStem(reverseUmlaut(compStem)) || REVERSE_COMPARATIVES[core];
+      if (base) {
+        const deg = isGradable(base) ? "comp" : null;
+        return {
+          input,
+          form: { core, ending },
+          degree: deg,
+          base,
+          confidence: deg ? 0.9 : 0.8,
+          notes: [...notes, deg ? `Comparativo detectado [${tag}]` : `Comparativo de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
+        };
+      }
     }
-    // 4) superlativo regular
+
+    // 3) superlativo regular (−st / −est)
     const supStem = peelSuperlative(core);
     if (supStem) {
-      let base = tryResolveBaseFromStem(supStem) || tryResolveBaseFromStem(reverseUmlaut(supStem)) || REVERSE_SUPERLATIVES[core];
-      if (base) return { input, form: { core, ending }, degree: "sup", base, confidence: 0.88, notes: [...notes, `Superlativo detectado [${tag}]`] };
+      const base = tryResolveBaseFromStem(supStem) || tryResolveBaseFromStem(reverseUmlaut(supStem)) || REVERSE_SUPERLATIVES[core];
+      if (base) {
+        const deg = isGradable(base) ? "sup" : null;
+        return {
+          input,
+          form: { core, ending },
+          degree: deg,
+          base,
+          confidence: deg ? 0.88 : 0.8,
+          notes: [...notes, deg ? `Superlativo detectado [${tag}]` : `Superlativo de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
+        };
+      }
     }
-    // 5) base tras revertir umlaut
+
+    // 4) base exacta
+    if (isBase(core)) {
+      const deg = isGradable(core) ? "base" : null;
+      return {
+        input,
+        form: { core, ending },
+        degree: deg,
+        base: core,
+        confidence: deg ? 1 - (ending ? 0.05 : 0) : 0.8,
+        notes: [...notes, deg ? `Base exacta [${tag}]` : `Base exacta de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
+      };
+    }
+
+    // 5) base tras revertir umlaut (+ variantes ß/ss)
     const maybeBase = reverseUmlaut(core);
-    if (isBase(maybeBase)) {
-      return { input, form: { core, ending }, degree: "base", base: maybeBase, confidence: 0.75, notes: [...notes, `Base tras revertir umlaut [${tag}]`] };
+    for (const cand of ssEszettVariants(maybeBase)) {
+      if (isBase(cand)) {
+        const deg = isGradable(cand) ? "base" : null;
+        return {
+          input,
+          form: { core, ending },
+          degree: deg,
+          base: cand,
+          confidence: deg ? 0.75 : 0.7,
+          notes: [...notes, deg ? `Base tras revertir umlaut [${tag}]` : `Base tras revertir umlaut (no gradable) → grado nulo [${tag}]`],
+        };
+      }
     }
+
     return null;
   };
 
   // estrategia principal: “declinación primero”
   let analysed = tryPath(stripA.core, stripA.ending, "decl→grado");
 
-  // fallback: si ending era 'er' pero no reconocimos, quizá ese -er era comparativo
+  // --- Ambigüedad "-er": si puede ser comparativo, preferimos comparativo ---
+  if (stripA.ending === "er") {
+    const asDegree = tryPath(norm, "", "grado→(sin decl)");
+    if (asDegree && asDegree.degree === "comp" && (!analysed || analysed.degree !== "comp")) {
+      asDegree.confidence = Math.max(asDegree.confidence ?? 0, 0.92);
+      asDegree.notes = [...(asDegree.notes ?? []), "Ambigüedad -er: preferido como comparativo"];
+      analysed = asDegree;
+    }
+  }
+
+  // fallback: si no hubo análisis y era 'er', reintenta
   if (!analysed && stripA.ending === "er") {
-    analysed = tryPath(input, "", "grado→(sin decl)");
+    analysed = tryPath(norm, "", "grado→(sin decl)");
   }
 
   if (!analysed) {
-    return { input, form: stripA, degree: null, base: null, confidence: 0.15, notes: [...notes, "No parece una forma adjetival conocida."] };
+    return {
+      input,
+      form: stripA,
+      degree: null,
+      base: null,
+      confidence: 0.15,
+      notes: [...notes, "No parece una forma adjetival conocida."],
+    };
   }
   return analysed;
 };
@@ -143,15 +263,3 @@ export const prettyDeclensionMatchesFor = (word, { max = 10 } = {}) => {
 
 // ---------- helper de UI ----------
 export const isAdjectiveLike = (token) => analyzeAdjective(token).confidence >= 0.5;
-
-// ---------- pruebas rápidas ----------
-(() => {
-  const ejemplos = ["schöne", "stärkeren", "höchstem", "besten", "fitter"];
-  for (const w of ejemplos) {
-    const g = analyzeAdjective(w);
-    // eslint-disable-next-line no-console
-    console.log("ANALYZE:", g);
-    // eslint-disable-next-line no-console
-    console.log("DECL  :", prettyDeclensionMatchesFor(w).join(" | "));
-  }
-})();

@@ -108,6 +108,8 @@ export const INDECLINABLE_COLORS_FORMS = [
   { base: { de: "jeans", es: "vaquero / denim" }, gradable: false },
 ];
 
+export const EXTRA_COLOR_COMPOUNDS = [{ base: { de: "orangefarben", es: "color naranja" }, gradable: false }];
+
 export const COLOR_PREFIXES_FORMS = [
   // Como prefijos, no generamos comp/sup
   { base: { de: "hell", es: "claro" }, gradable: false },
@@ -144,6 +146,6 @@ export const COLOR_SUFFIXES_FORMS = [
   { base: { de: "glänzend", es: "reluciente" }, gradable: false },
 ];
 
-export const COLORS_FORMS = [...BASIC_COLORS_FORMS, ...METAL_COLORS_FORMS, ...NATURE_COLORS_FORMS, ...INDECLINABLE_COLORS_FORMS];
+export const COLORS_FORMS = [...BASIC_COLORS_FORMS, ...METAL_COLORS_FORMS, ...NATURE_COLORS_FORMS, ...INDECLINABLE_COLORS_FORMS, ...EXTRA_COLOR_COMPOUNDS];
 
 export const COLORS = flatteAdj([...COLORS_FORMS, ...COLOR_PREFIXES_FORMS, ...COLOR_SUFFIXES_FORMS]);
