@@ -39,6 +39,12 @@ export const INSEPARABLES_GROUPED = {
   hinter: [
     "hinterfragen", // cuestionar críticamente
   ],
+
+  ver: ["verschwinden"],
+
+  be: ["behalten", "bedeuten", "begehen"],
+
+  er: ["erschaffen"],
 };
 
 // === Verbos AMBIGUOS (pueden ser separables o inseparables) ===

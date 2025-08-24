@@ -28,11 +28,10 @@ export const AUXILIARIES_FULL = {
     },
     konjunktiv2: {
       ich: "wäre",
-      // guardar variantes como array
-      du: ["wärst", "wärest"],
+      du: ["wärest", "wärst"],
       "er/sie/es": "wäre",
       wir: "wären",
-      ihr: ["wärt", "wäret"],
+      ihr: ["wäret", "wärt"],
       "sie/Sie": "wären",
     },
     partizip2: "gewesen",

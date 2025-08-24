@@ -760,6 +760,21 @@ export const ADDITIONAL_REGULAR_VERBS = [
   // Verbos reflexivos/con se
   "sich_beschäftigen", // ocuparse
   "sich_erinnern", // recordarse
+
+  "rasten", // descansar / pararse
+  "stimmen", // ser correcto / cuadrar
+  "droppen", // soltar / publicar (anglicismo)
+
+  "nutzen",
+  "suchen",
+  "basteln",
+  "drehen",
+  "wenden",
+  "stricken",
+  "bedeuten",
+  "klauen",
+  "kriegen",
+  "regen",
 ];
 
-export const REGULARS = Array.from(new Set(Object.values(BLOCK_REGULARS).flat()));
+export const REGULARS = Array.from(new Set([...Object.values(BLOCK_REGULARS).flat(), ...ADDITIONAL_REGULAR_VERBS]));

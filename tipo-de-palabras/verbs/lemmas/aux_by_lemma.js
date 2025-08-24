@@ -40,6 +40,12 @@ const BLOCKS_AUX_BY_LEMMA = {
     gelingen: "sein",
     entstehen: "sein",
     misslingen: "sein",
+
+    laufen: "sein",
+    einsteigen: "sein",
+    verschwinden: "sein",
+    landen: "sein",
+    abhauen: "sein",
   },
 
   haben: {
@@ -99,6 +105,44 @@ const BLOCKS_AUX_BY_LEMMA = {
     abschließen: "haben",
     zusehen: "haben",
     helfen: "haben",
+
+    basteln: "haben",
+    drehen: "haben",
+    wenden: "haben",
+    gewinnen: "haben",
+    nutzen: "haben",
+    fassen: "haben",
+    halten: "haben",
+    versuchen: "haben",
+    unterstützen: "haben",
+    einhaken: "haben",
+    weiterspinnen: "haben",
+    weiterspinnen: "haben",
+    entgegenlassen: "haben",
+    behalten: "haben",
+    hauen: "haben", // base; ver también "abhauen" arriba
+    kriegen: "haben",
+    bedeuten: "haben",
+    aufziehen: "haben",
+    stricken: "haben",
+    treffen: "haben",
+    suchen: "haben",
+    finden: "haben",
+    aufmachen: "haben",
+    klauen: "haben",
+    bringen: "haben", // ya estaba, pero no pasa nada si repites
+    sagen: "haben",
+    aufregen: "haben",
+    schlagen: "haben",
+    denken: "haben",
+    greifen: "haben",
+    vorliegen: "haben",
+    hängen: "haben",
+    treten: "haben", // ⚠️ ver nota: también puede usar "sein" intransitivo
+    begehen: "haben",
+    durchsägen: "haben",
+    aufbereiten: "haben",
+    erschaffen: "haben",
   },
 };
 

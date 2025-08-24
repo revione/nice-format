@@ -12,6 +12,32 @@ const normalize = (text = "") =>
     .normalize("NFC")
     .replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, "");
 
+const canonicalizeVerbish = (token = "") => {
+  let s = normalize(token).replace(/[’]/g, "'");
+
+  //  si hay guion, prueba con el primer segmento (kennen-Vibe -> kennen)
+  if (s.includes("-")) s = s.split("-")[0];
+
+  // 1) contracciones 's
+  if (s.endsWith("'s")) s = s.slice(0, -2);
+
+  // 2) coloquial sin apóstrofo
+  const dropSEnds = /^(wird|geht|gibt|kann|sag|hab|hätt|bleibt|ist|hat)$/;
+  if (s.endsWith("s")) {
+    const base = s.slice(0, -1);
+    if (dropSEnds.test(base)) s = base;
+  }
+
+  // 3) “geb” -> “gebe”
+  if (s === "geb") s = "gebe";
+
+  // 4) mapa coloquial
+  const colloquialMap = { hätt: "hätte", hab: "habe", sag: "sage" };
+  if (colloquialMap[s]) s = colloquialMap[s];
+
+  return s;
+};
+
 let verbDictionaries = null;
 
 /**
@@ -51,15 +77,24 @@ function splitSeparable(lemma) {
  * - zu-Infinitiv: <prefijo> + 'zu' + <base>  (p.ej. "abzuholen", "zurückzugehen")
  */
 function buildSeparableCompoundFromBasePar(lemma, basePar, prefix, base) {
-  // Mapea objetos de persona/numero añadiendo el prefijo al final
   const mapWithPrefixAtEnd = (obj = {}) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, v + " " + prefix]));
 
+  const mapWithPrefixAtStart = (obj = {}) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, prefix + v]));
+
+  // Finito (posición V2/imperativo): base + ' ' + prefijo
   const praesens = mapWithPrefixAtEnd(basePar.praesens);
   const präteritum = mapWithPrefixAtEnd(basePar.präteritum);
-
   let konjunktiv2 = undefined;
   if (basePar.konjunktiv2) {
     konjunktiv2 = mapWithPrefixAtEnd(basePar.konjunktiv2);
+  }
+
+  // NUEVO — Finito en subordinadas (prefijo delante, pegado)
+  const praesensSub = mapWithPrefixAtStart(basePar.praesens);
+  const praeteritumSub = mapWithPrefixAtStart(basePar.präteritum);
+  let konjunktiv2Sub = undefined;
+  if (basePar.konjunktiv2) {
+    konjunktiv2Sub = mapWithPrefixAtStart(basePar.konjunktiv2);
   }
 
   // Partizip II del separable: prefijo + partizip del base (pegado)
@@ -72,7 +107,7 @@ function buildSeparableCompoundFromBasePar(lemma, basePar, prefix, base) {
     if (basePar.partizip2.passiv) partizip2.passiv = prefix + basePar.partizip2.passiv;
   }
 
-  // Imperativ: base + ' ' + prefijo (evitamos los de "Sie" de 3 palabras más abajo al registrar)
+  // Imperativ: base + ' ' + prefijo
   const imperativ = basePar.imperativ ? Object.fromEntries(Object.entries(basePar.imperativ).map(([k, v]) => [k, v + " " + prefix])) : {};
 
   // zu-Infinitiv correcto para separables:
@@ -86,6 +121,9 @@ function buildSeparableCompoundFromBasePar(lemma, basePar, prefix, base) {
     praesens,
     präteritum,
     konjunktiv2,
+    praesensSub,
+    praeteritumSub,
+    konjunktiv2Sub,
     partizip2,
     imperativ,
     zuInfinitiv,
@@ -230,45 +268,79 @@ export function generateVerbDictionaries(lemmas) {
     }
   };
 
+  // Helper para recorrer objetos de formas donde los valores pueden ser string o array
+  const forEachForm = (obj, cb) => {
+    if (!obj) return;
+    Object.values(obj).forEach((val) => {
+      if (Array.isArray(val)) val.forEach((v) => cb(v));
+      else cb(val);
+    });
+  };
+
   for (const lemma of lemmas) {
     const paradigm = getVerbParadigm(lemma);
     if (!paradigm) continue;
 
     const lemmaKey = normalize(lemma);
 
-    // Finite (presente y pretérito) — pueden ser 1 o 2 palabras
-    Object.values(paradigm.praesens || {}).forEach((form) => registerForm(form, "finite", lemmaKey));
-    Object.values(paradigm.präteritum || {}).forEach((form) => registerForm(form, "finite", lemmaKey));
+    // Helpers locales que también registran la variante "pegada" si viene como bigrama
+    const registerFinite = (form) => {
+      if (!form) return;
+      registerForm(form, "finite", lemmaKey);
+      // Si es separable: "VERBO PREF" -> añadir "PREFVERBO"
+      if (/\s/.test(form)) {
+        const [v, pref] = form.split(/\s+/);
+        if (SEPARABLE_PREFIXES.includes(pref)) {
+          registerForm(pref + v, "finite", lemmaKey); // ej. "ein" + "steige" => "einsteige"
+        }
+      }
+    };
+    const registerImperative = (form) => {
+      if (!form) return;
+      registerForm(form, "imperative", lemmaKey);
+      if (/\s/.test(form)) {
+        const [v, pref] = form.split(/\s+/);
+        if (SEPARABLE_PREFIXES.includes(pref)) {
+          registerForm(pref + v, "imperative", lemmaKey);
+        }
+      }
+    };
 
-    // Konjunktiv II si existe
-    if (paradigm.konjunktiv2) {
-      Object.values(paradigm.konjunktiv2).forEach((form) => registerForm(form, "finite", lemmaKey));
-    }
+    // Finite (Präsens / Präteritum / Konjunktiv II)
+    forEachForm(paradigm.praesens, registerFinite);
+    forEachForm(paradigm.präteritum, registerFinite);
+    forEachForm(paradigm.konjunktiv2, registerFinite);
+
+    // soportar formas de subordinada pegadas (prefijo+verbo)
+    forEachForm(paradigm.praesensSub, registerFinite);
+    forEachForm(paradigm.praeteritumSub, registerFinite);
+    forEachForm(paradigm.konjunktiv2Sub, registerFinite);
 
     // Participios (string o {aktiv, passiv})
     if (paradigm.partizip2) {
       if (typeof paradigm.partizip2 === "string") {
         registerForm(paradigm.partizip2, "participle", lemmaKey);
       } else {
-        Object.values(paradigm.partizip2).forEach((p) => registerForm(p, "participle", lemmaKey));
+        forEachForm(paradigm.partizip2, (p) => registerForm(p, "participle", lemmaKey));
       }
     }
 
-    // Imperativos: registrar todos salvo los de 3 palabras con "Sie" (evitamos trigramas)
-    Object.entries(paradigm.imperativ || {}).forEach(([person, form]) => {
-      if (!form) return;
-      // No registrar "… Sie" para no introducir trigramas en el detector
-      if (/\bSie\b/i.test(form)) return;
-      registerForm(form, "imperative", lemmaKey);
-    });
+    // Imperativos (omitimos “… Sie” para no introducir trigramas)
+    if (paradigm.imperativ) {
+      Object.entries(paradigm.imperativ).forEach(([person, form]) => {
+        if (!form) return;
+        if (/\bSie\b/i.test(form)) return;
+        registerImperative(form);
+      });
+    }
 
-    // Infinitivos: lemma e "zu-Infinitiv" (sin espacios para búsquedas como 'abzuholen')
+    // Infinitivos: lemma y "zu-Infinitiv" sin espacios (p.ej. "abzuschließen")
     registerForm(paradigm.lemma, "infinitive", lemmaKey);
     if (paradigm.zuInfinitiv) {
       registerForm(paradigm.zuInfinitiv.replace(/\s+/g, ""), "infinitive", lemmaKey);
     }
 
-    // Auxiliar del paradigma
+    // Registrar auxiliar del paradigma para heurística de contexto
     if (paradigm.aux === "sein" || paradigm.aux === "haben") {
       AUXILIARIES.add(normalize(paradigm.aux));
     }
@@ -290,7 +362,13 @@ export function generateVerbDictionaries(lemmas) {
  */
 export const getVerbDictionaries = () => {
   if (!verbDictionaries) {
-    const allVerbLemmas = [...Object.keys(IRREGULARS), ...REGULARS];
+    const allVerbLemmas = Array.from(
+      new Set([
+        ...Object.keys(IRREGULARS),
+        ...REGULARS,
+        ...Object.keys(AUX_BY_LEMMA), // incluye lemas presentes solo en aux_by_lemma
+      ])
+    );
     verbDictionaries = generateVerbDictionaries(allVerbLemmas);
   }
   return verbDictionaries;
@@ -317,7 +395,7 @@ const analyzeVerbContext = (word, context = {}) => {
   if (currentIndex > 0) {
     const prevTokens = tokens.slice(Math.max(0, currentIndex - 3), currentIndex);
     for (const token of prevTokens) {
-      const normalizedToken = normalize(token);
+      const normalizedToken = canonicalizeVerbish(token);
       if (getVerbDictionaries().auxiliaries.has(normalizedToken)) {
         contextInfo.hasAuxiliaryBefore = true;
         break;
@@ -368,7 +446,7 @@ const analyzeVerbContext = (word, context = {}) => {
 // =====================
 
 export const isVerb = (word, context = {}) => {
-  const normalized = normalize(word);
+  const normalized = canonicalizeVerbish(word);
   const dictionaries = getVerbDictionaries();
 
   const result = {
