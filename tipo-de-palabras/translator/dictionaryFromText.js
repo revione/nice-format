@@ -1,5 +1,7 @@
 // ====== DICCIONARIO GLOBAL A PARTIR DE TEXTO ======
 import { normalizeWord, translateWord } from "./translator.js";
+import { analyzeAdjective } from "./adjetives/detection.js";
+import { translateAdjective } from "./adjetives/lookup.js";
 
 window.GLOBAL_WORD_DICTIONARY = window.GLOBAL_WORD_DICTIONARY || Object.create(null);
 
@@ -23,6 +25,16 @@ const buildWordDictionaryFromText = async (text, { includeTranslations = false, 
     if (!dict[normalized]) dict[normalized] = { count: 0, forms: new Set() };
     dict[normalized].count += 1;
     dict[normalized].forms.add(raw);
+
+    // Intentar análisis de adjetivo (alemán)
+    try {
+      const a = analyzeAdjective(raw);
+      if (a?.base && a.confidence >= 0.5) {
+        dict[normalized].pos = "adj";
+        dict[normalized].lemma = a.base; // p. ej. "schön"
+        dict[normalized].degree = a.degree; // "base" | "comp" | "sup" | null
+      }
+    } catch {}
   }
 
   if (includeTranslations) {
@@ -31,6 +43,16 @@ const buildWordDictionaryFromText = async (text, { includeTranslations = false, 
       words.map(async (w) => {
         if (dict[w].translation !== undefined) return;
         try {
+          //  Si es adjetivo detectado, intentar primero el lookup morfológico
+          if (dict[w].pos === "adj") {
+            const t = translateAdjective(w, { lang: targetLanguage });
+            if (t?.translation) {
+              dict[w].translation = t.translation;
+              dict[w].source = "adj-lookup";
+              return;
+            }
+          }
+          // Fallback al traductor híbrido genérico
           const r = await translateWord(w, sourceLanguage, targetLanguage);
           dict[w].translation = r?.translation ?? null;
           dict[w].source = r?.source ?? null;

@@ -177,8 +177,6 @@ export const LOCAL_DICTIONARY = {
   kurze: "breve, corto",
   kurz: "corto, brevemente",
   produktiv: "productivo",
-  leise: "suave, en voz baja",
-  leiser: "más bajo (volumen)",
   unnötig: "innecesario",
   wohl: "probablemente, al parecer",
   gut: "bueno, bien",

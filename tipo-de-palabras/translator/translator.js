@@ -1,5 +1,6 @@
 import { LOCAL_DICTIONARY } from "./localDictionary.js";
 import { loadApiKey } from "./apiKey.js";
+import { translateAdjective } from "./adjetives/lookup.js";
 
 const TRANSLATION_CACHE = new Map();
 const TRANSLATION_QUEUE = new Map();
@@ -225,6 +226,14 @@ export const translateWord = async (word, sourceLanguage = "de", targetLanguage 
 };
 
 export const performHybridTranslation = async (word, sourceLanguage, targetLanguage) => {
+  // PASO 0: Lookup morfológico de adjetivos
+  try {
+    const adj = translateAdjective(word, { lang: targetLanguage });
+    if (adj?.translation) {
+      return { translation: adj.translation, source: "adj-lookup" };
+    }
+  } catch {}
+
   // PASO 1: Buscar en diccionarios locales (base + aprendido)
   const localResult = findLocalTranslation(word);
   if (localResult) {

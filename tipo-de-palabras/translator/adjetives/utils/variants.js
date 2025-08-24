@@ -74,5 +74,14 @@ export const generateStemVariants = (stem) => {
     }
   }
 
+  // adjetivos que pierden la -e antes de -er/-est (leise -> leiser/leisest-)
+  const terminalE = `${stem}e`;
+  if (terminalE !== stem) {
+    variants.add(terminalE);
+    for (const variant of generateGermanVariants(terminalE)) {
+      variants.add(variant);
+    }
+  }
+
   return [...variants];
 };

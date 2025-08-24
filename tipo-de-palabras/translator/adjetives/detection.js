@@ -3,6 +3,7 @@ import { ADJECTIVES, ADJ_GRADABLE } from "./lemmas/index.js";
 import { tryIrregularLookup } from "./utils/shared.js";
 import { generateGermanVariants, generateStemVariants, transformUmlaut } from "./utils/variants.js";
 import { germanWordValidator } from "./utils/validation.js";
+import { tryColorCompound } from "./utils/colors.js";
 
 const BASE_SET = new Set(ADJECTIVES.filter((a) => a.form === "base").map((a) => a.de));
 
@@ -146,6 +147,19 @@ export const analyzeAdjective = (inputRaw) => {
       if (isBase(variant)) {
         return createAnalysisResult(input, { core, ending }, variant, "base", 0.75, `Base tras variantes [${tag}]`);
       }
+    }
+
+    // 6. Color compuesto (hellgrün, dunkelblau, knallrot, etc.)
+    const colorHit = tryColorCompound(core);
+    if (colorHit) {
+      return createAnalysisResult(
+        input,
+        { core, ending },
+        colorHit.base, // base = color simple ("grün")
+        "base", // grado: base
+        colorHit.confidence, // ~0.70
+        `${(colorHit.notes && colorHit.notes[0]) || "Color compuesto"} [${tag}]`
+      );
     }
 
     return null;

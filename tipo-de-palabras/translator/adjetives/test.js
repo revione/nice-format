@@ -72,7 +72,15 @@ const EXPECTS_3 = [
   ["Schön", "base", "schön"],
 ];
 
-const ALL_EXPECTS = [...EXPECTS_1, ...EXPECTS_2, ...EXPECTS_3];
+const EXPECTS_4 = [["leiser", "comp", "leise"]];
+const EXPECTS_5 = [
+  // sustantives
+  ["Deutsch", null, "Deutsch"],
+  ["Neue", null, "neu"],
+  ["Alten", null, "alt"],
+];
+
+const ALL_EXPECTS = [...EXPECTS_1, ...EXPECTS_2, ...EXPECTS_3, ...EXPECTS_4];
 
 const runImprovedTest = () => {
   console.log("=== TESTING IMPROVED TRANSLATION ===\n");
@@ -81,7 +89,7 @@ const runImprovedTest = () => {
   let translationOK = 0;
   let totalTests = 0;
 
-  for (const [word, expectedDegree, expectedBase] of ALL_EXPECTS) {
+  for (const [word, expectedDegree, expectedBase] of EXPECTS_5) {
     totalTests++;
 
     // Test analysis
@@ -100,6 +108,7 @@ const runImprovedTest = () => {
     const translationStatus = translation ? "✅" : "❌";
 
     console.log(`${analysisStatus}${translationStatus} ${word.padEnd(15)} → ${analysis.degree || "null"} ${analysis.base || "null"}`);
+    console.log(analysis);
 
     if (translation) {
       console.log(`     Translation: ${translation}`);
@@ -196,5 +205,5 @@ const debugOrangefarben = () => {
 
 // Run all tests
 runImprovedTest();
-testSpecificCases();
-debugOrangefarben();
+// testSpecificCases();
+// debugOrangefarben();

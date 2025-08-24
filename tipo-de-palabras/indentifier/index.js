@@ -5,7 +5,7 @@ import { PRONOUNS } from "../word-types/pronouns.js";
 import { CONJUNCTIONS } from "../word-types/conjunctions.js";
 import { ADVERBS, IRREGULAR_ADVERBS } from "../word-types/adverbs.js";
 import { NOUN_LEMMAS, detectNounBySuffix } from "../word-types/noun.js";
-import { GermanAdjectives } from "../word-types/adjectives/detection.js";
+import { analyzeAdjective, isAdjectiveLike } from "../translator/adjetives/detection.js";
 import { nonGermanWords } from "../word-types/nonGermanWords.js";
 import { specialCases } from "../word-types/specialCases.js";
 import { detectNumber } from "../word-types/numbers/recognizer.js";
@@ -106,7 +106,7 @@ const looksLikeNoun = (word, atSentenceStart = false) => {
   return false;
 };
 
-const looksLikeAdj = (word, context = {}) => GermanAdjectives.isAdjective(word, context);
+const looksLikeAdj = (word, context = {}) => isAdjectiveLike(word, context);
 
 const looksLikeAdverb = (word) => {
   const w = normalize(word);
@@ -277,11 +277,13 @@ const _identifierImpl = ({ word, words = [], index = 0, atSentenceStart = false,
   // =====================================================
 
   if (enableDeepAnalysis) {
-    const adjectiveResult = GermanAdjectives.analyze(original, {
+    const adjectiveResult = analyzeAdjective(word, {
       tokens: words,
       currentIndex: index,
       atSentenceStart,
     });
+
+    adjectiveResult.isAdjective = adjectiveResult.base !== null;
 
     if (adjectiveResult.isAdjective) {
       return {
