@@ -15,6 +15,7 @@ export const SUPPLETIVE_SUPERLATIVES = {
   viel: "meist",
   gern: "liebst",
   wenig: "weniger",
+  wenig: "wenigst",
 };
 
 /** Irregulares NO supletivos (cambios de tema). */

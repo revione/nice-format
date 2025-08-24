@@ -65,6 +65,16 @@ const tryResolveBaseFromStem = (stem) => {
     }
   }
 
+  // 1.2) También probar ae/oe/ue → a/o/u (útil cuando la BASE no lleva umlaut: groß)
+  {
+    const deDigraph = stem.replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u").replace(/Ae/g, "A").replace(/Oe/g, "O").replace(/Ue/g, "U");
+    if (deDigraph !== stem) {
+      for (const cand of ssEszettVariants(deDigraph)) {
+        if (isBase(cand)) return cand; // p.ej., gross → groß
+      }
+    }
+  }
+
   // 2) Heurísticas (p. ej., höh→hoch, fitt→fit) + variantes
   const fixed = applyReverseStemHeuristics(stem);
   if (fixed) {

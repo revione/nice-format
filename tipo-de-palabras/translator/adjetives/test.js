@@ -40,7 +40,7 @@ import { analyzeAdjective } from "./index.js";
 //   }
 // })();
 
-const EXPECT = [
+const EXPECTS_1 = [
   ["schöne", "base", "schön"],
   ["freundlichen", "base", "freundlich"],
   ["stärkeren", "comp", "stark"],
@@ -64,7 +64,7 @@ const EXPECT = [
   ["WEIßER", "comp", "weiß"], // mayúsculas + ß
 ];
 
-const RARE_CASES_EXPECT = [
+const EXPECTS_2 = [
   // umlaut irregulares
   ["dümmer", "comp", "dumm"],
   ["dümmsten", "sup", "dumm"],
@@ -107,7 +107,7 @@ const RARE_CASES_EXPECT = [
   ["verheiratet", null, "verheiratet"],
 ];
 
-const RARE_CASES_EXPECT_2 = [
+const EXPECTS_3 = [
   // umlaut irregulares menos típicos
   ["gesünder", "comp", "gesund"],
   ["gesündesten", "sup", "gesund"],
@@ -148,12 +148,14 @@ const RARE_CASES_EXPECT_2 = [
   ["GRÖßTE", "sup", "groß"], // mayúsculas con ß
 ];
 
+const EXPECTS = [...EXPECTS_1, ...EXPECTS_2, ...EXPECTS_3];
+
 const runExpect = () => {
   let fails = 0;
-  for (const [word, degree, base] of RARE_CASES_EXPECT_2) {
+  for (const [word, degree, base] of EXPECTS) {
     const g = analyzeAdjective(word);
     const ok = g.degree === degree && g.base === base;
-    console.log(word, g);
+    // console.log(word, g);
     if (!ok) {
       console.error("❌", word, "→", g.degree, g.base, " (expected:", degree, base, ")");
       fails++;
