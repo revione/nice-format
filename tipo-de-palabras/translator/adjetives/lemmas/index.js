@@ -1,5 +1,5 @@
-import { SUPPLETIVE_COMPARATIVES, SUPPLETIVE_SUPERLATIVES } from "./superlatives.js";
-import { ADJECTIVES_EMOTIONS } from "./emotions.js";
+// lemmas/index.js
+import { ADJECTIVES_STATES } from "./emotions.js";
 import { ADJECTIVES_LANGUAGE } from "./language.js";
 import { ADJECTIVES_PARTICIPLES } from "./participles.js";
 import { ADJECTIVES_POSITION } from "./position.js";
@@ -8,26 +8,12 @@ import { ADJECTIVES_SIZE } from "./size.js";
 import { ADJECTIVES_SOCIAL } from "./social.js";
 import { ADJECTIVES_SPACE } from "./space.js";
 import { ADJECTIVES_TIME } from "./time.js";
-import {
-  ADJECTIVE_DECLINATIONS,
-  APPEARANCE_GENERAL,
-  APPEARANCE_STYLE,
-  COLORS,
-  EVALUATION_FORMS,
-  AGE_FORMS,
-  DIFFICULTY_FORMS,
-  BRIGHTNESS_FORMS,
-  TEMPERATURE_FORMS,
-  NATURE_TECH_FORMS,
-  VISIBILITY_FORMS,
-  IMPORTANCE_MODALITY_FORMS,
-  SPECIFICITY_FORMS,
-  CONDITION_FORMS,
-  VALUE_FORMS,
-} from "./quality.js";
+import { ADJECTIVES_APPEARANCE } from "./appearance.js";
+import { COLORS } from "./colors.js";
+import { ADJECTIVES_QUALITY } from "./quality.js";
 
-export const ADJECTIVES = [
-  ...ADJECTIVES_EMOTIONS,
+export const ADJECTIVES_IMPORTED = [
+  ...ADJECTIVES_STATES,
   ...ADJECTIVES_LANGUAGE,
   ...ADJECTIVES_PARTICIPLES,
   ...ADJECTIVES_POSITION,
@@ -36,21 +22,11 @@ export const ADJECTIVES = [
   ...ADJECTIVES_SOCIAL,
   ...ADJECTIVES_SPACE,
   ...ADJECTIVES_TIME,
-  ...ADJECTIVE_DECLINATIONS,
-  ...AGE_FORMS,
-  ...APPEARANCE_GENERAL,
-  ...APPEARANCE_STYLE,
-  ...BRIGHTNESS_FORMS,
+  ...ADJECTIVES_APPEARANCE,
   ...COLORS,
-  ...CONDITION_FORMS,
-  ...DIFFICULTY_FORMS,
-  ...EVALUATION_FORMS,
-  ...IMPORTANCE_MODALITY_FORMS,
-  ...NATURE_TECH_FORMS,
-  ...SPECIFICITY_FORMS,
-  ...SUPPLETIVE_COMPARATIVES,
-  ...SUPPLETIVE_SUPERLATIVES,
-  ...TEMPERATURE_FORMS,
-  ...VALUE_FORMS,
-  ...VISIBILITY_FORMS,
+  ...ADJECTIVES_QUALITY,
 ].sort((a, b) => (a.de < b.de ? -1 : 1));
+
+const byDe = new Map();
+for (const a of ADJECTIVES_IMPORTED) if (!byDe.has(a.de)) byDe.set(a.de, a);
+export const ADJECTIVES = [...byDe.values()].sort((a, b) => (a.de < b.de ? -1 : 1));

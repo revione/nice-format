@@ -1,5 +1,4 @@
-// utils.js
-import { SUPPLETIVE_COMPARATIVES, SUPPLETIVE_SUPERLATIVES } from "./superlatives.js";
+import { SUPPLETIVE_COMPARATIVES, SUPPLETIVE_SUPERLATIVES, IRREGULAR_COMPARATIVES, IRREGULAR_SUPERLATIVES } from "./superlatives.js";
 
 // --- Builders por idioma (podés agregar más en BUILDERS) ---
 export const BUILDERS = {
@@ -55,25 +54,34 @@ export const makeAdjectivesFromList = (list) => {
 
     // --- Alemán (de) ---
     if (gradable !== false) {
-      // <<< solo si es gradable
       // Comparativo
       if (!comp.de) {
+        // 1) Supletivo verdadero (gut → besser)
         if (irregularities?.includes("suppletive") && SUPPLETIVE_COMPARATIVES[base.de]) {
           comp.de = SUPPLETIVE_COMPARATIVES[base.de];
+          // 2) Irregular no supletivo (hoch → höher; nah → näher)
+        } else if (IRREGULAR_COMPARATIVES[base.de]) {
+          comp.de = IRREGULAR_COMPARATIVES[base.de];
         } else {
           const stem = makeCompStemDe(base.de, irregularities);
           comp.de = `${stem}er`;
         }
       }
+
       // Superlativo
       if (!sup.de) {
+        // 1) Supletivo o marcado como superlativo irregular (gut → best)
         if (irregularities?.includes("suppletive") || irregularities?.includes("irregular superlative")) {
-          const mapped = SUPPLETIVE_SUPERLATIVES[base.de];
-          if (mapped) sup.de = mapped;
-          else {
+          const mapped = SUPPLETIVE_SUPERLATIVES[base.de] || IRREGULAR_SUPERLATIVES[base.de];
+          if (mapped) {
+            sup.de = mapped;
+          } else {
             const stem = makeSupStemDe(base.de, irregularities);
             sup.de = `${stem}${needsEst(base.de) ? "est" : "st"}`;
           }
+          // 2) Irregular no supletivo explícito (hoch → höchst; nah → nächst)
+        } else if (IRREGULAR_SUPERLATIVES[base.de]) {
+          sup.de = IRREGULAR_SUPERLATIVES[base.de];
         } else {
           const stem = makeSupStemDe(base.de, irregularities);
           sup.de = `${stem}${needsEst(base.de) ? "est" : "st"}`;
