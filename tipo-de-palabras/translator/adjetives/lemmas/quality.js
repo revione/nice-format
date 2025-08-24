@@ -86,6 +86,24 @@ export const FREQUENCY_INTENSITY_FORMS = [
   { base: { de: "selten", es: "raro/a, poco frecuente" } },
   { base: { de: "intensiv", es: "intenso/a" } },
   { base: { de: "mild", es: "suave" } },
+
+  {
+    base: { de: "viel", es: "mucho/a" },
+    comp: { de: "mehr", es: "más" },
+    sup: { de: "meist", es: "la mayoría, lo más" },
+    irregularities: ["suppletive"],
+  },
+  {
+    base: { de: "wenig", es: "poco/a" },
+    comp: { de: "weniger", es: "menos" },
+    sup: { de: "wenigst", es: "lo menos, mínimo" },
+    irregularities: ["suppletive"],
+  },
+
+  { base: { de: "häufig", es: "frecuente" } },
+  { base: { de: "selten", es: "raro/a, poco frecuente" } },
+  { base: { de: "intensiv", es: "intenso/a" } },
+  { base: { de: "mild", es: "suave" } },
 ];
 
 // --- character/attitude ---

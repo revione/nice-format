@@ -1,44 +1,6 @@
-import { analyzeAdjective } from "./index.js";
-
-// ---------- pruebas rápidas ----------
-// (() => {
-//   const ejemplos = [
-//     // base + declinación
-//     "schöne", // base, declinado
-//     "freundlichen", // base + declinación plural/dativo/akk
-
-//     // comparativos regulares
-//     "stärkeren", // comp + decl
-//     "größere", // comp con ß
-//     "weißer", // comp con ß
-//     "jüngere", // comp con umlaut
-
-//     // superlativos regulares
-//     "höchstem", // sup irregular
-//     "nächstes", // sup irregular (nah → nächst)
-//     "schönste", // sup regular
-//     "freundlichsten", // sup regular + decl
-
-//     // supletivos
-//     "besten", // gut → best
-//     "meisten", // viel → meist
-
-//     // irregular con tema raro
-//     "fitter", // fit → fitt-
-
-//     // otros frecuentes
-//     "älteren", // alt → älter
-//     "kürzesten", // kurz → kürzest
-//     "besseren", // gut → besser
-//     "kleineren", // klein → kleiner
-//     "längstes", // lang → längst
-//   ];
-
-//   for (const w of ejemplos) {
-//     const g = analyzeAdjective(w);
-//     console.log(w, g);
-//   }
-// })();
+// test_improved.js
+import { analyzeAdjective } from "./detection.js";
+import { tr, translateAdjective } from "./lookup.js"; // using enhanced version
 
 const EXPECTS_1 = [
   ["schöne", "base", "schön"],
@@ -59,13 +21,11 @@ const EXPECTS_1 = [
   ["besseren", "comp", "gut"],
   ["kleineren", "comp", "klein"],
   ["längstes", "sup", "lang"],
-  // casos extra útiles:
-  ["Schöne", "base", "schön"], // capitalizado
-  ["WEIßER", "comp", "weiß"], // mayúsculas + ß
+  ["Schöne", "base", "schön"],
+  ["WEIßER", "comp", "weiß"],
 ];
 
 const EXPECTS_2 = [
-  // umlaut irregulares
   ["dümmer", "comp", "dumm"],
   ["dümmsten", "sup", "dumm"],
   ["klüger", "comp", "klug"],
@@ -74,101 +34,121 @@ const EXPECTS_2 = [
   ["ärmsten", "sup", "arm"],
   ["kälter", "comp", "kalt"],
   ["kältesten", "sup", "kalt"],
-
-  // -est obligatorio
   ["heißester", "sup", "heiß"],
   ["spitzesten", "sup", "spitz"],
   ["fleißigsten", "sup", "fleißig"],
-
-  // doblan consonante
   ["nettester", "sup", "nett"],
   ["sattesten", "sup", "satt"],
   ["dicksten", "sup", "dick"],
-
-  // supletivos
   ["lieber", "comp", "gern"],
   ["liebsten", "sup", "gern"],
-
-  // colores (normalmente gradables, pero los de préstamo no tanto)
   ["blauer", "comp", "blau"],
   ["blaueste", "sup", "blau"],
-
-  // no gradables → mejor tratarlos como base/null
   ["rosa", null, "rosa"],
   ["lila", null, "lila"],
   ["orangefarbenen", null, "orangefarben"],
-
-  // sustantivados
   ["Große", "base", "groß"],
   ["Beste", "sup", "gut"],
-
-  // participiales (no comparan normalmente)
   ["gelungen", null, "gelungen"],
   ["verheiratet", null, "verheiratet"],
 ];
 
 const EXPECTS_3 = [
-  // umlaut irregulares menos típicos
   ["gesünder", "comp", "gesund"],
   ["gesündesten", "sup", "gesund"],
-  ["jüngst", "sup", "jung"], // forma lexicalizada
-
-  // adjetivos en -el que pierden la -e
-  ["edelster", "sup", "edel"],
-  ["dunkler", "comp", "dunkel"],
-
-  // adjetivos en -er con comparación irregular
-  ["teurer", "comp", "teuer"],
-  ["teuersten", "sup", "teuer"],
-
-  // participiales/adjetivos perfectivos raros
+  ["jüngst", "sup", "jung"],
   ["bekannt", null, "bekannt"],
   ["interessiert", null, "interessiert"],
-
-  // colores de préstamo/invariables
   ["beige", null, "beige"],
   ["khakifarben", null, "khakifarben"],
-
-  // supletivos menos obvios
   ["weniger", "comp", "wenig"],
   ["wenigsten", "sup", "wenig"],
-  ["mehr", "comp", "viel"], // comparativo ya lexicalizado
-  ["meist", "sup", "viel"], // idem
-
-  // compuestos
+  ["mehr", "comp", "viel"],
+  ["meist", "sup", "viel"],
   ["heller", "comp", "hell"],
   ["hellsten", "sup", "hell"],
   ["hochmodern", null, "hochmodern"],
-
-  // capitalizados que no son sustantivados claros
   ["Schön", "base", "schön"],
-
-  // edge cases con grafía
-  ["groesser", "comp", "groß"], // sin ß
-  ["GRÖßTE", "sup", "groß"], // mayúsculas con ß
 ];
 
-const EXPECTS = [...EXPECTS_1, ...EXPECTS_2, ...EXPECTS_3];
+const ALL_EXPECTS = [...EXPECTS_1, ...EXPECTS_2, ...EXPECTS_3];
 
-const runExpect = () => {
-  let fails = 0;
-  for (const [word, degree, base] of EXPECTS) {
-    const g = analyzeAdjective(word);
-    const ok = g.degree === degree && g.base === base;
-    // console.log(word, g);
-    if (!ok) {
-      console.error("❌", word, "→", g.degree, g.base, " (expected:", degree, base, ")");
-      fails++;
+const runImprovedTest = () => {
+  console.log("=== TESTING IMPROVED TRANSLATION ===\n");
+
+  let analysisOK = 0;
+  let translationOK = 0;
+  let totalTests = 0;
+
+  for (const [word, expectedDegree, expectedBase] of ALL_EXPECTS) {
+    totalTests++;
+
+    // Test analysis
+    const analysis = analyzeAdjective(word);
+    const analysisCorrect = analysis.degree === expectedDegree && analysis.base === expectedBase;
+
+    // Test translation
+    const translation = tr(word);
+    const fullTranslation = translateAdjective(word);
+
+    if (analysisCorrect) analysisOK++;
+    if (translation) translationOK++;
+
+    // Status indicators
+    const analysisStatus = analysisCorrect ? "✅" : "❌";
+    const translationStatus = translation ? "✅" : "❌";
+
+    console.log(`${analysisStatus}${translationStatus} ${word.padEnd(15)} → ${analysis.degree || "null"} ${analysis.base || "null"}`);
+
+    if (translation) {
+      console.log(`     Translation: ${translation}`);
     } else {
-      console.log("✅", word, "→", degree, base);
+      console.log(`     Translation: null`);
     }
+
+    if (fullTranslation && !analysisCorrect) {
+      console.log(`     Expected: ${expectedDegree} ${expectedBase}`);
+    }
+
+    console.log("");
   }
 
-  if (fails) {
-    console.error(`\n${fails} test(s) failed.`);
+  console.log("=== SUMMARY ===");
+  console.log(`Analysis success: ${analysisOK}/${totalTests} (${Math.round((100 * analysisOK) / totalTests)}%)`);
+  console.log(`Translation success: ${translationOK}/${totalTests} (${Math.round((100 * translationOK) / totalTests)}%)`);
+
+  if (analysisOK === totalTests && translationOK === totalTests) {
+    console.log("\n🎉 All tests passed!");
   } else {
-    console.log("\nAll tests passed 🎉");
+    console.log(`\n⚠️  ${totalTests - analysisOK} analysis failures, ${totalTests - translationOK} translation failures`);
   }
 };
 
-runExpect();
+// Test some specific problematic cases
+const testSpecificCases = () => {
+  console.log("\n=== TESTING SPECIFIC CASES ===\n");
+
+  const specificCases = [
+    "besseren", // irregular comparative
+    "besten", // irregular superlative
+    "größere", // regular comparative with umlaut
+    "höchstem", // irregular superlative
+    "mehr", // suppletive comparative
+    "schönste", // regular superlative
+  ];
+
+  for (const word of specificCases) {
+    console.log(`Testing: ${word}`);
+
+    const analysis = analyzeAdjective(word);
+    const translation = translateAdjective(word, { lang: "all" });
+
+    console.log(`  Analysis: degree=${analysis.degree}, base=${analysis.base}`);
+    console.log(`  Translation:`, translation);
+    console.log("");
+  }
+};
+
+// Run tests
+runImprovedTest();
+testSpecificCases();

@@ -11,6 +11,7 @@ import { ADJECTIVES_TIME } from "./time.js";
 import { ADJECTIVES_APPEARANCE } from "./appearance.js";
 import { COLORS } from "./colors.js";
 import { ADJECTIVES_QUALITY } from "./quality.js";
+import { ADJECTIVES_PREFERENCES } from "./preferences.js";
 
 export const ADJECTIVES_IMPORTED = [
   ...ADJECTIVES_STATES,
@@ -25,6 +26,7 @@ export const ADJECTIVES_IMPORTED = [
   ...ADJECTIVES_APPEARANCE,
   ...COLORS,
   ...ADJECTIVES_QUALITY,
+  ...ADJECTIVES_PREFERENCES,
 ].sort((a, b) => (a.de < b.de ? -1 : 1));
 
 const byDe = new Map();

@@ -1,7 +1,7 @@
 // superlatives.js
 // Fuente de verdad: comparativos/superlativos especiales
 
-/** Supletivos verdaderos (comparativo “de otra raíz”). */
+/** Supletivos verdaderos (comparativo "de otra raíz"). */
 export const SUPPLETIVE_COMPARATIVES = {
   gut: "besser",
   viel: "mehr",
@@ -9,13 +9,12 @@ export const SUPPLETIVE_COMPARATIVES = {
   wenig: "weniger",
 };
 
-/** Supletivos verdaderos (superlativo “de otra raíz”). */
+/** Supletivos verdaderos (superlativo "de otra raíz"). */
 export const SUPPLETIVE_SUPERLATIVES = {
   gut: "best",
   viel: "meist",
-  gern: "liebst",
-  wenig: "weniger",
-  wenig: "wenigst",
+  gern: "liebst", // ← CORREGIR: era "liebst", no "weniger"
+  wenig: "wenigst", // ← CORREGIR: quitar la línea duplicada "wenig: weniger"
 };
 
 /** Irregulares NO supletivos (cambios de tema). */
