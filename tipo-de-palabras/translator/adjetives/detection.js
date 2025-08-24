@@ -1,112 +1,78 @@
-// translator/adjetives/adj_guess.js
 import { DECLENSIONS } from "./declensions.js";
 import { REVERSE_COMPARATIVES, REVERSE_SUPERLATIVES } from "./lemmas/superlatives.js";
 import { ADJECTIVES, ADJ_GRADABLE } from "./lemmas/index.js";
+import { generateGermanVariants, generateStemVariants, transformUmlaut } from "./utils/variants.js";
+import { validateInput } from "./utils/validation.js";
 
-/** Heurísticas de stems raros (comparativo/superlativo ya “pelados”) */
+/** Heurísticas de stems raros */
 const REVERSE_STEM_FIXES = [
-  [/^höh$/i, () => "hoch"], // höher → (−er) → höh → hoch
-  [/^fitt$/i, () => "fit"], // fitter → (−er) → fitt → fit
+  [/^höh$/i, () => "hoch"],
+  [/^fitt$/i, () => "fit"],
 ];
 
 export const applyReverseStemHeuristics = (stem) => {
-  for (const [rx, toBase] of REVERSE_STEM_FIXES) if (rx.test(stem)) return toBase(stem);
+  for (const [rx, toBase] of REVERSE_STEM_FIXES) {
+    if (rx.test(stem)) return toBase(stem);
+  }
   return null;
 };
 
-// ---------- utils ----------
+// --- Utilidades ---
 const BASE_SET = new Set(ADJECTIVES.filter((a) => a.form === "base").map((a) => a.de));
-
-// ae/oe/ue <-> ä/ö/ü helpers
-const TO_UMLAUT = (s) => s.replace(/ae/g, "ä").replace(/oe/g, "ö").replace(/ue/g, "ü").replace(/Ae/g, "Ä").replace(/Oe/g, "Ö").replace(/Ue/g, "Ü");
-const FROM_UMLAUT = (s) => s.replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/Ä/g, "Ae").replace(/Ö/g, "Oe").replace(/Ü/g, "Ue");
 
 const stripDeclensionEnding = (form) => {
   const endings = ["en", "er", "es", "em", "e"];
-  for (const end of endings)
+  for (const end of endings) {
     if (form.toLowerCase().endsWith(end)) {
       return { core: form.slice(0, -end.length), ending: end };
     }
+  }
   return { core: form, ending: "" };
 };
 
-const reverseUmlaut = (s) => s.replace(/[ÄÖÜäöü]/g, (m) => ({ ä: "a", ö: "o", ü: "u", Ä: "A", Ö: "O", Ü: "U" }[m] ?? m));
 const peelComparative = (core) => (/er$/i.test(core) ? core.slice(0, -2) : null);
 const peelSuperlative = (core) => {
   if (/est$/i.test(core)) return core.slice(0, -3);
-  if (/ßt$/i.test(core)) return core.slice(0, -1); // deja 'größ' (no elimina la ß)
+  if (/ßt$/i.test(core)) return core.slice(0, -1);
   if (/st$/i.test(core)) return core.slice(0, -2);
   return null;
 };
+
 const isBase = (s) => BASE_SET.has(s);
 const isGradable = (s) => ADJ_GRADABLE.get(String(s).toLowerCase()) !== false;
 
-const ssEszettVariants = (s) => {
-  const withSS = s.replace(/ß/g, "ss");
-  const withEszett = s.replace(/ss/g, "ß");
-  return new Set([s, withSS, withEszett]);
-};
-
+/**
+ * Intenta resolver una base desde un stem usando todas las variantes
+ * VERSIÓN SIMPLIFICADA usando generateStemVariants
+ */
 const tryResolveBaseFromStem = (stem) => {
   if (!stem) return null;
 
-  // 1) Directo + variantes ß↔ss
-  for (const cand of ssEszettVariants(stem)) {
-    if (isBase(cand)) return cand;
+  // 1. Probar todas las variantes del stem
+  for (const variant of generateStemVariants(stem)) {
+    if (isBase(variant)) return variant;
   }
 
-  // 1.1) Probar con grafías ae/oe/ue → ä/ö/ü
-  {
-    const uml = TO_UMLAUT(stem);
-    if (uml !== stem) {
-      for (const cand of ssEszettVariants(uml)) {
-        if (isBase(cand)) return cand;
-      }
-    }
-  }
-
-  // 1.2) También probar ae/oe/ue → a/o/u (útil cuando la BASE no lleva umlaut: groß)
-  {
-    const deDigraph = stem.replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u").replace(/Ae/g, "A").replace(/Oe/g, "O").replace(/Ue/g, "U");
-    if (deDigraph !== stem) {
-      for (const cand of ssEszettVariants(deDigraph)) {
-        if (isBase(cand)) return cand; // p.ej., gross → groß
-      }
-    }
-  }
-
-  // 2) Heurísticas (p. ej., höh→hoch, fitt→fit) + variantes
+  // 2. Heurísticas específicas
   const fixed = applyReverseStemHeuristics(stem);
   if (fixed) {
-    for (const cand of ssEszettVariants(fixed)) {
-      if (isBase(cand)) return cand;
+    for (const variant of generateGermanVariants(fixed)) {
+      if (isBase(variant)) return variant;
     }
   }
 
-  // 3) Revertir umlaut (größ → gross) + variantes (→ groß)
-  const deU = reverseUmlaut(stem);
+  // 3. Revertir umlaut y probar
+  const deU = transformUmlaut.reverseUmlaut(stem);
   if (deU && deU !== stem) {
-    for (const cand of ssEszettVariants(deU)) {
-      if (isBase(cand)) return cand;
+    for (const variant of generateGermanVariants(deU)) {
+      if (isBase(variant)) return variant;
     }
-  }
 
-  // 4) Heurísticas después de revertir umlaut (por si aplica)
-  const fixedDeU = applyReverseStemHeuristics(deU);
-  if (fixedDeU) {
-    for (const cand of ssEszettVariants(fixedDeU)) {
-      if (isBase(cand)) return cand;
-    }
-  }
-
-  // 5) Adjs en -el / -er que pierden la -e en el tema del comp/sup:
-  //    dunkel → dunkler (stem "dunkl"), teuer → teurer (stem "teur")
-  {
-    // inserta 'e' antes de la última consonante
-    const plusE = stem.replace(/([bcdfghjklmnpqrstvwxyz])$/i, "e$1");
-    for (const cand of [plusE, TO_UMLAUT(plusE)]) {
-      for (const v of ssEszettVariants(cand)) {
-        if (isBase(v)) return v;
+    // También heurísticas del deU
+    const fixedDeU = applyReverseStemHeuristics(deU);
+    if (fixedDeU) {
+      for (const variant of generateGermanVariants(fixedDeU)) {
+        if (isBase(variant)) return variant;
       }
     }
   }
@@ -114,14 +80,32 @@ const tryResolveBaseFromStem = (stem) => {
   return null;
 };
 
-// ---------- declension helpers (opt-in) ----------
+/**
+ * Helper para crear resultados de análisis consistentes
+ */
+const createAnalysisResult = (input, form, base, rawDegree, baseConfidence, message, notes = []) => {
+  const degree = base && isGradable(base) ? rawDegree : null;
+  const confidence = degree ? baseConfidence : Math.max(baseConfidence - 0.15, 0.1);
+  const finalMessage = degree ? message : `${message} (no gradable → grado nulo)`;
+
+  return {
+    input,
+    form,
+    degree,
+    base,
+    confidence,
+    notes: [...notes, finalMessage],
+  };
+};
+
+// --- Declension helpers ---
 const findDeclensionMatchesForEnding = (ending) => {
   const out = [];
   if (!ending) return out;
-  for (const det of Object.keys(DECLENSIONS)) {
-    const table = DECLENSIONS[det];
-    for (const key of Object.keys(table)) {
-      if (table[key] === ending) {
+
+  for (const [det, table] of Object.entries(DECLENSIONS)) {
+    for (const [key, value] of Object.entries(table)) {
+      if (value === ending) {
         const [caso, genero] = key.split("|");
         out.push({ det, case: caso, gender: genero });
       }
@@ -140,163 +124,110 @@ const GENDER_LABEL = { m: "masculino", f: "femenino", n: "neutro", pl: "plural" 
 
 export const explainDeclensionMatch = ({ det, case: kase, gender }) => `${DET_LABEL[det]} — ${CASE_LABEL[kase]} ${GENDER_LABEL[gender]}`;
 
-// ---------- núcleo (sin declinaciones por defecto) ----------
+// --- Núcleo del análisis ---
 /**
- * Devuelve un análisis minimal:
- * { input, form:{core, ending}, degree:'base'|'comp'|'sup'|null, base:string|null, confidence:number, notes:string[] }
+ * Analiza una forma adjetival alemana
+ * VERSIÓN SIMPLIFICADA con menos repetición
  */
 export const analyzeAdjective = (inputRaw) => {
-  const input = String(inputRaw ?? "").trim();
-  const notes = [];
-  if (!input) {
+  // Validar entrada
+  const validation = validateInput(inputRaw, { allowEmpty: false, toLowerCase: true, trim: true });
+  if (!validation.valid) {
     return {
-      input,
+      input: String(inputRaw ?? "").trim(),
       form: { core: "", ending: "" },
       degree: null,
       base: null,
       confidence: 0,
-      notes: ["Entrada vacía"],
+      notes: [validation.error],
     };
   }
 
-  // Trabajamos en minúsculas para el matching, pero preservamos `input` para reportar.
-  const norm = input.toLowerCase();
+  const input = String(inputRaw ?? "").trim();
+  const norm = validation.value;
   const stripA = stripDeclensionEnding(norm);
 
+  /**
+   * Función unificada para probar un path de análisis
+   */
   const tryPath = (core, ending, tag) => {
-    // 1) supletivos/irregulares (forma exacta del comparativo/superlativo)
+    // 1. Supletivos/irregulares exactos
     if (REVERSE_COMPARATIVES[core]) {
-      const base = REVERSE_COMPARATIVES[core];
-      const deg = isGradable(base) ? "comp" : null;
-      return {
-        input,
-        form: { core, ending },
-        degree: deg,
-        base,
-        confidence: deg ? 0.95 : 0.8,
-        notes: [...notes, deg ? `Comparativo supletivo/irregular [${tag}]` : `Comparativo supletivo/irregular de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
-      };
+      return createAnalysisResult(input, { core, ending }, REVERSE_COMPARATIVES[core], "comp", 0.95, `Comparativo supletivo/irregular [${tag}]`);
     }
     if (REVERSE_SUPERLATIVES[core]) {
-      const base = REVERSE_SUPERLATIVES[core];
-      const deg = isGradable(base) ? "sup" : null;
-      return {
-        input,
-        form: { core, ending },
-        degree: deg,
-        base,
-        confidence: deg ? 0.95 : 0.8,
-        notes: [...notes, deg ? `Superlativo supletivo/irregular [${tag}]` : `Superlativo supletivo/irregular de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
-      };
+      return createAnalysisResult(input, { core, ending }, REVERSE_SUPERLATIVES[core], "sup", 0.95, `Superlativo supletivo/irregular [${tag}]`);
     }
 
-    // 2) comparativo regular (−er)
+    // 2. Comparativo regular
     const compStem = peelComparative(core);
     if (compStem) {
-      const base = tryResolveBaseFromStem(compStem) || tryResolveBaseFromStem(reverseUmlaut(compStem)) || REVERSE_COMPARATIVES[core];
+      const base = tryResolveBaseFromStem(compStem) || REVERSE_COMPARATIVES[core];
       if (base) {
-        const deg = isGradable(base) ? "comp" : null;
-        return {
-          input,
-          form: { core, ending },
-          degree: deg,
-          base,
-          confidence: deg ? 0.9 : 0.8,
-          notes: [...notes, deg ? `Comparativo detectado [${tag}]` : `Comparativo de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
-        };
+        return createAnalysisResult(input, { core, ending }, base, "comp", 0.9, `Comparativo detectado [${tag}]`);
       }
     }
 
-    // 3) superlativo regular (−st / −est)
+    // 3. Superlativo regular
     const supStem = peelSuperlative(core);
     if (supStem) {
-      const base = tryResolveBaseFromStem(supStem) || tryResolveBaseFromStem(reverseUmlaut(supStem)) || REVERSE_SUPERLATIVES[core];
+      const base = tryResolveBaseFromStem(supStem) || REVERSE_SUPERLATIVES[core];
       if (base) {
-        const deg = isGradable(base) ? "sup" : null;
-        return {
-          input,
-          form: { core, ending },
-          degree: deg,
-          base,
-          confidence: deg ? 0.88 : 0.8,
-          notes: [...notes, deg ? `Superlativo detectado [${tag}]` : `Superlativo de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
-        };
+        return createAnalysisResult(input, { core, ending }, base, "sup", 0.88, `Superlativo detectado [${tag}]`);
       }
     }
 
-    // 4) base exacta
+    // 4. Base exacta
     if (isBase(core)) {
-      const deg = isGradable(core) ? "base" : null;
-      return {
-        input,
-        form: { core, ending },
-        degree: deg,
-        base: core,
-        confidence: deg ? 1 - (ending ? 0.05 : 0) : 0.8,
-        notes: [...notes, deg ? `Base exacta [${tag}]` : `Base exacta de adjetivo no gradable → normalizado a grado nulo [${tag}]`],
-      };
+      return createAnalysisResult(input, { core, ending }, core, "base", 1 - (ending ? 0.05 : 0), `Base exacta [${tag}]`);
     }
 
-    // 5) base tras revertir umlaut (+ variantes ß/ss)
-    const maybeBase = reverseUmlaut(core);
-    for (const cand of ssEszettVariants(maybeBase)) {
-      if (isBase(cand)) {
-        const deg = isGradable(cand) ? "base" : null;
-        return {
-          input,
-          form: { core, ending },
-          degree: deg,
-          base: cand,
-          confidence: deg ? 0.75 : 0.7,
-          notes: [...notes, deg ? `Base tras revertir umlaut [${tag}]` : `Base tras revertir umlaut (no gradable) → grado nulo [${tag}]`],
-        };
+    // 5. Base tras transformaciones
+    for (const variant of generateGermanVariants(core)) {
+      if (isBase(variant)) {
+        return createAnalysisResult(input, { core, ending }, variant, "base", 0.75, `Base tras variantes ortográficas [${tag}]`);
       }
     }
 
     return null;
   };
 
-  // estrategia principal: “declinación primero”
-  let analysed = tryPath(stripA.core, stripA.ending, "decl→grado");
+  // Estrategia principal: declinación primero
+  let result = tryPath(stripA.core, stripA.ending, "decl→grado");
 
-  // --- Ambigüedad "-er": si puede ser comparativo, preferimos comparativo ---
+  // Ambigüedad "-er": preferir comparativo
   if (stripA.ending === "er") {
     const asDegree = tryPath(norm, "", "grado→(sin decl)");
-    if (asDegree && asDegree.degree === "comp" && (!analysed || analysed.degree !== "comp")) {
-      asDegree.confidence = Math.max(asDegree.confidence ?? 0, 0.92);
-      asDegree.notes = [...(asDegree.notes ?? []), "Ambigüedad -er: preferido como comparativo"];
-      analysed = asDegree;
+    if (asDegree?.degree === "comp" && (!result || result.degree !== "comp")) {
+      asDegree.confidence = Math.max(asDegree.confidence, 0.92);
+      asDegree.notes.push("Ambigüedad -er: preferido como comparativo");
+      result = asDegree;
     }
   }
 
-  // fallbacks:
-  // 1) si no hubo análisis y era 'er', ya reintentamos arriba
-  // 2) reintento GENERAL sin pelar la terminación (útil p. ej. para participios base en -en: 'gelungen')
-  if (!analysed) {
-    analysed = tryPath(norm, "", "grado→(sin decl)");
+  // Fallback: sin pelar terminación
+  if (!result) {
+    result = tryPath(norm, "", "grado→(sin decl)");
   }
 
-  if (!analysed) {
-    return {
+  return (
+    result || {
       input,
       form: stripA,
       degree: null,
       base: null,
       confidence: 0.15,
-      notes: [...notes, "No parece una forma adjetival conocida."],
-    };
-  }
-  return analysed;
+      notes: ["No parece una forma adjetival conocida"],
+    }
+  );
 };
 
-// ---------- API opt-in para declinaciones (cuando las necesites) ----------
-/** Devuelve las posibles casillas (det/case/gender) para la terminación detectada en `word`. */
+// --- API para declinaciones ---
 export const listDeclensionMatchesFor = (word) => {
   const { ending } = stripDeclensionEnding(String(word || "").trim());
   return findDeclensionMatchesForEnding(ending);
 };
 
-/** Igual que arriba, pero en frases legibles. */
 export const prettyDeclensionMatchesFor = (word, { max = 10 } = {}) => {
   const matches = listDeclensionMatchesFor(word);
   const lines = matches.slice(0, max).map(explainDeclensionMatch);
@@ -304,5 +235,4 @@ export const prettyDeclensionMatchesFor = (word, { max = 10 } = {}) => {
   return lines;
 };
 
-// ---------- helper de UI ----------
 export const isAdjectiveLike = (token) => analyzeAdjective(token).confidence >= 0.5;

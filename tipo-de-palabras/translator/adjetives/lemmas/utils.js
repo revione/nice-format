@@ -1,42 +1,75 @@
 import { SUPPLETIVE_COMPARATIVES, SUPPLETIVE_SUPERLATIVES, IRREGULAR_COMPARATIVES, IRREGULAR_SUPERLATIVES } from "./superlatives.js";
+import { transformUmlaut } from "../utils/variants.js";
 
-// --- Builders por idioma (podés agregar más en BUILDERS) ---
-export const BUILDERS = {
-  es: { comp: (s) => `más ${s}`, sup: (s) => `el/la más ${s}` },
-  en: { comp: (s) => `more ${s}`, sup: (s) => `most ${s}` },
-  // pt: { comp: (s) => `mais ${s}`, sup: (s) => `o/a mais ${s}` },
+// --- Builders por idioma ---
+const LANGUAGE_PATTERNS = {
+  es: {
+    comp: { prefix: "más ", suffix: "" },
+    sup: { prefix: "el/la más ", suffix: "" },
+  },
+  en: {
+    comp: { prefix: "more ", suffix: "" },
+    sup: { prefix: "most ", suffix: "" },
+  },
 };
 
-// --- Reglas y excepciones para el alemán (de) ---
-// Umlaut
-const UMLAUT_MAP = { a: "ä", o: "ö", u: "ü" };
+export const BUILDERS = Object.fromEntries(
+  Object.entries(LANGUAGE_PATTERNS).map(([lang, patterns]) => [
+    lang,
+    {
+      comp: (s) => `${patterns.comp.prefix}${s}${patterns.comp.suffix}`,
+      sup: (s) => `${patterns.sup.prefix}${s}${patterns.sup.suffix}`,
+    },
+  ])
+);
 
-/** Aplica umlaut a la ÚLTIMA vocal a/o/u en la palabra. */
-const applyUmlaut = (word) =>
-  word.replace(/[aou](?!.*[aou])/i, (m) => {
-    const low = m.toLowerCase();
-    const rep = UMLAUT_MAP[low] || m;
-    return m === low ? rep : rep.toUpperCase();
-  });
-
-/** Muchos superlativos escritos requieren -est.  */
+// --- Reglas alemanas ---
+const DOUBLE_STEM_SET = new Set(["fit"]);
 const needsEst = (baseDe) => /(?:sch|tsch|[dtzsxß])$/.test(baseDe);
 
-/** Duplicación de consonante en el tema (comparativo/superlativo). */
-const DOUBLE_STEM_SET = new Set(["fit"]); // fit -> fitt-
-
-/** Crea el tema para comparativo (aplicando irregularidades). */
-const makeCompStemDe = (baseDe, irregularities) => {
+/**
+ * Crea el tema unificado para comparativo y superlativo
+ * @param {string} baseDe - Forma base en alemán
+ * @param {Array} [irregularities] - Irregularidades aplicables
+ * @returns {string} - Tema para comp/sup
+ */
+const makeAdjStemDe = (baseDe, irregularities) => {
   let stem = baseDe;
-  // Umlaut (krank -> kränk-; stark -> stärk-; etc.)
-  if (irregularities?.includes("umlaut")) stem = applyUmlaut(stem);
-  // Duplicación final (fit -> fitt-)
-  if (DOUBLE_STEM_SET.has(baseDe)) stem = `${baseDe}${baseDe.slice(-1)}`;
+
+  // Aplicar umlaut si está marcado
+  if (irregularities?.includes("umlaut")) {
+    stem = transformUmlaut.applyUmlaut(stem);
+  }
+
+  // Duplicación de consonante final (fit -> fitt-)
+  if (DOUBLE_STEM_SET.has(baseDe)) {
+    stem = `${baseDe}${baseDe.slice(-1)}`;
+  }
+
   return stem;
 };
 
-/** Crea el tema para superlativo (mismas reglas que comparativo). */
-const makeSupStemDe = (baseDe, irregularities) => makeCompStemDe(baseDe, irregularities);
+// Aliases para claridad (mantener compatibilidad)
+const makeCompStemDe = makeAdjStemDe;
+const makeSupStemDe = makeAdjStemDe;
+
+/**
+ * Helper para crear resultado de análisis con manejo de gradabilidad
+ * @param {Object} params - Parámetros del resultado
+ * @returns {Object} - Resultado de análisis normalizado
+ */
+const createGradedResult = ({ entry, base, rawDegree, confidence, message, gradable }) => {
+  const degree = gradable !== false ? rawDegree : null;
+  const adjustedConfidence = degree ? confidence : Math.max(confidence - 0.15, 0.1);
+  const finalMessage = degree ? message : `${message} (no gradable → grado nulo)`;
+
+  return {
+    ...entry,
+    degree,
+    confidence: adjustedConfidence,
+    notes: [finalMessage],
+  };
+};
 
 // --- Generador principal: completa comp/sup y propaga a otros idiomas ---
 export const makeAdjectivesFromList = (list) => {
@@ -47,19 +80,17 @@ export const makeAdjectivesFromList = (list) => {
   return list.map((entry) => {
     if (!entry?.base?.de) throw new Error("Cada entrada necesita base.de");
 
-    const { irregularities, gradable } = entry; // <<< leemos gradable
+    const { irregularities, gradable } = entry;
     const base = { ...entry.base };
     const comp = { ...(entry.comp || {}) };
     const sup = { ...(entry.sup || {}) };
 
-    // --- Alemán (de) ---
+    // --- Alemán (de) - Solo si es gradable ---
     if (gradable !== false) {
       // Comparativo
       if (!comp.de) {
-        // 1) Supletivo verdadero (gut → besser)
         if (irregularities?.includes("suppletive") && SUPPLETIVE_COMPARATIVES[base.de]) {
           comp.de = SUPPLETIVE_COMPARATIVES[base.de];
-          // 2) Irregular no supletivo (hoch → höher; nah → näher)
         } else if (IRREGULAR_COMPARATIVES[base.de]) {
           comp.de = IRREGULAR_COMPARATIVES[base.de];
         } else {
@@ -70,7 +101,6 @@ export const makeAdjectivesFromList = (list) => {
 
       // Superlativo
       if (!sup.de) {
-        // 1) Supletivo o marcado como superlativo irregular (gut → best)
         if (irregularities?.includes("suppletive") || irregularities?.includes("irregular superlative")) {
           const mapped = SUPPLETIVE_SUPERLATIVES[base.de] || IRREGULAR_SUPERLATIVES[base.de];
           if (mapped) {
@@ -79,7 +109,6 @@ export const makeAdjectivesFromList = (list) => {
             const stem = makeSupStemDe(base.de, irregularities);
             sup.de = `${stem}${needsEst(base.de) ? "est" : "st"}`;
           }
-          // 2) Irregular no supletivo explícito (hoch → höchst; nah → nächst)
         } else if (IRREGULAR_SUPERLATIVES[base.de]) {
           sup.de = IRREGULAR_SUPERLATIVES[base.de];
         } else {
@@ -96,7 +125,6 @@ export const makeAdjectivesFromList = (list) => {
       const b = BUILDERS[lang];
       if (!b || !tr) continue;
       if (gradable !== false) {
-        // <<< idem
         comp[lang] ||= b.comp(tr);
         sup[lang] ||= b.sup(tr);
       }
@@ -112,17 +140,17 @@ export const flattenBlocks = (blocks) => {
 
   const out = [];
   for (const { base, comp, sup, gradable } of blocks) {
-    // Siempre agregar la forma base si existe
-    if (base && typeof base === "object" && base.de) {
+    // Siempre agregar la forma base
+    if (base?.de) {
       out.push({ ...base, form: "base", gradable });
     }
 
-    // Solo agregar comp/sup si el adjetivo es gradable Y las formas tienen contenido
+    // Solo agregar comp/sup si es gradable
     if (gradable !== false) {
-      if (comp && typeof comp === "object" && comp.de) {
+      if (comp?.de) {
         out.push({ ...comp, form: "comp", gradable });
       }
-      if (sup && typeof sup === "object" && sup.de) {
+      if (sup?.de) {
         out.push({ ...sup, form: "sup", gradable });
       }
     }
@@ -131,12 +159,7 @@ export const flattenBlocks = (blocks) => {
 };
 
 /**
- * Pipeline cómodo:
- * 1) completa comp/sup si faltan
- * 2) aplana a lista simple de formas
- *
- * @param {Array} list - [{ base:{de, es, ...}, comp?, sup?, irregularities? }, ...]
- * @returns {Array}    - [{ de:'', es:'', en?:'' }, ...]
+ * Pipeline cómodo: completa comp/sup + aplana
  */
 export const flatteAdj = (list) => {
   if (!Array.isArray(list)) throw new TypeError("flatteAdj: se esperaba un array");
