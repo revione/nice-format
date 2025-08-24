@@ -84,6 +84,7 @@ export const NEG_FEAR = [
   { base: { de: "unsicher", es: "inseguro/a" } },
   { base: { de: "verunsichert", es: "desconcertado/a, inseguro/a" } },
   { base: { de: "schuldig", es: "culpable" } },
+  { base: { de: "aufgeregt", es: "nervioso/a, excitado/a" } },
 ];
 
 export const NEG_SHAME = [

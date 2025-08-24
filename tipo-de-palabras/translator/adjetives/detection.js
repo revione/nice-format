@@ -59,13 +59,17 @@ const tryResolveBaseFromStem = (stem) => {
 
 // === CONSTRUCCIÓN DE RESULTADOS ===
 
-/**
- * Crea resultado de análisis
- */
+/**   * Crea resultado de análisis   */
 const createAnalysisResult = (input, form, base, rawDegree, baseConfidence, message) => {
-  const degree = base && isGradable(base) ? rawDegree : null;
+  const nonGradable = base && !isGradable(base);
+
+  // Permitir "base" aunque no sea gradable; anular solo comp/sup
+  let degree = rawDegree;
+  if (!base) degree = null;
+  if (nonGradable && rawDegree !== "base") degree = null;
+
   const confidence = degree ? baseConfidence : Math.max(baseConfidence - 0.15, 0.1);
-  const finalMessage = degree ? message : `${message} (no gradable → grado nulo)`;
+  const finalMessage = nonGradable && rawDegree !== "base" ? `${message} (no gradable → sin comp/sup)` : message;
 
   return {
     input: String(input || "").trim(),

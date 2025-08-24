@@ -30,6 +30,7 @@ export const BASIC_COLORS_FORMS = [
   // también habituales pero no gradables
   { base: { de: "orange", es: "naranja" }, gradable: false },
   { base: { de: "beige", es: "beige" }, gradable: false },
+  { base: { de: "bunt", es: "colorido" }, gradable: false },
 ];
 
 export const METAL_COLORS_FORMS = [

@@ -3,6 +3,13 @@ import { analyzeAdjective } from "./detection.js";
 import { tr, translateAdjective } from "./lookup.js";
 import { ADJECTIVES_IMPORTED, ADJ_GRADABLE } from "./lemmas/index.js";
 
+// const EXPECTS_00 = [
+//   // sustantives pero no vamos a considerarlos
+//   ["Deutsch", null, "Deutsch"],
+//   ["Neue", null, "neu"],
+//   ["Alten", null, "alt"],
+// ];
+
 const EXPECTS_1 = [
   ["schöne", "base", "schön"],
   ["freundlichen", "base", "freundlich"],
@@ -73,11 +80,27 @@ const EXPECTS_3 = [
 ];
 
 const EXPECTS_4 = [["leiser", "comp", "leise"]];
-const EXPECTS_5 = [
-  // sustantives
-  ["Deutsch", null, "Deutsch"],
-  ["Neue", null, "neu"],
-  ["Alten", null, "alt"],
+
+const EXPECTS_6 = [
+  // ["gerade", "base", "gerade"],
+  // ["egal", "base", "egal"],
+  // ["komplett", "base", "komplett"],
+  // ["ausgeschieden", "base", "ausgeschieden"],
+  // ["fix", "base", "fix"],
+  // ["gelbwürdig", "base", "gelbwürdig"],
+  // ["nice", "base", "nice"],
+  // ["ungefähr", "base", "ungefähr"],
+
+  // ["abgeräumt", "base", "abgeräumt"],
+  // ["verschätzt", "base", "verschätzt"],
+  // ["überflutet", "base", "überflutet"],
+  // ["geklappt", "base", "geklappt"],
+  // ["non-stop", "base", "non-stop"],
+
+  ["aufgemacht", "base", "aufgemacht"],
+  ["gelandet", "base", "gelandet"],
+  ["bedeutend", "base", "bedeutend"],
+  ["stimmig", "base", "stimmig"],
 ];
 
 const ALL_EXPECTS = [...EXPECTS_1, ...EXPECTS_2, ...EXPECTS_3, ...EXPECTS_4];
@@ -89,7 +112,7 @@ const runImprovedTest = () => {
   let translationOK = 0;
   let totalTests = 0;
 
-  for (const [word, expectedDegree, expectedBase] of EXPECTS_5) {
+  for (const [word, expectedDegree, expectedBase] of EXPECTS_6) {
     totalTests++;
 
     // Test analysis

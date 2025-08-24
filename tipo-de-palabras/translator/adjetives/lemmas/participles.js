@@ -1,4 +1,5 @@
 import { flatteAdj } from "../utils/builders.js";
+
 export const ADJECTIVES_PARTICIPLES_FORMS = [
   { base: { de: "ausgerichtet", es: "orientado/a" } },
   { base: { de: "gekämmt", es: "peinado/a" }, gradable: false },
@@ -12,6 +13,26 @@ export const ADJECTIVES_PARTICIPLES_FORMS = [
   { base: { de: "verheiratet", es: "casado/a" }, gradable: false },
   { base: { de: "bekannt", es: "conocido/a" }, gradable: false },
   { base: { de: "interessiert", es: "interesado/a" }, gradable: false },
+  { base: { de: "überzogen", es: "exagerado/a" } },
+  { base: { de: "kommentiert", es: "comentado/a" }, gradable: false },
+  { base: { de: "strukturiert", es: "estructurado/a" } },
+  { base: { de: "fertig", es: "terminado/a" } },
+  { base: { de: "beschimpfend", es: "injuriante" } },
+  { base: { de: "geschützt", es: "protegido/a" } },
+  { base: { de: "betroffen", es: "afectado/a" } },
+  { base: { de: "ausgedacht", es: "inventado/a" } },
+  { base: { de: "angezeigt", es: "indicado, mostrado" } },
+  { base: { de: "betrieben", es: "gestionado, operado" } },
+  { base: { de: "befunden", es: "considerado" } },
+  { base: { de: "bestraft", es: "castigado" } },
+  { base: { de: "zusammengetragen", es: "recopilado" } },
+  { base: { de: "ausgeschieden", es: "eliminado/a" }, gradable: false },
+  { base: { de: "abgeräumt", es: "recogido/a" }, gradable: false },
+  { base: { de: "verschätzt", es: "mal calculado/a" }, gradable: false },
+  { base: { de: "überflutet", es: "inundado/a" }, gradable: false },
+  { base: { de: "geklappt", es: "plegado/a" }, gradable: false },
+  { base: { de: "aufgemacht", es: "abierto/a" }, gradable: false },
+  { base: { de: "gelandet", es: "aterrizado/a" }, gradable: false },
 ];
 
 export const ADJECTIVES_PARTICIPLES = flatteAdj(ADJECTIVES_PARTICIPLES_FORMS);

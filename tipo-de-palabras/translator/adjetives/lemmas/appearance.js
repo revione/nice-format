@@ -12,6 +12,7 @@ export const APPEARANCE_GENERAL = [
     comp: { de: "unattraktiver", es: "menos atractivo/a" },
     sup: { de: "unattraktivst", es: "el/la menos atractivo/a" },
   },
+  { base: { de: "aktiv", es: "activo/a, dinámico/a" } },
 ];
 
 export const APPEARANCE_STYLE = [
@@ -20,7 +21,6 @@ export const APPEARANCE_STYLE = [
   { base: { de: "elegant", es: "elegante" } },
   { base: { de: "schick", es: "chic, elegante" } },
   { base: { de: "lässig", es: "informal, desenfadado/a" } },
-
   {
     base: { de: "geschmackvoll", es: "de buen gusto" },
     comp: { de: "geschmackvoller", es: "de mejor gusto" },
@@ -31,6 +31,10 @@ export const APPEARANCE_STYLE = [
     comp: { de: "geschmackloser", es: "de peor gusto" },
     sup: { de: "geschmacklosest", es: "de el peor gusto" },
   },
+  { base: { de: "süß-interaktiv", es: "interactivo/a y agradable" }, gradable: false },
+  { base: { de: "cool", es: "guay, cool" }, gradable: false },
+  { base: { de: "easy", es: "fácil, relajado/a" }, gradable: false },
+  { base: { de: "spielerisch", es: "juguetón, lúdico, estilo de interacción" } },
 ];
 
 export const APPEARANCE_PHYSICAL = [
@@ -85,6 +89,8 @@ export const APPEARANCE_EXPRESSIVE = [
     sup: { de: "ausdrucksstärkst", es: "el/la más expresivo/a" },
   },
   { base: { de: "geheimnisvoll", es: "misterioso/a" } },
+  { base: { de: "augenzwinkernd", es: "guiñador/a, con guiño" } },
+  { base: { de: "still", es: "tranquilo/a, silencioso/a" } },
 ];
 
 export const APPEARANCE_COLOR_LIGHT = [
@@ -98,7 +104,12 @@ export const APPEARANCE_COLOR_LIGHT = [
   { base: { de: "bleich", es: "muy pálido/a" } },
 ];
 
-export const APPEARANCE_AGE = [{ base: { de: "jugendlich", es: "juvenil" } }, { base: { de: "alterslos", es: "atemporal, sin edad" } }, { base: { de: "greisenhaft", es: "de anciano/a, senil" } }];
+export const APPEARANCE_AGE = [
+  { base: { de: "jugendlich", es: "juvenil" } },
+  { base: { de: "alterslos", es: "atemporal, sin edad" } },
+  { base: { de: "uralt", es: "antiquísimo/a, muy viejo/a" } },
+  { base: { de: "greisenhaft", es: "de anciano/a, senil" } },
+];
 
 export const APPEARANCE_DETAIL = [
   { base: { de: "gebräunt", es: "bronceado/a" } },
