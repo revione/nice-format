@@ -13,8 +13,8 @@ export const SUPPLETIVE_COMPARATIVES = {
 export const SUPPLETIVE_SUPERLATIVES = {
   gut: "best",
   viel: "meist",
-  gern: "liebst", // ← CORREGIR: era "liebst", no "weniger"
-  wenig: "wenigst", // ← CORREGIR: quitar la línea duplicada "wenig: weniger"
+  gern: "liebst",
+  wenig: "wenigst",
 };
 
 /** Irregulares NO supletivos (cambios de tema). */

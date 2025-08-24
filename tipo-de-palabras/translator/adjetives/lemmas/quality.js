@@ -99,11 +99,6 @@ export const FREQUENCY_INTENSITY_FORMS = [
     sup: { de: "wenigst", es: "lo menos, mínimo" },
     irregularities: ["suppletive"],
   },
-
-  { base: { de: "häufig", es: "frecuente" } },
-  { base: { de: "selten", es: "raro/a, poco frecuente" } },
-  { base: { de: "intensiv", es: "intenso/a" } },
-  { base: { de: "mild", es: "suave" } },
 ];
 
 // --- character/attitude ---

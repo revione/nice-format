@@ -1,46 +1,29 @@
 import { ADJECTIVES_IMPORTED, ADJ_GRADABLE } from "./lemmas/index.js";
 import { makeAdjectivesFromList } from "./lemmas/utils.js";
 import { analyzeAdjective } from "./detection.js";
-
-/** Normaliza una palabra DE para comparar (lowercase, trim). */
-const norm = (s) => s?.trim().toLowerCase() || "";
+import { generateGermanVariants } from "./utils/variants.js";
 
 /**
- * Crea un mapa simple de todas las formas explícitas en ADJECTIVES_IMPORTED
- * y sus variantes ortográficas (ß/ss, ä/ae, etc.)
+ * Mapa simple de formas explícitas con sus variantes
  */
 const buildDirectFormsMap = () => {
   const map = new Map();
 
-  // Genera variantes ortográficas
-  const addVariants = (word, entry) => {
-    const x = norm(word);
-    if (!x) return;
-
-    const variants = new Set([x]);
-    // ß <-> ss
-    variants.add(x.replace(/ß/g, "ss"));
-    variants.add(x.replace(/ss/g, "ß"));
-    // ä/ö/ü <-> ae/oe/ue
-    variants.add(x.replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue"));
-    variants.add(x.replace(/ae/g, "ä").replace(/oe/g, "ö").replace(/ue/g, "ü"));
-
-    for (const variant of variants) {
-      if (!map.has(variant)) {
-        map.set(variant, entry);
+  for (const entry of ADJECTIVES_IMPORTED) {
+    if (entry.de) {
+      // Verificación de integridad
+      for (const variant of generateGermanVariants(entry.de)) {
+        if (!map.has(variant)) {
+          map.set(variant, entry);
+        }
       }
     }
-  };
-
-  // Agregar todas las formas explícitas
-  for (const entry of ADJECTIVES_IMPORTED) {
-    addVariants(entry.de, entry);
   }
 
   return map;
 };
 
-// Cache global
+// Cache
 let DIRECT_FORMS_CACHE = null;
 const getDirectForms = () => {
   if (!DIRECT_FORMS_CACHE) {
@@ -50,67 +33,65 @@ const getDirectForms = () => {
 };
 
 /**
- * Busca una entrada: primero busca formas explícitas,
- * luego usa análisis morfológico para generar la traducción
+ * Busca entrada: directo primero, análisis morfológico después
  */
 const findEntry = (deWord) => {
   const directForms = getDirectForms();
-  const normalizedWord = norm(deWord);
 
-  // 1. Buscar forma explícita directa
-  const directMatch = directForms.get(normalizedWord);
-  if (directMatch) {
-    return {
-      ...directMatch,
-      de: deWord, // Preserva la forma original
-    };
+  // 1. Buscar forma directa
+  for (const variant of generateGermanVariants(deWord)) {
+    const direct = directForms.get(variant);
+    if (direct) {
+      return { ...direct, de: deWord };
+    }
   }
 
-  // 2. Usar análisis morfológico
+  // 2. Análisis morfológico
   const analysis = analyzeAdjective(deWord);
 
   if (!analysis.base || analysis.confidence < 0.5) {
     return null;
   }
 
-  // 3. Buscar la entrada base
-  const baseNorm = norm(analysis.base);
-  const baseEntry = directForms.get(baseNorm);
+  // 3. Buscar base y generar traducción
+  for (const baseVariant of generateGermanVariants(analysis.base)) {
+    const baseEntry = directForms.get(baseVariant);
 
-  if (!baseEntry || baseEntry.form !== "base") {
-    return null;
-  }
+    if (baseEntry && baseEntry.form === "base") {
+      const targetForm = analysis.degree || "base";
 
-  // 4. Si es la forma base o null (adjetivos no gradables), devolverla directamente
-  if (analysis.degree === "base" || analysis.degree === null) {
-    return {
-      ...baseEntry,
-      de: deWord,
-      form: analysis.degree || "base",
-    };
-  }
-
-  // 5. Para comp/sup, generar la traducción usando utils.js
-  if (analysis.degree === "comp" || analysis.degree === "sup") {
-    try {
-      const [generated] = makeAdjectivesFromList([
-        {
-          base: { de: baseEntry.de, es: baseEntry.es },
-          gradable: baseEntry.gradable,
-        },
-      ]);
-
-      const targetTranslation = generated[analysis.degree];
-      if (targetTranslation && targetTranslation.es) {
+      // Forma base o no gradable
+      if (targetForm === "base" || analysis.degree === null) {
         return {
           ...baseEntry,
           de: deWord,
-          es: targetTranslation.es,
-          form: analysis.degree,
+          form: "base",
         };
       }
-    } catch (error) {
-      console.warn(`Error generando forma ${analysis.degree} para ${analysis.base}:`, error);
+
+      // Generar comp/sup si es gradable
+      if ((targetForm === "comp" || targetForm === "sup") && ADJ_GRADABLE.get(baseEntry.de) !== false) {
+        try {
+          const [generated] = makeAdjectivesFromList([
+            {
+              base: { de: baseEntry.de, es: baseEntry.es },
+              gradable: baseEntry.gradable,
+            },
+          ]);
+
+          const targetTranslation = generated[targetForm];
+          if (targetTranslation?.es) {
+            return {
+              ...baseEntry,
+              de: deWord,
+              es: targetTranslation.es,
+              form: targetForm,
+            };
+          }
+        } catch (error) {
+          console.warn(`Error generando ${targetForm} para ${analysis.base}:`, error);
+        }
+      }
     }
   }
 

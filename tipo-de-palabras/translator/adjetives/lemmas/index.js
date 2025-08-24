@@ -31,7 +31,7 @@ export const ADJECTIVES_IMPORTED = [
 
 const byDe = new Map();
 for (const a of ADJECTIVES_IMPORTED) if (!byDe.has(a.de)) byDe.set(a.de, a);
-export const ADJECTIVES = [...byDe.values()].sort((a, b) => (a.de < b.de ? -1 : 1));
+export const ADJECTIVES = [...byDe.values()];
 
 // Si una entrada no trae `gradable`, asumimos que SÍ es gradable (comportamiento previo)
 export const ADJ_GRADABLE = new Map([...byDe.values()].map((a) => [a.de, a.gradable !== false]));
