@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const ADJECTIVES_TIME_FORMS = [
   { base: { de: "heutig", es: "de hoy" }, gradable: false },
   { base: { de: "früh", es: "temprano" }, comp: { de: "früher" }, sup: { de: "frühest" } },

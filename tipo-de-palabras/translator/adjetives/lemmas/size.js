@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 // --- GENERAL ---
 export const GENERAL_FORMS = [
   {

@@ -1,6 +1,5 @@
 // social.js corregido
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const ADJECTIVES_SOCIAL_FORMS = [
   { base: { de: "sozial", es: "social" } },
   { base: { de: "asozial", es: "antisocial" } },

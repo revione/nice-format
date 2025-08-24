@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 // --- TOUCH ---
 export const TOUCH_SOFTNESS_FORMS = [
   { base: { de: "weich", es: "blando/a, suave" } },
@@ -30,7 +29,7 @@ export const TOUCH_CONSISTENCY_FORMS = [
   { base: { de: "massiv", es: "macizo/a, sólido/a" } },
 ];
 
-export const ADJECTIVES_TOUCH = flatteAdj([...TOUCH_SOFTNESS_FORMS, ...TOUCH_SURFACE_FORMS, ...TOUCH_CONSISTENCY_FORMS]);
+export const ADJECTIVES_TOUCH = [...TOUCH_SOFTNESS_FORMS, ...TOUCH_SURFACE_FORMS, ...TOUCH_CONSISTENCY_FORMS];
 
 // --- SMELL ---
 export const SMELL_PLEASANT_FORMS = [
@@ -42,7 +41,7 @@ export const SMELL_PLEASANT_FORMS = [
 
 export const SMELL_UNPLEASANT_FORMS = [{ base: { de: "stinkend", es: "apestoso/a" } }, { base: { de: "übelriechend", es: "maloliente" } }, { base: { de: "muffig", es: "rancio/a" } }];
 
-export const ADJECTIVES_SMELL = flatteAdj([...SMELL_PLEASANT_FORMS, ...SMELL_UNPLEASANT_FORMS]);
+export const ADJECTIVES_SMELL = [...SMELL_PLEASANT_FORMS, ...SMELL_UNPLEASANT_FORMS];
 
 // --- TASTE ---
 export const TASTE_BASIC_FORMS = [
@@ -61,7 +60,7 @@ export const TASTE_QUALITY_FORMS = [
   { base: { de: "ungenießbar", es: "incomible" } },
 ];
 
-export const ADJECTIVES_TASTE = flatteAdj([...TASTE_BASIC_FORMS, ...TASTE_QUALITY_FORMS]);
+export const ADJECTIVES_TASTE = [...TASTE_BASIC_FORMS, ...TASTE_QUALITY_FORMS];
 
 // --- SOUND ---
 export const SOUND_VOLUME_FORMS = [{ base: { de: "laut", es: "fuerte (volumen)" } }, { base: { de: "leise", es: "bajo/a, silencioso/a" } }, { base: { de: "lärmend", es: "ruidoso/a" } }];
@@ -78,7 +77,7 @@ export const SOUND_TONE_FORMS = [
 
 export const SOUND_SENSITIVITY_FORMS = [{ base: { de: "hellhörig", es: "sensible al ruido" } }];
 
-export const ADJECTIVES_SOUND = flatteAdj([...SOUND_VOLUME_FORMS, ...SOUND_TONE_FORMS, ...SOUND_SENSITIVITY_FORMS]);
+export const ADJECTIVES_SOUND = [...SOUND_VOLUME_FORMS, ...SOUND_TONE_FORMS, ...SOUND_SENSITIVITY_FORMS];
 
 // --- VISION ---
 export const VISION_LIGHT_FORMS = [
@@ -101,7 +100,6 @@ export const VISION_CLARITY_COLOR_FORMS = [
   { base: { de: "unscharf", es: "borroso/a" }, irregularities: ["umlaut"] },
 ];
 
-export const ADJECTIVES_VISION = flatteAdj([...VISION_LIGHT_FORMS, ...VISION_CLARITY_COLOR_FORMS]);
+export const ADJECTIVES_VISION = [...VISION_LIGHT_FORMS, ...VISION_CLARITY_COLOR_FORMS];
 
-// --- ALL senses together ---
-export const ADJECTIVES_SENSES = [...ADJECTIVES_TOUCH, ...ADJECTIVES_SMELL, ...ADJECTIVES_TASTE, ...ADJECTIVES_SOUND, ...ADJECTIVES_VISION];
+export const ADJECTIVES_SENSES = flatteAdj([...ADJECTIVES_TOUCH, ...ADJECTIVES_SMELL, ...ADJECTIVES_TASTE, ...ADJECTIVES_SOUND, ...ADJECTIVES_VISION]);

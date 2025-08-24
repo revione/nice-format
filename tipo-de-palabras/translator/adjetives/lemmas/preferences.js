@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const PREFERENCE_FORMS = [
   {
     base: { de: "gern", es: "de buena gana, con gusto" },

@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const PHYS_ENERGY = [
   { base: { de: "müde", es: "cansado/a" } },
   { base: { de: "schläfrig", es: "somnoliento/a" } },

@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const ADJECTIVES_PARTICIPLES_FORMS = [
   { base: { de: "ausgerichtet", es: "orientado/a" } },
   { base: { de: "gekämmt", es: "peinado/a" }, gradable: false },

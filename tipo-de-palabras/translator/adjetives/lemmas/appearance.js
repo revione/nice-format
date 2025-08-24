@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const APPEARANCE_GENERAL = [
   { base: { de: "schön", es: "hermoso/a, bonito/a" } },
   { base: { de: "hässlich", es: "feo/a" } },

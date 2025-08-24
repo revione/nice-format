@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const ADJECTIVES_LANGUAGE_FORMS = [
   { base: { de: "englisch", es: "inglés" }, gradable: false },
   { base: { de: "deutsch", es: "alemán" }, gradable: false },

@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const ADJECTIVES_POSITION_FORMS = [
   { base: { de: "ober", es: "superior" }, gradable: false }, // funciona más como prefijo
   { base: { de: "unter", es: "inferior" }, gradable: false }, // ídem

@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const ADJECTIVES_SPACE_FORMS = [
   {
     base: { de: "nah", es: "cercano/a" },

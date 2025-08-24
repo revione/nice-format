@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 export const BASIC_COLORS_FORMS = [
   // básicos: sí gradables
   { base: { de: "rot", es: "rojo" }, irregularities: ["umlaut"] }, // röter, rötesten

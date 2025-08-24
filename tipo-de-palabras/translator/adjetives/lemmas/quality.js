@@ -1,5 +1,4 @@
-import { flatteAdj } from "./utils.js";
-
+import { flatteAdj } from "../utils/builders.js";
 // --- evaluation ---
 export const EVALUATION_FORMS = [
   { base: { de: "gut", es: "bueno/a" }, comp: { de: "besser", es: "mejor" }, sup: { de: "best", es: "el/la mejor" }, irregularities: ["suppletive"] },
