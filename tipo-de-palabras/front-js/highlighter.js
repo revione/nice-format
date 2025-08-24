@@ -1,22 +1,42 @@
+// front-js/highlighter.js
+import { normalizeWord } from "../translator/translator.js";
+
+const escapeAttr = (s = "") => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 const render = (container, segments, activeTypes) => {
+  const dict = (window.getSerializableGlobalWordDictionary && window.getSerializableGlobalWordDictionary()) || {};
   let html = "";
+
   for (const seg of segments) {
     if (seg.isSpace) {
       html += seg.text.replace(/\n/g, "<br>");
       continue;
     }
-
     if (seg.text === "—" || seg.text === "–") {
       html += "&#8201;" + seg.text + "&#8201;";
       continue;
     }
-
     if (!activeTypes.includes(seg.type)) {
       html += seg.text;
       continue;
     }
-    html += `<span class="word-colored word-${seg.type}" data-tooltip="${seg.tooltip}" data-word="${seg.dataWord}" data-type="${seg.type}">${seg.text}</span>`;
+
+    // Tooltip base
+    let tooltip = seg.tooltip || "";
+
+    // Buscar traducción en el diccionario global (normalizado)
+    const key = normalizeWord(seg.dataWord || seg.text || "");
+    const entry = dict[key];
+    if (entry && entry.translation) {
+      tooltip += (tooltip ? " → " : "") + entry.translation;
+    }
+
+    html += `<span class="word-colored word-${seg.type}"
+                  data-tooltip="${escapeAttr(tooltip)}"
+                  data-word="${escapeAttr(seg.dataWord)}"
+                  data-type="${escapeAttr(seg.type)}">${seg.text}</span>`;
   }
+
   container.innerHTML = html;
 };
 
@@ -50,6 +70,9 @@ const initHighlighter = () => {
     activeTypes = e.detail.activeTypes || [];
     doRender();
   });
+
+  // 👇 Re-render cuando el diccionario tenga traducciones listas
+  document.addEventListener("app:dict-updated", doRender);
 
   coloredBox.style.display = "block";
 };
