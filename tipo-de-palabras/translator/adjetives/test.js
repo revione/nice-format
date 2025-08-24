@@ -1,6 +1,7 @@
-// test_improved.js
+// test.js actualizado
 import { analyzeAdjective } from "./detection.js";
-import { tr, translateAdjective } from "./lookup.js"; // using enhanced version
+import { tr, translateAdjective } from "./lookup.js";
+import { ADJECTIVES_IMPORTED, ADJ_GRADABLE } from "./lemmas/index.js";
 
 const EXPECTS_1 = [
   ["schöne", "base", "schön"],
@@ -110,6 +111,21 @@ const runImprovedTest = () => {
       console.log(`     Expected: ${expectedDegree} ${expectedBase}`);
     }
 
+    // Debug específico para orangefarbenen
+    if (word === "orangefarbenen" && !translation) {
+      console.log("     🔍 DEBUG orangefarbenen:");
+      console.log(`        Analysis confidence: ${analysis.confidence}`);
+      console.log(`        Full analysis:`, analysis);
+      console.log(`        Full translation result:`, fullTranslation);
+
+      // Buscar en ADJECTIVES_IMPORTED
+      const orangeEntries = ADJECTIVES_IMPORTED.filter((adj) => adj.de.toLowerCase().includes("orange"));
+      console.log(`        Orange entries in data:`, orangeEntries);
+
+      // Verificar gradabilidad
+      console.log(`        Is gradable:`, ADJ_GRADABLE.get("orangefarben"));
+    }
+
     console.log("");
   }
 
@@ -135,6 +151,7 @@ const testSpecificCases = () => {
     "höchstem", // irregular superlative
     "mehr", // suppletive comparative
     "schönste", // regular superlative
+    "orangefarbenen", // the failing case
   ];
 
   for (const word of specificCases) {
@@ -143,12 +160,41 @@ const testSpecificCases = () => {
     const analysis = analyzeAdjective(word);
     const translation = translateAdjective(word, { lang: "all" });
 
-    console.log(`  Analysis: degree=${analysis.degree}, base=${analysis.base}`);
+    console.log(`  Analysis: degree=${analysis.degree}, base=${analysis.base}, confidence=${analysis.confidence}`);
     console.log(`  Translation:`, translation);
     console.log("");
   }
 };
 
-// Run tests
+// Función de debug adicional para orangefarben
+const debugOrangefarben = () => {
+  console.log("\n=== DEBUG ORANGEFARBEN ESPECÍFICO ===\n");
+
+  const word = "orangefarbenen";
+  const base = "orangefarben";
+
+  // 1. Verificar si la base está en los datos
+  const baseEntries = ADJECTIVES_IMPORTED.filter((adj) => adj.de.toLowerCase() === base.toLowerCase());
+  console.log("Base entries:", baseEntries);
+
+  // 2. Verificar análisis paso a paso
+  const analysis = analyzeAdjective(word);
+  console.log("Analysis:", analysis);
+
+  // 3. Verificar lookup paso a paso
+  console.log("\nStep-by-step lookup:");
+  console.log("1. Word:", word);
+  console.log("2. Expected base:", base);
+  console.log("3. Analysis degree:", analysis.degree);
+  console.log("4. Analysis base:", analysis.base);
+  console.log("5. Is gradable:", ADJ_GRADABLE.get(base));
+
+  // 4. Intentar traducción
+  const result = translateAdjective(word);
+  console.log("6. Translation result:", result);
+};
+
+// Run all tests
 runImprovedTest();
 testSpecificCases();
+debugOrangefarben();

@@ -112,9 +112,20 @@ export const flattenBlocks = (blocks) => {
 
   const out = [];
   for (const { base, comp, sup, gradable } of blocks) {
-    if (base && typeof base === "object") out.push({ ...base, form: "base", gradable });
-    if (comp && typeof comp === "object") out.push({ ...comp, form: "comp", gradable });
-    if (sup && typeof sup === "object") out.push({ ...sup, form: "sup", gradable });
+    // Siempre agregar la forma base si existe
+    if (base && typeof base === "object" && base.de) {
+      out.push({ ...base, form: "base", gradable });
+    }
+
+    // Solo agregar comp/sup si el adjetivo es gradable Y las formas tienen contenido
+    if (gradable !== false) {
+      if (comp && typeof comp === "object" && comp.de) {
+        out.push({ ...comp, form: "comp", gradable });
+      }
+      if (sup && typeof sup === "object" && sup.de) {
+        out.push({ ...sup, form: "sup", gradable });
+      }
+    }
   }
   return out;
 };
