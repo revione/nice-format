@@ -73,21 +73,12 @@ export const PREP_GEN = [
   "unweit",
   "inmitten",
   "längs",
+  "zugunsten",
 ];
 
 // ---- 4) Wechselpräpositionen (Akk/Dat según movimiento vs. ubicación) ----
 // Akk = destino/dirección (“Wohin?”), Dat = ubicación (“Wo?”)
-export const PREP_TWO_WAY = [
-  "an",
-  "auf",
-  "hinter",
-  "in",
-  "neben",
-  "über",
-  "unter",
-  "vor",
-  "zwischen",
-];
+export const PREP_TWO_WAY = ["an", "auf", "hinter", "in", "neben", "über", "unter", "vor", "zwischen"];
 
 // ---- 5) Mixtas / variación de caso por uso/registro ----
 // - “wegen”, “trotz”, “während”, “laut”, “dank” → Gen (estándar), Dat en coloquial/legal.
@@ -111,18 +102,7 @@ export const PREP_CONTRACTIONS = {
   // + dem
   dem: ["am", "beim", "im", "vom", "zum", "hinterm", "überm", "unterm", "vorm"],
   // + das
-  das: [
-    "ans",
-    "ins",
-    "aufs",
-    "durchs",
-    "fürs",
-    "ums",
-    "übers",
-    "unters",
-    "hinters",
-    "vors",
-  ],
+  das: ["ans", "ins", "aufs", "durchs", "fürs", "ums", "übers", "unters", "hinters", "vors"],
   // + der
   der: ["zur"],
 };

@@ -2,14 +2,7 @@
 // Conjunciones en alemán
 // =====================
 
-export const CONJ_COORDINATING = [
-  "und",
-  "oder",
-  "aber",
-  "denn",
-  "sondern",
-  "doch",
-];
+export const CONJ_COORDINATING = ["und", "oder", "aber", "denn", "sondern", "doch"];
 
 export const CONJ_SUBORDINATING = [
   "dass",
@@ -57,6 +50,11 @@ export const CONJ_ADVERBIAL = [
   "zwar",
   "jedoch",
   "so", // cuando funciona como conector adverbial
+  "dafür",
+  "sogar",
+  "zwischendurch",
+  "sonst",
+  "dazu",
 ];
 
 export const CONJ_CORRELATIVE = {
@@ -73,14 +71,7 @@ export const BLOCKS_CONJUNCTIONS = {
   CORRELATIVE: CONJ_CORRELATIVE,
 };
 
-export const CONJUNCTIONS = Array.from(
-  new Set([
-    ...CONJ_COORDINATING,
-    ...CONJ_SUBORDINATING,
-    ...CONJ_ADVERBIAL,
-    ...Object.values(CONJ_CORRELATIVE).flat(),
-  ])
-);
+export const CONJUNCTIONS = Array.from(new Set([...CONJ_COORDINATING, ...CONJ_SUBORDINATING, ...CONJ_ADVERBIAL, ...Object.values(CONJ_CORRELATIVE).flat()]));
 
 // =====================
 // Notas:

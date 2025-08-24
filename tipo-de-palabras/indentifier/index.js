@@ -9,6 +9,7 @@ import { analyzeAdjective, isAdjectiveLike } from "../translator/adjetives/detec
 import { nonGermanWords } from "../word-types/nonGermanWords.js";
 import { specialCases } from "../word-types/specialCases.js";
 import { detectNumber } from "../word-types/numbers/recognizer.js";
+import { INTERJECTION } from "../word-types/interjection.js";
 import { isVerb } from "../verbs/recognizer.js";
 
 const _cache = new Map();
@@ -88,6 +89,7 @@ const D = {
   nonDE: toSet(nonGermanWords),
   articlesAndDeterminants: new Set(ARTICLES_AND_DETERMINANTS.map(normalize)),
   irregularAdverbs: new Set(IRREGULAR_ADVERBS.map(normalize)),
+  interjections: new Set(INTERJECTION.map(normalize)),
 };
 
 const cleanToken = (raw) => {
@@ -177,6 +179,11 @@ const _identifierImpl = ({ word, words = [], index = 0, atSentenceStart = false,
   }
 
   // =====================================================
+  // STEP 0.5: INTERJECCIONES
+  // =====================================================
+  if (D.interjections.has(w)) return { type: "interjection", rule: "lex-interjection" };
+
+  // =====================================================
   // STEP 1: NO-ALEMÁN EXPLÍCITO
   // =====================================================
 
@@ -211,7 +218,14 @@ const _identifierImpl = ({ word, words = [], index = 0, atSentenceStart = false,
   // STEP 3: CASOS ESPECIALES EXACTOS
   // =====================================================
 
-  if (specialCases[w]) return { type: specialCases[w], rule: "special-case" };
+  if (specialCases[w]) {
+    const sc = specialCases[w];
+    return {
+      type: "special",
+      rule: "special-case",
+      special: { ...sc }, // normalize + note
+    };
+  }
 
   // =====================================================
   // STEP 4: ADVERBIOS POR SUFIJO Y DIRECCIONALES

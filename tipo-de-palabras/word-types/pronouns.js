@@ -90,6 +90,7 @@ export const PRON_INDEFINITE = [
   "etwas",
   "nichts",
   "alles",
+  "irgendwas",
   "einer",
   "keiner",
   "irgendein",
@@ -103,11 +104,13 @@ export const PRON_INDEFINITE = [
   "manche",
   "manches",
   "paar", // "ein paar" - cantidad indefinida pequeña
+  "jemanden",
+  "selber",
 ];
 
 export const PRON_QUANTIFIERS = ["alle", "viele", "wenige", "viel", "wenig", "sämtliche", "etliche", "zahlreiche"];
 
-export const PRON_ADVERBIAL = ["dabei", "wo", "worauf", "woraus", "womit", "davon", "darauf"];
+export const PRON_ADVERBIAL = ["dabei", "wo", "worauf", "woraus", "womit", "davon", "darauf", "worum"];
 
 export const PRONOUNS = Array.from(
   new Set([...Object.values(PRON_PERSONAL).flat(), ...PRON_REFLEXIVE, ...PRON_POSESSIVE, ...PRON_DEMONSTRATIVE, ...PRON_INTERROGATIVE, ...PRON_INDEFINITE, ...PRON_QUANTIFIERS, ...PRON_ADVERBIAL])

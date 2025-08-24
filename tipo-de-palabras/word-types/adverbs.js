@@ -34,6 +34,7 @@ export const ADV_PLACE = [
   "dahin",
   "hinein",
   "heraus",
+  "mitten",
 ];
 
 export const ADV_TIME = [
@@ -73,6 +74,9 @@ export const ADV_TIME = [
   "früher",
   "erst",
   "wieder",
+  "erstmal",
+  "nochmal",
+  "wann",
 ];
 
 export const ADV_MANNER = [
@@ -135,7 +139,7 @@ export const ADV_DEGREE = [
   "nicht",
 ];
 
-export const ADV_MODALITY = ["wahrscheinlich", "vielleicht", "sicher", "bestimmt", "definitiv", "klar", "eigentlich", "wohl"];
+export const ADV_MODALITY = ["wahrscheinlich", "vielleicht", "sicher", "bestimmt", "definitiv", "klar", "eigentlich", "wohl", "leider"];
 
 export const ADV_CONNECTIVE = [
   "dann",
@@ -158,9 +162,27 @@ export const ADV_CONNECTIVE = [
   "doch",
   "so",
   "also",
+  "wie",
 ];
 
-export const ADV_PARTICLES = ["ja", "nein", "oh", "hm", "ok", "na", "super", "danke", "mal"];
+export const ADV_PARTICLES = [
+  "ja",
+  "nein",
+  "oh",
+  "hm",
+  "ok",
+  "na",
+  "super",
+  "danke",
+  "mal",
+  // interjecciones coloquiales frecuentes
+  "nee",
+  "ne",
+  "ähm",
+  "ey",
+  "dankeschön",
+  "bitte",
+];
 
 export const BLOCKS_ADVERBS = {
   PLACE: ADV_PLACE,

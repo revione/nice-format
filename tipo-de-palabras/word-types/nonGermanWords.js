@@ -60,4 +60,16 @@ export const nonGermanWords = [
   "later",
   "okay",
   "finish",
+
+  "said",
+  "file",
+  "Skip",
+  "content",
+  "history",
+  "sorry",
+  "chosen",
+  "chosenNo",
+  "make",
+  "mistakes",
+  "info",
 ];
