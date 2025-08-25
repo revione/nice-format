@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Avanzado de Cartas de Alemán</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/context-header.css" />
+    <link rel="stylesheet" href="./css/toggle.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🇩🇪 Sistema Avanzado de Vocabulario Alemán</h1>
+        <p>Con seguimiento de dominio y progreso inteligente</p>
+
+        <div class="header-controls">
+          <div class="dropdown">
+            <button class="dropdown-btn" onclick="toggleDropdown('configDropdown')">⚙️ Configuración</button>
+            <div id="configDropdown" class="dropdown-content">
+              <div class="config-section">
+                <h3>🌐 Idiomas de Estudio</h3>
+                <div class="language-selection">
+                  <div class="language-option selected" data-lang="es" onclick="toggleLanguage('es')"><input type="checkbox" checked /> 🇪🇸 Español</div>
+                  <div class="language-option selected" data-lang="en" onclick="toggleLanguage('en')"><input type="checkbox" checked /> 🇬🇧 Inglés</div>
+                </div>
+              </div>
+
+              <div class="config-section">
+                <h3>📥 Importar Datos</h3>
+                <textarea id="dataInput" class="import-textarea" placeholder="Pega aquí tu JSON con las palabras a importar...">
+{
+    "contextText": "Ich brauche eine schnelle Beratung für mein neues Projekt.",
+    "contextWords": [
+        {
+            "toLearn": { "de": "Beratung", "es": "asesoramiento", "en": "counseling" },
+            "examples": [
+                { "de": "Ich brauche eine Beratung.", "es": "Necesito un asesoramiento.", "en": "I need counseling." },
+                { "de": "Die Beratung war hilfreich.", "es": "La asesoría fue útil.", "en": "The counseling was helpful." }
+            ]
+        },
+        {
+            "toLearn": { "de": "schnell", "es": "rápido", "en": "fast" },
+            "examples": [
+                { "de": "Das Auto ist sehr schnell.", "es": "El coche es muy rápido.", "en": "The car is very fast." },
+                { "de": "Wir müssen schnell handeln.", "es": "Debemos actuar rápido.", "en": "We must act quickly." }
+            ]
+        }
+    ]
+}
+                            </textarea
+                >
+                <div class="import-actions">
+                  <button class="btn btn-small" onclick="processImport()">💾 Importar Texto</button>
+                  <label for="importFile" class="btn btn-small">📁 Importar Archivo</label>
+                  <input type="file" id="importFile" accept=".json" style="display: none" onchange="importFromFile()" />
+                  <button class="btn btn-small btn-warning" onclick="exportData()">📤 Exportar</button>
+                  <button class="btn btn-small btn-danger" onclick="clearAllData()">🗑️ Borrar Todo</button>
+                </div>
+
+                <div id="importMessage"></div>
+              </div>
+
+              <div class="config-section">
+                <div id="configStats" style="margin-top: 15px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <!-- Vista principal: Lista de palabras -->
+        <div id="mainView">
+          <div class="filter-section">
+            <h3 style="margin-bottom: 15px; color: #4facfe">📋 Filtros y Organización</h3>
+            <div class="filter-controls">
+              <div class="filter-control">
+                <label>Estado:</label>
+                <select id="statusFilter" onchange="updateMainView()">
+                  <option value="all">Todas las palabras</option>
+                  <option value="practiced">Solo practicadas</option>
+                  <option value="unpracticed">Sin practicar</option>
+                  <option value="mastered">Dominadas</option>
+                  <option value="not-mastered">No dominadas</option>
+                  <option value="active">Activas (no dominadas)</option>
+                </select>
+              </div>
+              <div class="filter-control">
+                <label>Ordenar por:</label>
+                <select id="sortBy" onchange="updateMainView()">
+                  <option value="german">Alemán (A-Z)</option>
+                  <option value="german-desc">Alemán (Z-A)</option>
+                  <option value="dateCreated">Fecha creación (↓ Recientes)</option>
+                  <option value="dateCreated-asc">Fecha creación (↑ Antiguas)</option>
+                  <option value="lastStudied">Última práctica (↓ Recientes)</option>
+                  <option value="lastStudied-asc">Última práctica (↑ Antiguas)</option>
+                  <option value="totalPracticed">Más practicada (↓ Mayor)</option>
+                  <option value="totalPracticed-asc">Menos practicada (↑ Menor)</option>
+                </select>
+              </div>
+              <div class="filter-control">
+                <label>Buscar:</label>
+                <input type="text" id="searchInput" placeholder="Buscar palabra..." onkeyup="updateMainView()" />
+              </div>
+              <div class="filter-control">
+                <label>Contexto:</label>
+                <select id="contextFilter" onchange="updateMainView()">
+                  <option value="all">Todos los contextos</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="view-toggle">
+              <input type="checkbox" id="groupByContext" onchange="updateMainView()" checked />
+              <label for="groupByContext" class="toggle">
+                <div class="toggle-icon">📋</div>
+                <span class="toggle-text">Mostrar por contexto</span>
+                <div class="toggle-switch">
+                  <div class="toggle-knob"></div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="stats-summary" id="wordStats"></div>
+
+          <div class="action-bar">
+            <div class="selection-info" id="selectionCount">0 palabras seleccionadas</div>
+            <div class="action-buttons">
+              <button class="btn btn-small btn-secondary" onclick="selectAllWords()">✅ Seleccionar Todas</button>
+              <button class="btn btn-small btn-secondary" onclick="deselectAllWords()">❌ Deseleccionar</button>
+              <button class="btn btn-success" onclick="startReview()">🎯 Iniciar Repaso</button>
+            </div>
+          </div>
+
+          <div class="word-list-section" id="wordListContainer"></div>
+        </div>
+
+        <!-- Vista de estudio -->
+        <div id="studyView" style="display: none">
+          <div class="study-header">
+            <div class="progress-info" id="progressInfo">Palabra 1 de 10</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+            </div>
+            <div class="session-indicators" id="sessionIndicators"></div>
+            <h3>🎯 Sesión de Repaso Avanzada</h3>
+            <button class="btn btn-small btn-secondary" onclick="endReview()">← Volver a Lista</button>
+          </div>
+
+          <div id="studyCard" class="card">
+            <div class="card-content">
+              <h2 id="wordGerman">Palabra</h2>
+            </div>
+
+            <button class="reveal-btn" id="revealBtn" onclick="revealContent()"><span id="eyeIcon">👁️</span> Ver Traducción</button>
+
+            <div id="cardTranslations" class="card-translations"></div>
+            <div id="cardExamples" class="card-examples"></div>
+
+            <div class="navigation-controls">
+              <button class="btn btn-secondary nav-btn" id="prevBtn" onclick="previousCard()">← Anterior</button>
+              <button class="btn btn-success practice-btn" id="practiceBtn" onclick="markAsPracticed()">✅ Practicado</button>
+              <button class="btn master-btn" id="masterBtn" onclick="toggleMastery()">🏆 Dominar</button>
+              <button class="btn btn-secondary nav-btn" id="nextBtn" onclick="nextCard()">Siguiente →</button>
+            </div>
+          </div>
+
+          <div id="sessionComplete" style="display: none; text-align: center; padding: 30px">
+            <h2>🎉 ¡Sesión de Repaso Completada!</h2>
+            <div id="sessionResults"></div>
+            <button class="btn" onclick="endReview()">← Volver a Lista</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./js/index.js"></script>
+  </body>
+</html>

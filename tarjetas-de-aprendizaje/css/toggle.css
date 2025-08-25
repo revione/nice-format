@@ -1,0 +1,182 @@
+/* ========== TOGGLE ELEGANTE ========== */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.view-toggle:hover {
+  box-shadow: 0 6px 20px rgba(79, 172, 254, 0.15);
+  transform: translateY(-2px);
+}
+
+.view-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  user-select: none;
+  padding: 12px 20px;
+  border-radius: 30px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: rgba(248, 249, 250, 0.8);
+  border: 2px solid transparent;
+}
+
+.toggle:hover {
+  background: rgba(79, 172, 254, 0.05);
+  border-color: rgba(79, 172, 254, 0.2);
+}
+
+.toggle-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3em;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.toggle-icon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.toggle-text {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.toggle-switch {
+  width: 60px;
+  height: 34px;
+  background: #e5e7eb;
+  border-radius: 17px;
+  position: relative;
+  transition: all 0.4s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-knob::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #d1d5db;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+/* ========== ESTADO ACTIVO ========== */
+input[type="checkbox"]:checked + .toggle {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.3);
+}
+
+input[type="checkbox"]:checked + .toggle .toggle-icon {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  transform: rotate(360deg) scale(1.05);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+}
+
+input[type="checkbox"]:checked + .toggle .toggle-icon::before {
+  opacity: 1;
+}
+
+input[type="checkbox"]:checked + .toggle .toggle-text {
+  color: #4facfe;
+  transform: translateX(2px);
+}
+
+input[type="checkbox"]:checked + .toggle .toggle-switch {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: inset 0 2px 8px rgba(79, 172, 254, 0.3);
+}
+
+input[type="checkbox"]:checked + .toggle .toggle-knob {
+  transform: translateX(26px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+input[type="checkbox"]:checked + .toggle .toggle-knob::after {
+  background: #ffffff;
+  transform: scale(1.2);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .view-toggle {
+    padding: 16px;
+  }
+
+  .toggle {
+    gap: 12px;
+    padding: 10px 16px;
+  }
+
+  .toggle-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2em;
+  }
+
+  .toggle-text {
+    font-size: 1rem;
+  }
+
+  .toggle-switch {
+    width: 52px;
+    height: 30px;
+  }
+
+  .toggle-knob {
+    width: 24px;
+    height: 24px;
+    top: 3px;
+    left: 3px;
+  }
+
+  input[type="checkbox"]:checked + .toggle .toggle-knob {
+    transform: translateX(22px) scale(1.05);
+  }
+}
