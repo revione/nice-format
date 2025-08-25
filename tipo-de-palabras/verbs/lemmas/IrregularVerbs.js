@@ -1232,4 +1232,54 @@ export const IRREGULARS = {
     imperativ: { du: "kenn", ihr: "kennt", Sie: "kennen Sie" },
     zuInfinitiv: "zu kennen",
   },
+
+  tragen: {
+    lemma: "tragen",
+    aux: "haben",
+    praesens: { ich: "trage", du: "trägst", "er/sie/es": "trägt", wir: "tragen", ihr: "tragt", "sie/Sie": "tragen" },
+    präteritum: { ich: "trug", du: "trugst", "er/sie/es": "trug", wir: "trugen", ihr: "trugt", "sie/Sie": "trugen" },
+    partizip2: "getragen",
+    imperativ: { du: "trag", ihr: "tragt", Sie: "tragen Sie" },
+    zuInfinitiv: "zu tragen",
+  },
+
+  fallen: {
+    lemma: "fallen",
+    aux: "sein",
+    praesens: { ich: "falle", du: "fällst", "er/sie/es": "fällt", wir: "fallen", ihr: "fallt", "sie/Sie": "fallen" },
+    präteritum: { ich: "fiel", du: "fielst", "er/sie/es": "fiel", wir: "fielen", ihr: "fielt", "sie/Sie": "fielen" },
+    partizip2: "gefallen", // ojo: homógrafo de 'gefallen' (gustar)
+    imperativ: { du: "fall", ihr: "fallt", Sie: "fallen Sie" },
+    zuInfinitiv: "zu fallen",
+  },
+
+  ziehen: {
+    lemma: "ziehen",
+    aux: "haben", // Nota: en uso intransitivo de movimiento (z.B. 'nach Berlin ziehen') se usa a menudo 'sein'
+    praesens: { ich: "ziehe", du: "ziehst", "er/sie/es": "zieht", wir: "ziehen", ihr: "zieht", "sie/Sie": "ziehen" },
+    präteritum: { ich: "zog", du: "zogst", "er/sie/es": "zog", wir: "zogen", ihr: "zogt", "sie/Sie": "zogen" },
+    partizip2: "gezogen",
+    imperativ: { du: "zieh", ihr: "zieht", Sie: "ziehen Sie" },
+    zuInfinitiv: "zu ziehen",
+  },
+
+  befinden: {
+    lemma: "befinden",
+    aux: "haben",
+    praesens: { ich: "befinde", du: "befindest", "er/sie/es": "befindet", wir: "befinden", ihr: "befindet", "sie/Sie": "befinden" },
+    präteritum: { ich: "befand", du: "befandest", "er/sie/es": "befand", wir: "befanden", ihr: "befandet", "sie/Sie": "befanden" },
+    partizip2: "befunden",
+    imperativ: { du: "befinde", ihr: "befindet", Sie: "befinden Sie" },
+    zuInfinitiv: "zu befinden",
+  },
+
+  umschließen: {
+    lemma: "umschließen",
+    aux: "haben",
+    praesens: { ich: "umschließe", du: "umschließt", "er/sie/es": "umschließt", wir: "umschließen", ihr: "umschließt", "sie/Sie": "umschließen" },
+    präteritum: { ich: "umschloss", du: "umschlossest", "er/sie/es": "umschloss", wir: "umschlossen", ihr: "umschlosst", "sie/Sie": "umschlossen" },
+    partizip2: "umschlossen",
+    imperativ: { du: "umschließ", ihr: "umschließt", Sie: "umschließen Sie" },
+    zuInfinitiv: "zu umschließen",
+  },
 };

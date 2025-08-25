@@ -19,4 +19,14 @@ export const ambiguousWords = {
     meanings: "tomado/grabado (participio usado como adjetivo declinado)",
     primary: "adjective",
   },
+  rechte: {
+    type: "ambiguous",
+    meanings: "adjetivo: derecha/derecho (fem./pl) / sustantivo: Rechte (derechos, la derecha)",
+    primary: "adjective",
+  },
+  rechten: {
+    type: "ambiguous",
+    meanings: "adjetivo flexionado / genitivo plural de Rechte (poco común)",
+    primary: "adjective",
+  },
 };

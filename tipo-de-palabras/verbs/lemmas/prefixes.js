@@ -30,6 +30,7 @@ export const SEPARABLE_PREFIXES = [
   "zurück",
   "zusammen",
   "zwischen",
+  "heraus",
 ];
 
 export const INSEPARABLE_PREFIXES = ["be", "emp", "ent", "er", "ge", "miss", "ver", "zer", "de", "dis", "in", "re"];

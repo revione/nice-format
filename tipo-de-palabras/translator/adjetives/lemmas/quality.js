@@ -15,6 +15,8 @@ export const EVALUATION_FORMS = [
   { base: { de: "satirisch", es: "satírico/a" } },
   { base: { de: "authentisch", es: "auténtico/a" } },
   { base: { de: "normal", es: "normal" } },
+  { base: { de: "prominent", es: "prominente, sobresaliente" } },
+  { base: { de: "interessant", es: "interesante" } },
 ];
 
 // --- age ---

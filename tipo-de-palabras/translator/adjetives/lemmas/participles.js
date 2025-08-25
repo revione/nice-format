@@ -33,6 +33,12 @@ export const ADJECTIVES_PARTICIPLES_FORMS = [
   { base: { de: "geklappt", es: "plegado/a" }, gradable: false },
   { base: { de: "aufgemacht", es: "abierto/a" }, gradable: false },
   { base: { de: "gelandet", es: "aterrizado/a" }, gradable: false },
+  { base: { de: "lächelnd", es: "sonriente" } },
+  { base: { de: "geschwollen", es: "hinchado/a" }, gradable: false },
+  { base: { de: "geteilt", es: "dividido/a, partido/a" }, gradable: false },
+  { base: { de: "rasiert", es: "rasurado/a" }, gradable: false },
+  { base: { de: "eingezogen", es: "hundido/a, retraído/a" }, gradable: false },
+  { base: { de: "aufgebläht", es: "inflado/a, hinchado/a" }, gradable: false },
 ];
 
 export const ADJECTIVES_PARTICIPLES = flatteAdj(ADJECTIVES_PARTICIPLES_FORMS);

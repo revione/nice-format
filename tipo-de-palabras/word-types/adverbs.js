@@ -35,6 +35,9 @@ export const ADV_PLACE = [
   "hinein",
   "heraus",
   "mitten",
+  "oben",
+  "dabin",
+  "dahinter",
 ];
 
 export const ADV_TIME = [
@@ -139,7 +142,7 @@ export const ADV_DEGREE = [
   "nicht",
 ];
 
-export const ADV_MODALITY = ["wahrscheinlich", "vielleicht", "sicher", "bestimmt", "definitiv", "klar", "eigentlich", "wohl", "leider"];
+export const ADV_MODALITY = ["wahrscheinlich", "vielleicht", "sicher", "bestimmt", "definitiv", "klar", "eigentlich", "wohl", "leider", "anscheinend"];
 
 export const ADV_CONNECTIVE = [
   "dann",
@@ -194,7 +197,25 @@ export const BLOCKS_ADVERBS = {
   PARTICLES: ADV_PARTICLES,
 };
 
-export const ADVERBS = Array.from(new Set([...ADV_PLACE, ...ADV_TIME, ...ADV_MANNER, ...ADV_DEGREE, ...ADV_MODALITY, ...ADV_CONNECTIVE, ...ADV_PARTICLES]));
+// Genera adverbios pronominales: da-/dar- + prep (p.ej. darauf, daran, darin, dahinter…)
+import { PREP_AKK, PREP_DAT, PREP_TWO_WAY } from "./prepositions.js";
+const PRONOMINAL_PREPS = Array.from(new Set([...PREP_AKK, ...PREP_DAT, ...PREP_TWO_WAY]));
+
+function buildPronominalAdverbs() {
+  const out = new Set();
+  for (const p of PRONOMINAL_PREPS) {
+    // formas estándar con "da" o "dar" según vocal inicial
+    const stem = /^[aeiouäöüy]/.test(p) ? "dar" : "da";
+    out.add(stem + p);
+    // variantes muy frecuentes de dirección: hin/her (daraufhin no es tan común, pero darin/dahinter sí)
+    if (p === "in") out.add("darin");
+    if (p === "hinter") out.add("dahinter");
+  }
+  return Array.from(out);
+}
+const ADV_PRONOMINAL = buildPronominalAdverbs();
+
+export const ADVERBS = Array.from(new Set([...ADV_PLACE, ...ADV_TIME, ...ADV_MANNER, ...ADV_DEGREE, ...ADV_MODALITY, ...ADV_CONNECTIVE, ...ADV_PARTICLES, ...ADV_PRONOMINAL]));
 
 export const IRREGULAR_ADVERBS = [
   "gern",

@@ -111,6 +111,8 @@ export const INDECLINABLE_COLORS_FORMS = [
 export const EXTRA_COLOR_COMPOUNDS = [
   { base: { de: "orangefarben", es: "color naranja" }, gradable: false },
   { base: { de: "khakifarben", es: "color caqui" }, gradable: false },
+  { base: { de: "weizenfarben", es: "color trigo" }, gradable: false },
+  { base: { de: "olivfarben", es: "color oliva" }, gradable: false },
 ];
 
 export const COLOR_PREFIXES_FORMS = [

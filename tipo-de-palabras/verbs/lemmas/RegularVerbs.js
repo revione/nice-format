@@ -775,6 +775,14 @@ export const ADDITIONAL_REGULAR_VERBS = [
   "klauen",
   "kriegen",
   "regen",
+
+  "lächeln",
+  "kämmen",
+  "richten",
+  "reichen",
+  "behandeln",
+  "frisieren",
+  "runden",
 ];
 
 export const REGULARS = Array.from(new Set([...Object.values(BLOCK_REGULARS).flat(), ...ADDITIONAL_REGULAR_VERBS]));

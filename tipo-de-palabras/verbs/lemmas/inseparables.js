@@ -28,6 +28,7 @@ export const INSEPARABLES_GROUPED = {
     "umarmen", // abrazar
     "umringen", // rodear
     "umfassen", // abarcar / comprender
+    "umschließen",
   ],
 
   durch: [
@@ -42,7 +43,7 @@ export const INSEPARABLES_GROUPED = {
 
   ver: ["verschwinden"],
 
-  be: ["behalten", "bedeuten", "begehen"],
+  be: ["behalten", "bedeuten", "begehen", "befinden", "behandeln"],
 
   er: ["erschaffen"],
 };

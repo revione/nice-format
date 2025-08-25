@@ -46,6 +46,8 @@ const BLOCKS_AUX_BY_LEMMA = {
     verschwinden: "sein",
     landen: "sein",
     abhauen: "sein",
+
+    fallen: "sein",
   },
 
   haben: {
@@ -143,6 +145,19 @@ const BLOCKS_AUX_BY_LEMMA = {
     durchsägen: "haben",
     aufbereiten: "haben",
     erschaffen: "haben",
+
+    tragen: "haben",
+    lächeln: "haben",
+    kämmen: "haben",
+    richten: "haben",
+    reichen: "haben",
+    behandeln: "haben",
+    frisieren: "haben",
+    umschließen: "haben",
+    befinden: "haben", // 'sich befinden' también usa 'haben'
+    ziehen: "haben",
+
+    herausstehen: "haben",
   },
 };
 

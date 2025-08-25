@@ -51,6 +51,7 @@ export const LENGTH_FORMS = [
   { base: { de: "kurz", es: "corto/a" }, irregularities: ["umlaut"] },
   { base: { de: "endlos", es: "interminable" } },
   { base: { de: "kurzzeitig", es: "de corta duración" } },
+  { base: { de: "mittellang", es: "de longitud media" }, gradable: false },
 ];
 
 // --- WEIGHT / VOLUME ---
@@ -65,6 +66,7 @@ export const WEIGHT_VOLUME_FORMS = [
   { base: { de: "federleicht", es: "ligerísimo/a" } },
   { base: { de: "dicht", es: "denso/a" } },
   { base: { de: "locker", es: "suelto/a" } },
+  { base: { de: "halbdünn", es: "medio delgado/a" } },
 ];
 
 // --- SHAPE ---
