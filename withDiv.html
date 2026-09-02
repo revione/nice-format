@@ -239,8 +239,14 @@
       }
       .grupo b {
         font-weight: 500;
-        min-width: 2.1em;
+        min-width: 2.6em;
         text-align: center;
+        cursor: pointer;
+      }
+      .grupo input[type="range"] {
+        width: 92px;
+        margin: 0;
+        accent-color: currentColor;
         cursor: pointer;
       }
     </style>
@@ -336,6 +342,7 @@
         Object.keys(AJUSTES).forEach((nombre) =>
           fijarAjuste(nombre, prefs[nombre] ?? AJUSTES[nombre].def)
         );
+        fijarMaxChar(prefs.maxChar ?? MAX_CHAR_DEF);
         document.body.classList.toggle("dark", !!prefs.oscuro);
         botonTema.textContent = prefs.oscuro ? "☀️" : "🌙";
         chipModo.textContent = formatter.hasAttribute("contenteditable")
@@ -427,6 +434,138 @@
           });
       });
 
+      // --- Separar en parrafos ---
+      // misma logica que remove-lines-and-separate-by-dots.html: junta
+      // todas las lineas en una sola y luego corta por el punto mas
+      // cercano al limite de caracteres.
+      const MAX_CHAR_DEF = 10;
+      const deslizador = document.getElementById("maxChar");
+      const valorMaxChar = document.getElementById("valor-maxChar");
+      let yaSeparado = false;
+      let deshacerSeparar = null; // contenido previo, para el Cmd+Z
+
+      const fijarMaxChar = (valor) => {
+        const numero = Number(valor);
+        // un valor guardado de un rango anterior se descarta en vez de
+        // quedar acotado a medias: el numero y el tirador iban por libre
+        const fuera =
+          !Number.isFinite(numero) ||
+          numero < Number(deslizador.min) ||
+          numero > Number(deslizador.max);
+
+        deslizador.value = fuera ? MAX_CHAR_DEF : numero;
+        // se relee del control, que ya ajusta al min, al max y al paso
+        prefs.maxChar = Number(deslizador.value);
+        valorMaxChar.textContent = prefs.maxChar;
+      };
+
+      const quitarSaltos = (texto) =>
+        texto
+          .split("\n")
+          .map((linea) => linea.trim() + " ")
+          .join("");
+
+      // misma logica que splitTextByDelimiters de separar-2.html: corta
+      // por el punto o la coma mas cercanos al limite de caracteres
+      const separarPorDelimitadores = (texto, maxChar) => {
+        const parrafos = [];
+        let inicio = 0;
+
+        while (inicio < texto.length) {
+          let fin = inicio + maxChar;
+
+          if (fin >= texto.length) {
+            parrafos.push(texto.substring(inicio));
+            break;
+          }
+
+          const anterior = Math.max(
+            texto.lastIndexOf(".", fin),
+            texto.lastIndexOf(",", fin)
+          );
+
+          if (anterior > inicio) {
+            fin = anterior + 1;
+          } else {
+            // no hay delimitador antes del limite: se busca el siguiente
+            const siguiente = (caracter) => {
+              const donde = texto.indexOf(caracter, fin);
+              return donde === -1 ? Infinity : donde + 1;
+            };
+            const proximo = Math.min(siguiente("."), siguiente(","));
+
+            if (proximo !== Infinity && proximo > inicio) {
+              fin = proximo;
+            } else {
+              // ya no queda ningun delimitador: se corta en un espacio
+              // para no partir una palabra por la mitad
+              const espacio = texto.lastIndexOf(" ", fin);
+              if (espacio > inicio) {
+                fin = espacio + 1;
+              } else {
+                // la palabra sola ya pasa del limite: se deja entera
+                const adelante = texto.indexOf(" ", fin);
+                fin = adelante === -1 ? texto.length : adelante + 1;
+              }
+            }
+          }
+
+          parrafos.push(texto.substring(inicio, fin));
+          inicio = fin;
+        }
+
+        return parrafos.map((parrafo) => parrafo.trim()).filter(Boolean);
+      };
+
+      const escapar = (texto) =>
+        texto.replace(
+          /[&<>]/g,
+          (caracter) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[caracter])
+        );
+
+      // el texto se queda sin ningun formato, a proposito
+      const separar = () => {
+        const parrafos = separarPorDelimitadores(
+          quitarSaltos(formatter.innerText),
+          prefs.maxChar ?? MAX_CHAR_DEF
+        );
+        if (!parrafos.length) return;
+
+        // el div vacio entre parrafos es la linea en blanco; va como
+        // separador para que no quede una sobrante al final
+        const html = parrafos
+          .map((parrafo) => "<div>" + escapar(parrafo) + "</div>")
+          .join("<div><br></div>");
+
+        // Se asigna directamente. Con execCommand("insertHTML") el
+        // navegador reaplicaba al texto insertado el estilo de lo que
+        // reemplazaba y lo dejaba todo en negrita.
+        deshacerSeparar = formatter.innerHTML;
+        formatter.innerHTML = html;
+
+        yaSeparado = true;
+        aplicar();
+      };
+
+      document.getElementById("separar").addEventListener("click", separar);
+
+      formatter.addEventListener("input", () => {
+        deshacerSeparar = null;
+      });
+
+      // arrastrar solo mueve el numero; al soltar se vuelve a repartir
+      deslizador.addEventListener("input", () => fijarMaxChar(deslizador.value));
+      deslizador.addEventListener("change", () => {
+        guardar();
+        if (yaSeparado) separar();
+      });
+
+      valorMaxChar.addEventListener("dblclick", () => {
+        fijarMaxChar(MAX_CHAR_DEF);
+        guardar();
+        if (yaSeparado) separar();
+      });
+
       const alternarTema = () => {
         prefs.oscuro = !document.body.classList.contains("dark");
         aplicar();
@@ -439,6 +578,18 @@
         if (event.key === "Escape") {
           formatter.toggleAttribute("contenteditable");
           aplicar();
+        }
+        // asignar innerHTML rompe el historial nativo, asi que el
+        // deshacer de la separacion lo llevamos a mano
+        if (
+          (event.metaKey || event.ctrlKey) &&
+          event.key.toLowerCase() === "z" &&
+          !event.shiftKey &&
+          deshacerSeparar !== null
+        ) {
+          event.preventDefault();
+          formatter.innerHTML = deshacerSeparar;
+          deshacerSeparar = null;
         }
         if (event.key === "1" && event.metaKey) {
           event.preventDefault();
@@ -476,6 +627,27 @@
         <b id="valor-interlineado" title="Doble clic para restablecer">1.6</b>
         <button type="button" data-ajuste="interlineado" data-paso="1">↕+</button>
       </span>
+
+      <span class="chip grupo" title="Máximo de caracteres por párrafo">
+        <input
+          type="range"
+          id="maxChar"
+          min="10"
+          max="50"
+          step="5"
+          value="10"
+        />
+        <b id="valor-maxChar" title="Doble clic para restablecer">10</b>
+      </span>
+
+      <button
+        class="chip"
+        id="separar"
+        type="button"
+        title="Quita los saltos de línea y reparte el texto en párrafos cortando por puntos y comas"
+      >
+        ¶ separar
+      </button>
 
       <button
         class="chip"
