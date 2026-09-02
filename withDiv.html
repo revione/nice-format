@@ -81,7 +81,6 @@
         background-color: var(--hoja);
         color: var(--texto);
         caret-color: var(--texto);
-        border: 1px solid var(--borde);
         border-radius: 4px;
         padding: 10px;
         box-sizing: border-box;
@@ -99,18 +98,32 @@
         cursor: default;
       }
 
-      /* nada de lo que pegues puede salirse de la caja, y el texto
-         pegado adopta los colores de lectura en vez de los suyos
-         (asi no queda negro sobre negro en modo oscuro) */
+      /* nada de lo que pegues puede salirse de la caja */
       .formatter * {
-        max-width: 100% !important;
         overflow-wrap: anywhere !important;
         box-sizing: border-box;
-        background: transparent !important;
-        color: inherit !important;
+      }
+      .formatter div,
+      .formatter p,
+      .formatter pre,
+      .formatter blockquote,
+      .formatter table,
+      .formatter img,
+      .formatter svg,
+      .formatter video {
+        max-width: 100% !important;
       }
 
-      /* texto preformateado: respeta los saltos pero envuelve */
+      /* Los colores de lectura se imponen SOLO en los bloques, nunca en
+         los elementos inline: los lectores de voz (Natural Reader)
+         resaltan la frase y la palabra envolviendolas en <span> con
+         fondo propio, y un background transparente global se los borra. */
+      .formatter div,
+      .formatter p {
+        background: transparent !important;
+        color: unset !important;
+      }
+
       /* lo pegado obedece a la fuente y el interlineado elegidos;
          los titulos conservan su tamano relativo (van en em) */
       .formatter * {
@@ -121,6 +134,7 @@
         font-size: inherit !important;
       }
 
+      /* texto preformateado: respeta los saltos pero envuelve */
       .formatter pre,
       .formatter code,
       .formatter [style*="white-space"],
@@ -279,9 +293,15 @@
 
       const prefs = leer();
 
+      // La posicion lateral no se conserva: el cuadro arranca siempre
+      // centrado. Mover y, sobre todo, ensanchar por un borde dejan un
+      // desplazamiento que no tiene sentido heredar en la carga.
+      delete prefs.desplazamiento;
+
       const guardar = () => {
         try {
-          localStorage.setItem(CLAVE, JSON.stringify(prefs));
+          const { desplazamiento, ...aGuardar } = prefs;
+          localStorage.setItem(CLAVE, JSON.stringify(aGuardar));
         } catch {}
       };
 
