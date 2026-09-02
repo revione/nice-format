@@ -33,14 +33,48 @@
         border: 1px solid #ccc;
         border-radius: 4px;
         padding: 10px;
+        box-sizing: border-box;
         resize: both;
         width: 70%;
-        height: 80vh;
-        overflow-x: hidden;
+
+        /* crece con el texto en vez de recortarlo a 80vh */
+        min-height: 80vh;
+        height: auto;
+
+        /* si lo redimensionas mas pequeno, se desplaza en vez de ocultar */
+        overflow: auto;
+        overflow-wrap: anywhere;
       }
       .formatter:not([contenteditable]) {
         cursor: default;
       }
+
+      /* nada de lo que pegues puede salirse de la caja */
+      .formatter * {
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+        box-sizing: border-box;
+      }
+
+      /* texto preformateado: respeta los saltos pero envuelve */
+      .formatter pre,
+      .formatter code,
+      .formatter [style*="white-space"],
+      .formatter [style*="nowrap"] {
+        white-space: pre-wrap !important;
+      }
+
+      .formatter img,
+      .formatter svg,
+      .formatter video {
+        height: auto !important;
+      }
+
+      .formatter table {
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+
       p,
       div {
         background: transparent !important;
