@@ -51,7 +51,7 @@
         gap: 15px;
 
         margin: 0;
-        margin-top: 4vh;
+        margin-top: max(4vh, 56px); /* deja libre la barra fija de arriba */
         margin-bottom: 100vh;
 
         align-items: center;
@@ -73,6 +73,11 @@
       }
 
       .formatter {
+        /* 1.6 de interlineado y 24px son los valores de partida
+           recomendados para lectura; se ajustan desde la barra */
+        font-size: var(--fuente, 24px);
+        line-height: var(--interlineado, 1.6);
+
         background-color: var(--hoja);
         color: var(--texto);
         caret-color: var(--texto);
@@ -106,6 +111,16 @@
       }
 
       /* texto preformateado: respeta los saltos pero envuelve */
+      /* lo pegado obedece a la fuente y el interlineado elegidos;
+         los titulos conservan su tamano relativo (van en em) */
+      .formatter * {
+        font-family: inherit !important;
+        line-height: inherit !important;
+      }
+      .formatter *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
+        font-size: inherit !important;
+      }
+
       .formatter pre,
       .formatter code,
       .formatter [style*="white-space"],
@@ -183,6 +198,9 @@
         top: 10px;
         right: 12px;
         display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: calc(100vw - 24px);
         align-items: center;
         gap: 8px;
         z-index: 10;
@@ -206,6 +224,25 @@
         cursor: pointer;
         font-size: 14px;
       }
+      .grupo {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .grupo button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      .grupo b {
+        font-weight: 500;
+        min-width: 2.1em;
+        text-align: center;
+        cursor: pointer;
+      }
     </style>
   </head>
 
@@ -219,6 +256,12 @@
       const CLAVE = "withDiv:preferencias";
       const ANCHO_MIN = 240;
       const ALTO_MIN = 120;
+
+      // ajustes tipograficos de la barra
+      const AJUSTES = {
+        fuente: { def: 24, min: 12, max: 48, paso: 1, unidad: "px", dec: 0 },
+        interlineado: { def: 1.6, min: 1, max: 2.4, paso: 0.1, unidad: "", dec: 1 },
+      };
 
       const leer = () => {
         try {
@@ -237,6 +280,18 @@
       };
 
       const anchoDisponible = () => document.documentElement.clientWidth;
+
+      const fijarAjuste = (nombre, valor) => {
+        const ajuste = AJUSTES[nombre];
+        const acotado = Math.min(Math.max(valor, ajuste.min), ajuste.max);
+        prefs[nombre] = Number(acotado.toFixed(ajuste.dec));
+        formatter.style.setProperty(
+          "--" + nombre,
+          prefs[nombre] + ajuste.unidad
+        );
+        document.getElementById("valor-" + nombre).textContent =
+          prefs[nombre].toFixed(ajuste.dec);
+      };
 
       const fijarAncho = (deseado) => {
         const ancho = Math.round(
@@ -278,6 +333,9 @@
         );
         formatter.style.height = prefs.alto ? prefs.alto + "px" : "";
         formatter.style.minHeight = prefs.alto ? prefs.alto + "px" : "";
+        Object.keys(AJUSTES).forEach((nombre) =>
+          fijarAjuste(nombre, prefs[nombre] ?? AJUSTES[nombre].def)
+        );
         document.body.classList.toggle("dark", !!prefs.oscuro);
         botonTema.textContent = prefs.oscuro ? "☀️" : "🌙";
         chipModo.textContent = formatter.hasAttribute("contenteditable")
@@ -348,6 +406,27 @@
         });
       });
 
+      document.querySelectorAll("[data-ajuste]").forEach((boton) => {
+        const nombre = boton.dataset.ajuste;
+        const ajuste = AJUSTES[nombre];
+
+        boton.addEventListener("click", () => {
+          const actual = prefs[nombre] ?? ajuste.def;
+          fijarAjuste(nombre, actual + Number(boton.dataset.paso) * ajuste.paso);
+          guardar();
+        });
+      });
+
+      // doble clic sobre el numero: vuelve al valor recomendado
+      Object.keys(AJUSTES).forEach((nombre) => {
+        document
+          .getElementById("valor-" + nombre)
+          .addEventListener("dblclick", () => {
+            fijarAjuste(nombre, AJUSTES[nombre].def);
+            guardar();
+          });
+      });
+
       const alternarTema = () => {
         prefs.oscuro = !document.body.classList.contains("dark");
         aplicar();
@@ -383,6 +462,21 @@
   <body>
     <div class="barra">
       <span class="chip" id="modo">edición</span>
+
+      <span class="chip grupo" title="Tamaño de la letra">
+        <button type="button" data-ajuste="fuente" data-paso="-1">A−</button>
+        <b id="valor-fuente" title="Doble clic para restablecer">24</b>
+        <button type="button" data-ajuste="fuente" data-paso="1">A+</button>
+      </span>
+
+      <span class="chip grupo" title="Espacio entre líneas">
+        <button type="button" data-ajuste="interlineado" data-paso="-1">
+          ↕−
+        </button>
+        <b id="valor-interlineado" title="Doble clic para restablecer">1.6</b>
+        <button type="button" data-ajuste="interlineado" data-paso="1">↕+</button>
+      </span>
+
       <button
         class="chip"
         id="tema"
