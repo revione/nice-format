@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,6 +15,7 @@
         --texto: #2e2e2e;
         --borde: #dcdad3;
         --seleccion: #cfe0f7;
+        --asa: #b6c4d6;
       }
 
       /* Modo oscuro: casi negro en vez de #000 (el negro puro produce
@@ -27,6 +28,7 @@
         --texto: #d9d7d2;
         --borde: #34383b;
         --seleccion: #2f4666;
+        --asa: #3d4753;
         color-scheme: dark;
       }
 
@@ -55,6 +57,21 @@
         align-items: center;
         min-height: 100vh;
       }
+
+      /* mientras arrastras una asa no se selecciona texto sin querer */
+      body.arrastrando {
+        user-select: none;
+      }
+
+      /* El marco es lo que se mueve y se ensancha; el ancho vive aqui
+         para que las asas queden pegadas a los bordes reales. */
+      .marco {
+        position: relative;
+        width: var(--ancho, 70%);
+        max-width: 100%;
+        transform: translateX(var(--desplazamiento, 0px));
+      }
+
       .formatter {
         background-color: var(--hoja);
         color: var(--texto);
@@ -63,14 +80,13 @@
         border-radius: 4px;
         padding: 10px;
         box-sizing: border-box;
-        resize: both;
-        width: 70%;
+        width: 100%;
 
         /* crece con el texto en vez de recortarlo a 80vh */
         min-height: 80vh;
         height: auto;
 
-        /* si lo redimensionas mas pequeno, se desplaza en vez de ocultar */
+        /* si lo achicas con el asa, se desplaza en vez de ocultar */
         overflow: auto;
         overflow-wrap: anywhere;
       }
@@ -107,30 +123,301 @@
         width: 100% !important;
         table-layout: fixed !important;
       }
+
+      /* --- Asas: bandas invisibles justo por fuera de cada borde --- */
+      .asa {
+        position: absolute;
+        border-radius: 4px;
+        background-color: transparent;
+        transition: background-color 0.15s ease;
+        touch-action: none;
+      }
+      .asa:hover,
+      .asa.activa {
+        background-color: var(--asa);
+      }
+
+      .asa-izq,
+      .asa-der {
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        cursor: ew-resize;
+      }
+      .asa-izq {
+        left: -6px;
+      }
+      .asa-der {
+        right: -6px;
+      }
+
+      .asa-abajo {
+        left: 0;
+        right: 0;
+        bottom: -6px;
+        height: 12px;
+        cursor: ns-resize;
+      }
+
+      /* Solo desplaza a los lados, no flota: no cambia el alto ni la
+         posicion vertical. */
+      .asa-mover {
+        left: 0;
+        right: 0;
+        top: -6px;
+        height: 12px;
+        cursor: grab;
+      }
+      .asa-mover.activa {
+        cursor: grabbing;
+      }
+
+      /* mover el bloque solo esta disponible en modo div (no editable) */
+      #formatter[contenteditable] ~ .asa-mover {
+        display: none;
+      }
+
+      /* --- Barra de estado --- */
+      .barra {
+        position: fixed;
+        top: 10px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 10;
+        font-size: 13px;
+        font-family: sans-serif;
+      }
+      .chip {
+        background-color: var(--hoja);
+        color: var(--texto);
+        border: 1px solid var(--borde);
+        border-radius: 999px;
+        padding: 5px 11px;
+        line-height: 1;
+        opacity: 0.7;
+        transition: opacity 0.15s ease;
+      }
+      .chip:hover {
+        opacity: 1;
+      }
+      button.chip {
+        cursor: pointer;
+        font-size: 14px;
+      }
     </style>
   </head>
 
   <script>
     const app = () => {
+      const marco = document.getElementById("marco");
       const formatter = document.getElementById("formatter");
+      const botonTema = document.getElementById("tema");
+      const chipModo = document.getElementById("modo");
+
+      const CLAVE = "withDiv:preferencias";
+      const ANCHO_MIN = 240;
+      const ALTO_MIN = 120;
+
+      const leer = () => {
+        try {
+          return JSON.parse(localStorage.getItem(CLAVE)) || {};
+        } catch {
+          return {};
+        }
+      };
+
+      const prefs = leer();
+
+      const guardar = () => {
+        try {
+          localStorage.setItem(CLAVE, JSON.stringify(prefs));
+        } catch {}
+      };
+
+      const anchoDisponible = () => document.documentElement.clientWidth;
+
+      const fijarAncho = (deseado) => {
+        const ancho = Math.round(
+          Math.min(Math.max(deseado, ANCHO_MIN), anchoDisponible())
+        );
+        prefs.ancho = ancho;
+        marco.style.setProperty("--ancho", ancho + "px");
+        return ancho;
+      };
+
+      const fijarAlto = (deseado) => {
+        const alto = Math.round(Math.max(deseado, ALTO_MIN));
+        prefs.alto = alto;
+        // el min-height por defecto es 80vh, hay que bajarlo tambien
+        formatter.style.height = alto + "px";
+        formatter.style.minHeight = alto + "px";
+      };
+
+      // Limites para que el bloque nunca se salga de la pantalla.
+      const fijarDesplazamiento = (deseado) => {
+        const actual = prefs.desplazamiento || 0;
+        const caja = marco.getBoundingClientRect();
+        const centrado = caja.left - actual;
+        const min = -centrado;
+        const max = anchoDisponible() - caja.width - centrado;
+        const valor = Math.round(Math.min(Math.max(deseado, min), max));
+        prefs.desplazamiento = valor;
+        marco.style.setProperty("--desplazamiento", valor + "px");
+      };
+
+      const aplicar = () => {
+        marco.style.setProperty(
+          "--ancho",
+          prefs.ancho ? prefs.ancho + "px" : "70%"
+        );
+        marco.style.setProperty(
+          "--desplazamiento",
+          (prefs.desplazamiento || 0) + "px"
+        );
+        formatter.style.height = prefs.alto ? prefs.alto + "px" : "";
+        formatter.style.minHeight = prefs.alto ? prefs.alto + "px" : "";
+        document.body.classList.toggle("dark", !!prefs.oscuro);
+        botonTema.textContent = prefs.oscuro ? "☀️" : "🌙";
+        chipModo.textContent = formatter.hasAttribute("contenteditable")
+          ? "edición"
+          : "div";
+      };
+
+      // Al mover un borde lateral la caja sigue centrada, asi que el
+      // borde opuesto se queda quieto compensando la mitad del avance.
+      const gestos = {
+        izq: (d) => {
+          const ancho = fijarAncho(d.ancho - d.dx);
+          fijarDesplazamiento(d.off + (d.ancho - ancho) / 2);
+        },
+        der: (d) => {
+          const ancho = fijarAncho(d.ancho + d.dx);
+          fijarDesplazamiento(d.off + (ancho - d.ancho) / 2);
+        },
+        abajo: (d) => fijarAlto(d.alto + d.dy),
+        mover: (d) => fijarDesplazamiento(d.off + d.dx),
+      };
+
+      document.querySelectorAll(".asa").forEach((asa) => {
+        const gesto = gestos[asa.dataset.asa];
+
+        asa.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          asa.setPointerCapture(event.pointerId);
+          asa.classList.add("activa");
+          document.body.classList.add("arrastrando");
+
+          const inicio = {
+            x: event.clientX,
+            y: event.clientY,
+            ancho: marco.getBoundingClientRect().width,
+            alto: formatter.getBoundingClientRect().height,
+            off: prefs.desplazamiento || 0,
+          };
+
+          const mover = (e) =>
+            gesto({
+              ...inicio,
+              dx: e.clientX - inicio.x,
+              dy: e.clientY - inicio.y,
+            });
+
+          const soltar = () => {
+            asa.classList.remove("activa");
+            document.body.classList.remove("arrastrando");
+            asa.removeEventListener("pointermove", mover);
+            asa.removeEventListener("pointerup", soltar);
+            asa.removeEventListener("pointercancel", soltar);
+            guardar();
+          };
+
+          asa.addEventListener("pointermove", mover);
+          asa.addEventListener("pointerup", soltar);
+          asa.addEventListener("pointercancel", soltar);
+        });
+
+        // doble clic en cualquier asa: vuelve al tamano y sitio original
+        asa.addEventListener("dblclick", () => {
+          delete prefs.ancho;
+          delete prefs.alto;
+          prefs.desplazamiento = 0;
+          aplicar();
+          guardar();
+        });
+      });
+
+      const alternarTema = () => {
+        prefs.oscuro = !document.body.classList.contains("dark");
+        aplicar();
+        guardar();
+      };
+
+      botonTema.addEventListener("click", alternarTema);
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
           formatter.toggleAttribute("contenteditable");
+          aplicar();
         }
         if (event.key === "1" && event.metaKey) {
           event.preventDefault();
-          document.body.classList.toggle("dark");
+          alternarTema();
         }
       });
+
+      // si cambia el tamano de la ventana, se vuelve a encajar
+      window.addEventListener("resize", () => {
+        if (prefs.ancho) fijarAncho(prefs.ancho);
+        fijarDesplazamiento(prefs.desplazamiento || 0);
+      });
+
+      aplicar();
+      fijarDesplazamiento(prefs.desplazamiento || 0);
     };
 
     document.addEventListener("DOMContentLoaded", app);
   </script>
 
   <body>
-    <div id="formatter" class="formatter" contenteditable="true">
-      Escribe...
+    <div class="barra">
+      <span class="chip" id="modo">edición</span>
+      <button
+        class="chip"
+        id="tema"
+        type="button"
+        title="Modo oscuro (Cmd+1)"
+        aria-label="Cambiar tema"
+      >
+        🌙
+      </button>
+    </div>
+
+    <div class="marco" id="marco">
+      <div id="formatter" class="formatter" contenteditable="true">
+        Escribe...
+      </div>
+      <span
+        class="asa asa-mover"
+        data-asa="mover"
+        title="Arrastra para mover el bloque a los lados (solo en modo div)"
+      ></span>
+      <span
+        class="asa asa-izq"
+        data-asa="izq"
+        title="Arrastra para cambiar el ancho"
+      ></span>
+      <span
+        class="asa asa-der"
+        data-asa="der"
+        title="Arrastra para cambiar el ancho"
+      ></span>
+      <span
+        class="asa asa-abajo"
+        data-asa="abajo"
+        title="Arrastra para cambiar el alto"
+      ></span>
     </div>
   </body>
 </html>
