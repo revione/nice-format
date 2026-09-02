@@ -5,13 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Formatter</title>
     <style>
+      /* Colores recomendados para lectura larga:
+         gris oscuro sobre off-white (no negro puro sobre blanco puro:
+         21:1 es demasiado duro y cansa la vista). Contraste 12.9:1,
+         muy por encima del 7:1 que pide WCAG AAA. */
+      :root {
+        --pagina: #f1f0ea;
+        --hoja: #faf9f5;
+        --texto: #2e2e2e;
+        --borde: #dcdad3;
+        --seleccion: #cfe0f7;
+      }
+
+      /* Modo oscuro: casi negro en vez de #000 (el negro puro produce
+         halo alrededor de las letras y parpadeo en pantallas OLED) y
+         gris claro en vez de blanco puro (evita el deslumbramiento).
+         Contraste 11.6:1. */
       body.dark {
-        background-color: #1a1a1a;
-        color: #e0e0ea;
+        --pagina: #141617;
+        --hoja: #1c1e20;
+        --texto: #d9d7d2;
+        --borde: #34383b;
+        --seleccion: #2f4666;
+        color-scheme: dark;
+      }
+
+      ::selection {
+        background-color: var(--seleccion);
       }
 
       body {
-        background-color: #2effbb08;
+        background-color: var(--pagina);
+        color: var(--texto);
+        color-scheme: light;
 
         font-size: 24px;
         line-height: 1.5rem;
@@ -30,7 +56,10 @@
         min-height: 100vh;
       }
       .formatter {
-        border: 1px solid #ccc;
+        background-color: var(--hoja);
+        color: var(--texto);
+        caret-color: var(--texto);
+        border: 1px solid var(--borde);
         border-radius: 4px;
         padding: 10px;
         box-sizing: border-box;
@@ -49,11 +78,15 @@
         cursor: default;
       }
 
-      /* nada de lo que pegues puede salirse de la caja */
+      /* nada de lo que pegues puede salirse de la caja, y el texto
+         pegado adopta los colores de lectura en vez de los suyos
+         (asi no queda negro sobre negro en modo oscuro) */
       .formatter * {
         max-width: 100% !important;
         overflow-wrap: anywhere !important;
         box-sizing: border-box;
+        background: transparent !important;
+        color: inherit !important;
       }
 
       /* texto preformateado: respeta los saltos pero envuelve */
@@ -73,12 +106,6 @@
       .formatter table {
         width: 100% !important;
         table-layout: fixed !important;
-      }
-
-      p,
-      div {
-        background: transparent !important;
-        color: unset !important;
       }
     </style>
   </head>
