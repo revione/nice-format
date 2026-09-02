@@ -5,31 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Formatter</title>
     <style>
-      /* Colores recomendados para lectura larga:
-         gris oscuro sobre off-white (no negro puro sobre blanco puro:
-         21:1 es demasiado duro y cansa la vista). Contraste 12.9:1,
-         muy por encima del 7:1 que pide WCAG AAA. */
+      /* Paletas de lectura. Las seis dan como minimo 7:1 de contraste
+         entre texto y hoja (WCAG AAA) sin llegar al 21:1 del negro puro
+         sobre blanco puro, que cansa la vista. Las oscuras usan un casi
+         negro, no #000, que produce halo y parpadeo en OLED.
+         Estos valores son el tema Papel; el JS los reescribe. */
       :root {
         --pagina: #f1f0ea;
         --hoja: #faf9f5;
         --texto: #2e2e2e;
         --borde: #dcdad3;
-        --seleccion: #cfe0f7;
-        --asa: #b6c4d6;
-      }
-
-      /* Modo oscuro: casi negro en vez de #000 (el negro puro produce
-         halo alrededor de las letras y parpadeo en pantallas OLED) y
-         gris claro en vez de blanco puro (evita el deslumbramiento).
-         Contraste 11.6:1. */
-      body.dark {
-        --pagina: #141617;
-        --hoja: #1c1e20;
-        --texto: #d9d7d2;
-        --borde: #34383b;
-        --seleccion: #2f4666;
-        --asa: #3d4753;
-        color-scheme: dark;
+        --seleccion: #d5d3cd;
+        --asa: #c8c6c0;
       }
 
       ::selection {
@@ -238,6 +225,61 @@
         cursor: pointer;
         font-size: 14px;
       }
+
+      /* --- Panel de colores --- */
+      /* el display de autor gana al [hidden] del navegador */
+      [hidden] {
+        display: none !important;
+      }
+      .panel {
+        position: fixed;
+        top: 48px;
+        right: 12px;
+        z-index: 11;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 10px;
+        background-color: var(--hoja);
+        color: var(--texto);
+        border: 1px solid var(--borde);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+        font-size: 13px;
+        font-family: sans-serif;
+      }
+      .muestras {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+      .muestra {
+        width: 58px;
+        height: 40px;
+        border-radius: 6px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        font-family: serif;
+        font-size: 15px;
+      }
+      .muestra[aria-pressed="true"] {
+        border-color: currentColor;
+      }
+      .fila {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .fila input[type="color"] {
+        width: 34px;
+        height: 24px;
+        padding: 0;
+        border: 1px solid var(--borde);
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+      }
       .grupo {
         display: inline-flex;
         align-items: center;
@@ -272,6 +314,12 @@
       const formatter = document.getElementById("formatter");
       const botonTema = document.getElementById("tema");
       const chipModo = document.getElementById("modo");
+      const panel = document.getElementById("panel");
+      const entradas = {
+        pagina: document.getElementById("c-pagina"),
+        hoja: document.getElementById("c-hoja"),
+        texto: document.getElementById("c-texto"),
+      };
 
       const CLAVE = "withDiv:preferencias";
       const ANCHO_MIN = 240;
@@ -297,6 +345,10 @@
       // centrado. Mover y, sobre todo, ensanchar por un borde dejan un
       // desplazamiento que no tiene sentido heredar en la carga.
       delete prefs.desplazamiento;
+
+      // antes solo habia claro/oscuro; se traduce al tema equivalente
+      if (!prefs.tema) prefs.tema = prefs.oscuro ? "noche" : "papel";
+      delete prefs.oscuro;
 
       const guardar = () => {
         try {
@@ -363,8 +415,7 @@
           fijarAjuste(nombre, prefs[nombre] ?? AJUSTES[nombre].def)
         );
         fijarMaxChar(prefs.maxChar ?? MAX_CHAR_DEF);
-        document.body.classList.toggle("dark", !!prefs.oscuro);
-        botonTema.textContent = prefs.oscuro ? "☀️" : "🌙";
+        pintarPaleta();
         chipModo.textContent = formatter.hasAttribute("contenteditable")
           ? "edición"
           : "div";
@@ -586,9 +637,131 @@
         if (yaSeparado) separar();
       });
 
+      // --- Temas ---
+      // Cada tema define solo pagina, hoja y texto; el borde, el asa y
+      // la seleccion salen de mezclar texto con hoja, asi cualquier
+      // paleta (incluida la tuya) queda coherente sin elegir 6 colores.
+      const TEMAS = [
+        { id: "papel", nombre: "Papel", pagina: "#f1f0ea", hoja: "#faf9f5", texto: "#2e2e2e", oscuro: false, par: "noche" },
+        { id: "sepia", nombre: "Sepia", pagina: "#e8ddc7", hoja: "#f4ecd8", texto: "#4a3b28", oscuro: false, par: "ambar" },
+        { id: "gris", nombre: "Gris", pagina: "#e3e6e8", hoja: "#eef0f2", texto: "#31363b", oscuro: false, par: "pizarra" },
+        { id: "noche", nombre: "Noche", pagina: "#141617", hoja: "#1c1e20", texto: "#d9d7d2", oscuro: true, par: "papel" },
+        { id: "ambar", nombre: "Ámbar", pagina: "#17130d", hoja: "#201b13", texto: "#e2cfab", oscuro: true, par: "sepia" },
+        { id: "pizarra", nombre: "Pizarra", pagina: "#131619", hoja: "#1b1f24", texto: "#ccd3da", oscuro: true, par: "gris" },
+      ];
+
+      const canal = (color, indice) =>
+        parseInt(color.slice(1 + indice * 2, 3 + indice * 2), 16);
+
+      const mezclar = (colorA, colorB, proporcion) =>
+        "#" +
+        [0, 1, 2]
+          .map((i) =>
+            Math.round(
+              canal(colorA, i) * proporcion + canal(colorB, i) * (1 - proporcion)
+            )
+              .toString(16)
+              .padStart(2, "0")
+          )
+          .join("");
+
+      // luminancia relativa (WCAG) para decidir si una paleta propia es
+      // oscura, y ajustar color-scheme sin preguntarlo
+      const esOscuro = (color) => {
+        const lineal = (c) =>
+          c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        const luz =
+          0.2126 * lineal(canal(color, 0) / 255) +
+          0.7152 * lineal(canal(color, 1) / 255) +
+          0.0722 * lineal(canal(color, 2) / 255);
+        return luz < 0.35;
+      };
+
+      const temaActual = () => {
+        if (prefs.tema === "custom" && prefs.custom) {
+          return {
+            ...prefs.custom,
+            id: "custom",
+            oscuro: esOscuro(prefs.custom.hoja),
+          };
+        }
+        return TEMAS.find((tema) => tema.id === prefs.tema) || TEMAS[0];
+      };
+
+      const pintarPaleta = () => {
+        const tema = temaActual();
+        const raiz = document.documentElement.style;
+
+        raiz.setProperty("--pagina", tema.pagina);
+        raiz.setProperty("--hoja", tema.hoja);
+        raiz.setProperty("--texto", tema.texto);
+        raiz.setProperty("--borde", mezclar(tema.texto, tema.hoja, 0.16));
+        raiz.setProperty("--asa", mezclar(tema.texto, tema.hoja, 0.3));
+        raiz.setProperty("--seleccion", mezclar(tema.texto, tema.hoja, 0.22));
+
+        document.body.style.colorScheme = tema.oscuro ? "dark" : "light";
+        botonTema.textContent = tema.oscuro ? "☀️" : "🌙";
+
+        document.querySelectorAll(".muestra").forEach((muestra) => {
+          muestra.setAttribute(
+            "aria-pressed",
+            String(muestra.dataset.tema === tema.id)
+          );
+        });
+
+        entradas.pagina.value = tema.pagina;
+        entradas.hoja.value = tema.hoja;
+        entradas.texto.value = tema.texto;
+      };
+
+      const muestrario = document.getElementById("muestras");
+      TEMAS.forEach((tema) => {
+        const muestra = document.createElement("button");
+        muestra.type = "button";
+        muestra.className = "muestra";
+        muestra.dataset.tema = tema.id;
+        muestra.title = tema.nombre;
+        muestra.textContent = "Aa";
+        muestra.style.backgroundColor = tema.hoja;
+        muestra.style.color = tema.texto;
+        muestra.addEventListener("click", () => {
+          prefs.tema = tema.id;
+          pintarPaleta();
+          guardar();
+        });
+        muestrario.appendChild(muestra);
+      });
+
+      // tocar cualquier color parte del tema activo y crea el propio
+      Object.entries(entradas).forEach(([clave, entrada]) => {
+        entrada.addEventListener("input", () => {
+          const base = temaActual();
+          prefs.custom = {
+            pagina: base.pagina,
+            hoja: base.hoja,
+            texto: base.texto,
+            [clave]: entrada.value,
+          };
+          prefs.tema = "custom";
+          pintarPaleta();
+          guardar();
+        });
+      });
+
+      document.getElementById("paleta").addEventListener("click", (event) => {
+        event.stopPropagation();
+        panel.hidden = !panel.hidden;
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!panel.hidden && !panel.contains(event.target)) panel.hidden = true;
+      });
+
+      // salta al tema emparejado: Papel <-> Noche, Sepia <-> Ambar...
       const alternarTema = () => {
-        prefs.oscuro = !document.body.classList.contains("dark");
-        aplicar();
+        const tema = temaActual();
+        prefs.tema = tema.par || (tema.oscuro ? "papel" : "noche");
+        pintarPaleta();
         guardar();
       };
 
@@ -596,8 +769,12 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          formatter.toggleAttribute("contenteditable");
-          aplicar();
+          if (!panel.hidden) {
+            panel.hidden = true;
+          } else {
+            formatter.toggleAttribute("contenteditable");
+            aplicar();
+          }
         }
         // asignar innerHTML rompe el historial nativo, asi que el
         // deshacer de la separacion lo llevamos a mano
@@ -669,6 +846,10 @@
         ¶ separar
       </button>
 
+      <button class="chip" id="paleta" type="button" title="Colores">
+        🎨
+      </button>
+
       <button
         class="chip"
         id="tema"
@@ -678,6 +859,19 @@
       >
         🌙
       </button>
+    </div>
+
+    <div class="panel" id="panel" hidden>
+      <div class="muestras" id="muestras"></div>
+      <label class="fila">
+        <span>Página</span><input type="color" id="c-pagina" />
+      </label>
+      <label class="fila">
+        <span>Hoja</span><input type="color" id="c-hoja" />
+      </label>
+      <label class="fila">
+        <span>Texto</span><input type="color" id="c-texto" />
+      </label>
     </div>
 
     <div class="marco" id="marco">
