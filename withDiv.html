@@ -52,8 +52,19 @@
 
       /* El marco es lo que se mueve y se ensancha; el ancho vive aqui
          para que las asas queden pegadas a los bordes reales. */
+      /* Los dos marcos van en una fila centrada. Cada uno lleva su
+         propio ancho, su propio alto y su propio desplazamiento: son
+         independientes, la fila solo los mantiene juntos y separados. */
+      .fila {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: var(--separacion, 22px);
+        width: 100%;
+      }
       .marco {
         position: relative;
+        flex: 0 0 auto;
         width: var(--ancho, 70%);
         max-width: 100%;
         transform: translateX(var(--desplazamiento, 0px));
@@ -71,7 +82,6 @@
         border-radius: 4px;
         padding: 10px;
         box-sizing: border-box;
-        width: 100%;
 
         /* crece con el texto en vez de recortarlo a 80vh */
         min-height: 80vh;
@@ -188,9 +198,30 @@
         cursor: grabbing;
       }
 
-      /* mover el bloque solo esta disponible en modo div (no editable) */
-      #formatter[contenteditable] ~ .asa-mover {
-        display: none;
+      /* --- Notas: la hoja de al lado, con su propio marco --- */
+      .notas {
+        width: 100%;
+        height: 80vh;
+        min-height: 80vh;
+        box-sizing: border-box;
+        overflow: auto;
+        resize: none;
+        border: 0;
+        outline: none;
+        border-radius: 4px;
+        padding: 10px;
+
+        background-color: var(--hoja);
+        color: var(--texto);
+        caret-color: var(--texto);
+
+        font-family: sans-serif;
+        font-weight: 300;
+        font-size: var(--fuente, 24px);
+        line-height: var(--interlineado, 1.6);
+      }
+      .notas:read-only {
+        cursor: default;
       }
 
       /* --- Barra de estado --- */
@@ -265,13 +296,13 @@
       .muestra[aria-pressed="true"] {
         border-color: currentColor;
       }
-      .fila {
+      .color-fila {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
-      .fila input[type="color"] {
+      .color-fila input[type="color"] {
         width: 34px;
         height: 24px;
         padding: 0;
@@ -310,11 +341,12 @@
 
   <script>
     const app = () => {
-      const marco = document.getElementById("marco");
+      const fila = document.getElementById("fila");
       const formatter = document.getElementById("formatter");
       const botonTema = document.getElementById("tema");
       const chipModo = document.getElementById("modo");
       const panel = document.getElementById("panel");
+      const areaNotas = document.getElementById("texto-notas");
       const entradas = {
         pagina: document.getElementById("c-pagina"),
         hoja: document.getElementById("c-hoja"),
@@ -324,6 +356,10 @@
       const CLAVE = "withDiv:preferencias";
       const ANCHO_MIN = 240;
       const ALTO_MIN = 120;
+      const SEPARACION = 22; // el hueco entre los dos marcos, en px
+      const HUECO_MIN = 12; // lo minimo que pueden acercarse al moverse
+      const MARGEN = 28; // aire a los lados que la colocacion automatica
+      // nunca se come; arrastrando a mano si se puede llegar al borde
 
       // ajustes tipograficos de la barra
       const AJUSTES = {
@@ -344,26 +380,159 @@
       // La posicion lateral no se conserva: el cuadro arranca siempre
       // centrado. Mover y, sobre todo, ensanchar por un borde dejan un
       // desplazamiento que no tiene sentido heredar en la carga.
-      delete prefs.desplazamiento;
+      // cada marco guarda su ancho y su alto aparte
+      prefs.paneles = prefs.paneles || {};
+      prefs.paneles.lectura = prefs.paneles.lectura || {};
+      prefs.paneles.notas = prefs.paneles.notas || {};
+      if (prefs.ancho) prefs.paneles.lectura.ancho = prefs.ancho;
+      if (prefs.alto) prefs.paneles.lectura.alto = prefs.alto;
+      delete prefs.ancho;
+      delete prefs.alto;
+      delete prefs.reparto;
 
       // antes solo habia claro/oscuro; se traduce al tema equivalente
       if (!prefs.tema) prefs.tema = prefs.oscuro ? "noche" : "papel";
       delete prefs.oscuro;
+      delete prefs.anchoNotas; // sobra desde que las notas van al lado
 
+      // la posicion lateral no se guarda: los marcos arrancan centrados
       const guardar = () => {
         try {
-          const { desplazamiento, ...aGuardar } = prefs;
-          localStorage.setItem(CLAVE, JSON.stringify(aGuardar));
+          const copia = { ...prefs, paneles: {} };
+          Object.entries(prefs.paneles).forEach(([id, ajuste]) => {
+            const { desplazamiento, ...resto } = ajuste;
+            copia.paneles[id] = resto;
+          });
+          localStorage.setItem(CLAVE, JSON.stringify(copia));
         } catch {}
       };
 
+      const PANELES = {
+        lectura: {
+          id: "lectura",
+          lado: "izq",
+          marco: document.getElementById("marco-lectura"),
+          hoja: formatter,
+        },
+        notas: {
+          id: "notas",
+          lado: "der",
+          marco: document.getElementById("marco-notas"),
+          hoja: areaNotas,
+        },
+      };
+
+      const ajustes = (panel) => prefs.paneles[panel.id];
+      const visible = (panel) => !panel.marco.hidden;
+      const vecinoDe = (panel) =>
+        panel.id === "lectura" ? PANELES.notas : PANELES.lectura;
+
       const anchoDisponible = () => document.documentElement.clientWidth;
+
+      // ancho de trabajo: la ventana menos el aire de los lados
+      const anchoUtil = () => anchoDisponible() - MARGEN * 2;
+
+      // el tope de cada marco descuenta lo que ocupa el otro, asi la
+      // fila nunca desborda ni se pega a los bordes
+      const fijarAncho = (panel, deseado) => {
+        const vecino = vecinoDe(panel);
+        const ocupado = visible(vecino)
+          ? vecino.marco.getBoundingClientRect().width + SEPARACION
+          : 0;
+        const tope = Math.max(ANCHO_MIN, anchoUtil() - ocupado);
+        const ancho = Math.round(Math.min(Math.max(deseado, ANCHO_MIN), tope));
+        ajustes(panel).ancho = ancho;
+        panel.marco.style.setProperty("--ancho", ancho + "px");
+        return ancho;
+      };
+
+      const fijarAlto = (panel, deseado) => {
+        const alto = Math.round(Math.max(deseado, ALTO_MIN));
+        ajustes(panel).alto = alto;
+        // el min-height por defecto es 80vh, hay que bajarlo tambien
+        panel.hoja.style.height = alto + "px";
+        panel.hoja.style.minHeight = alto + "px";
+      };
+
+      // Cada marco se queda dentro de la ventana y dentro de su lado:
+      // el de la izquierda no cruza al de la derecha ni al reves.
+      const fijarDesplazamiento = (panel, deseado) => {
+        const actual = ajustes(panel).desplazamiento || 0;
+        const caja = panel.marco.getBoundingClientRect();
+        const centrado = caja.left - actual;
+
+        let min = -centrado;
+        let max = anchoDisponible() - caja.width - centrado;
+
+        const vecino = vecinoDe(panel);
+        if (visible(vecino) && visible(panel)) {
+          const otro = vecino.marco.getBoundingClientRect();
+          if (panel.lado === "izq") {
+            max = Math.min(max, otro.left - HUECO_MIN - caja.width - centrado);
+          } else {
+            min = Math.max(min, otro.right + HUECO_MIN - centrado);
+          }
+        }
+
+        const valor = Math.round(Math.min(Math.max(deseado, min), max));
+        ajustes(panel).desplazamiento = valor;
+        panel.marco.style.setProperty("--desplazamiento", valor + "px");
+      };
+
+      const pintarPanel = (panel) => {
+        const ajuste = ajustes(panel);
+        panel.marco.style.setProperty(
+          "--ancho",
+          ajuste.ancho ? ajuste.ancho + "px" : "70%"
+        );
+        panel.marco.style.setProperty(
+          "--desplazamiento",
+          (ajuste.desplazamiento || 0) + "px"
+        );
+        panel.hoja.style.height = ajuste.alto ? ajuste.alto + "px" : "";
+        panel.hoja.style.minHeight = ajuste.alto ? ajuste.alto + "px" : "";
+      };
+
+      const anchoPorDefecto = () => Math.round(anchoDisponible() * 0.7);
+
+      // Con los dos marcos abiertos, conserva sus anchos si caben en el
+      // ancho util y si no los encoge en la misma proporcion. Corre en
+      // cada pintado, no solo al pulsar el boton: si no, un estado
+      // guardado con las notas abiertas se salia de la ventana.
+      const encajar = () => {
+        if (!visible(PANELES.notas)) return;
+
+        const lectura = ajustes(PANELES.lectura);
+        const notas = ajustes(PANELES.notas);
+        const sitio = anchoUtil() - SEPARACION;
+
+        // ventana muy estrecha: mitad y mitad, sin suelo minimo
+        if (sitio < ANCHO_MIN * 2) {
+          lectura.ancho = notas.ancho = Math.max(80, Math.round(sitio / 2));
+          return;
+        }
+
+        const anchoLectura = lectura.ancho || anchoPorDefecto();
+        const anchoNotas = notas.ancho || Math.round(anchoLectura * 0.55);
+        const factor = Math.min(1, sitio / (anchoLectura + anchoNotas));
+
+        lectura.ancho = Math.max(ANCHO_MIN, Math.round(anchoLectura * factor));
+        notas.ancho = Math.max(ANCHO_MIN, Math.round(anchoNotas * factor));
+      };
+
+      const pintarNotas = () => {
+        PANELES.notas.marco.hidden = !prefs.notasAbiertas;
+        fila.style.setProperty("--separacion", SEPARACION + "px");
+        encajar();
+        Object.values(PANELES).forEach(pintarPanel);
+      };
 
       const fijarAjuste = (nombre, valor) => {
         const ajuste = AJUSTES[nombre];
         const acotado = Math.min(Math.max(valor, ajuste.min), ajuste.max);
         prefs[nombre] = Number(acotado.toFixed(ajuste.dec));
-        formatter.style.setProperty(
+        // en la raiz, no en el cuadro: las notas usan los mismos valores
+        document.documentElement.style.setProperty(
           "--" + nombre,
           prefs[nombre] + ajuste.unidad
         );
@@ -371,73 +540,60 @@
           prefs[nombre].toFixed(ajuste.dec);
       };
 
-      const fijarAncho = (deseado) => {
-        const ancho = Math.round(
-          Math.min(Math.max(deseado, ANCHO_MIN), anchoDisponible())
-        );
-        prefs.ancho = ancho;
-        marco.style.setProperty("--ancho", ancho + "px");
-        return ancho;
-      };
-
-      const fijarAlto = (deseado) => {
-        const alto = Math.round(Math.max(deseado, ALTO_MIN));
-        prefs.alto = alto;
-        // el min-height por defecto es 80vh, hay que bajarlo tambien
-        formatter.style.height = alto + "px";
-        formatter.style.minHeight = alto + "px";
-      };
-
-      // Limites para que el bloque nunca se salga de la pantalla.
-      const fijarDesplazamiento = (deseado) => {
-        const actual = prefs.desplazamiento || 0;
-        const caja = marco.getBoundingClientRect();
-        const centrado = caja.left - actual;
-        const min = -centrado;
-        const max = anchoDisponible() - caja.width - centrado;
-        const valor = Math.round(Math.min(Math.max(deseado, min), max));
-        prefs.desplazamiento = valor;
-        marco.style.setProperty("--desplazamiento", valor + "px");
-      };
-
-      const aplicar = () => {
-        marco.style.setProperty(
-          "--ancho",
-          prefs.ancho ? prefs.ancho + "px" : "70%"
-        );
-        marco.style.setProperty(
-          "--desplazamiento",
-          (prefs.desplazamiento || 0) + "px"
-        );
-        formatter.style.height = prefs.alto ? prefs.alto + "px" : "";
-        formatter.style.minHeight = prefs.alto ? prefs.alto + "px" : "";
-        Object.keys(AJUSTES).forEach((nombre) =>
-          fijarAjuste(nombre, prefs[nombre] ?? AJUSTES[nombre].def)
-        );
-        fijarMaxChar(prefs.maxChar ?? MAX_CHAR_DEF);
-        pintarPaleta();
+      const pintarModo = () => {
+        if (document.activeElement === areaNotas) {
+          chipModo.textContent = areaNotas.readOnly ? "notas fijas" : "notas";
+          return;
+        }
         chipModo.textContent = formatter.hasAttribute("contenteditable")
           ? "edición"
           : "div";
       };
 
-      // Al mover un borde lateral la caja sigue centrada, asi que el
-      // borde opuesto se queda quieto compensando la mitad del avance.
+      const aplicar = () => {
+        Object.keys(AJUSTES).forEach((nombre) =>
+          fijarAjuste(nombre, prefs[nombre] ?? AJUSTES[nombre].def)
+        );
+        fijarMaxChar(prefs.maxChar ?? MAX_CHAR_DEF);
+        pintarPaleta();
+        pintarNotas();
+        // solo si difiere: reasignar el value mueve el cursor al final
+        const texto = prefs.textoNotas || "";
+        if (areaNotas.value !== texto) areaNotas.value = texto;
+        pintarModo();
+      };
+
+      // La fila esta centrada, asi que cambiar el ancho de un marco
+      // recoloca a los dos. Se compensa en ambos para que solo se mueva
+      // el borde que estas arrastrando y el otro marco no se inmute.
+      const redimensionar = (panel, d, anchoNuevo, bordeFijo) => {
+        const ancho = fijarAncho(panel, anchoNuevo);
+        const delta = ancho - d.ancho;
+
+        fijarDesplazamiento(
+          panel,
+          d.off + (bordeFijo === "izq" ? delta / 2 : -delta / 2)
+        );
+
+        const vecino = vecinoDe(panel);
+        if (visible(vecino)) {
+          fijarDesplazamiento(
+            vecino,
+            d.offVecino + (panel.lado === "izq" ? -delta / 2 : delta / 2)
+          );
+        }
+      };
+
       const gestos = {
-        izq: (d) => {
-          const ancho = fijarAncho(d.ancho - d.dx);
-          fijarDesplazamiento(d.off + (d.ancho - ancho) / 2);
-        },
-        der: (d) => {
-          const ancho = fijarAncho(d.ancho + d.dx);
-          fijarDesplazamiento(d.off + (ancho - d.ancho) / 2);
-        },
-        abajo: (d) => fijarAlto(d.alto + d.dy),
-        mover: (d) => fijarDesplazamiento(d.off + d.dx),
+        izq: (panel, d) => redimensionar(panel, d, d.ancho - d.dx, "der"),
+        der: (panel, d) => redimensionar(panel, d, d.ancho + d.dx, "izq"),
+        abajo: (panel, d) => fijarAlto(panel, d.alto + d.dy),
+        mover: (panel, d) => fijarDesplazamiento(panel, d.off + d.dx),
       };
 
       document.querySelectorAll(".asa").forEach((asa) => {
         const gesto = gestos[asa.dataset.asa];
+        const panel = PANELES[asa.closest(".marco").dataset.panel];
 
         asa.addEventListener("pointerdown", (event) => {
           event.preventDefault();
@@ -448,13 +604,14 @@
           const inicio = {
             x: event.clientX,
             y: event.clientY,
-            ancho: marco.getBoundingClientRect().width,
-            alto: formatter.getBoundingClientRect().height,
-            off: prefs.desplazamiento || 0,
+            ancho: panel.marco.getBoundingClientRect().width,
+            alto: panel.hoja.getBoundingClientRect().height,
+            off: ajustes(panel).desplazamiento || 0,
+            offVecino: ajustes(vecinoDe(panel)).desplazamiento || 0,
           };
 
           const mover = (e) =>
-            gesto({
+            gesto(panel, {
               ...inicio,
               dx: e.clientX - inicio.x,
               dy: e.clientY - inicio.y,
@@ -474,35 +631,18 @@
           asa.addEventListener("pointercancel", soltar);
         });
 
-        // doble clic en cualquier asa: vuelve al tamano y sitio original
+        // doble clic: ese marco vuelve a su tamano y sitio original
         asa.addEventListener("dblclick", () => {
-          delete prefs.ancho;
-          delete prefs.alto;
-          prefs.desplazamiento = 0;
-          aplicar();
+          prefs.paneles[panel.id] = {};
+          pintarPanel(panel);
+          // con los dos abiertos el 70% de partida desbordaria la fila,
+          // asi que se acota a lo que deje libre el otro marco
+          if (visible(PANELES.notas)) {
+            fijarAncho(panel, panel.marco.getBoundingClientRect().width);
+          }
+          fijarDesplazamiento(panel, 0);
           guardar();
         });
-      });
-
-      document.querySelectorAll("[data-ajuste]").forEach((boton) => {
-        const nombre = boton.dataset.ajuste;
-        const ajuste = AJUSTES[nombre];
-
-        boton.addEventListener("click", () => {
-          const actual = prefs[nombre] ?? ajuste.def;
-          fijarAjuste(nombre, actual + Number(boton.dataset.paso) * ajuste.paso);
-          guardar();
-        });
-      });
-
-      // doble clic sobre el numero: vuelve al valor recomendado
-      Object.keys(AJUSTES).forEach((nombre) => {
-        document
-          .getElementById("valor-" + nombre)
-          .addEventListener("dblclick", () => {
-            fijarAjuste(nombre, AJUSTES[nombre].def);
-            guardar();
-          });
       });
 
       // --- Separar en parrafos ---
@@ -727,6 +867,10 @@
         muestra.addEventListener("click", () => {
           prefs.tema = tema.id;
           pintarPaleta();
+        pintarNotas();
+        // solo si difiere: reasignar el value mueve el cursor al final
+        const texto = prefs.textoNotas || "";
+        if (areaNotas.value !== texto) areaNotas.value = texto;
           guardar();
         });
         muestrario.appendChild(muestra);
@@ -744,6 +888,10 @@
           };
           prefs.tema = "custom";
           pintarPaleta();
+        pintarNotas();
+        // solo si difiere: reasignar el value mueve el cursor al final
+        const texto = prefs.textoNotas || "";
+        if (areaNotas.value !== texto) areaNotas.value = texto;
           guardar();
         });
       });
@@ -757,11 +905,42 @@
         if (!panel.hidden && !panel.contains(event.target)) panel.hidden = true;
       });
 
+      const alternarNotas = () => {
+        prefs.notasAbiertas = !prefs.notasAbiertas;
+
+        pintarNotas();
+        Object.values(PANELES).forEach((panel) =>
+          fijarDesplazamiento(panel, ajustes(panel).desplazamiento || 0)
+        );
+        if (prefs.notasAbiertas) areaNotas.focus();
+        pintarModo();
+        guardar();
+      };
+
+      document
+        .getElementById("boton-notas")
+        .addEventListener("click", alternarNotas);
+
+      let guardadoNotas;
+      areaNotas.addEventListener("input", () => {
+        prefs.textoNotas = areaNotas.value;
+        clearTimeout(guardadoNotas);
+        guardadoNotas = setTimeout(guardar, 400);
+      });
+
+      areaNotas.addEventListener("focus", pintarModo);
+      areaNotas.addEventListener("blur", pintarModo);
+      formatter.addEventListener("focus", pintarModo);
+
       // salta al tema emparejado: Papel <-> Noche, Sepia <-> Ambar...
       const alternarTema = () => {
         const tema = temaActual();
         prefs.tema = tema.par || (tema.oscuro ? "papel" : "noche");
         pintarPaleta();
+        pintarNotas();
+        // solo si difiere: reasignar el value mueve el cursor al final
+        const texto = prefs.textoNotas || "";
+        if (areaNotas.value !== texto) areaNotas.value = texto;
         guardar();
       };
 
@@ -771,10 +950,18 @@
         if (event.key === "Escape") {
           if (!panel.hidden) {
             panel.hidden = true;
+          } else if (document.activeElement === areaNotas) {
+            // en las notas el equivalente a salir de edicion es fijarlas
+            areaNotas.readOnly = !areaNotas.readOnly;
+            pintarModo();
           } else {
             formatter.toggleAttribute("contenteditable");
             aplicar();
           }
+        }
+        if (event.key === "2" && event.metaKey) {
+          event.preventDefault();
+          alternarNotas();
         }
         // asignar innerHTML rompe el historial nativo, asi que el
         // deshacer de la separacion lo llevamos a mano
@@ -796,12 +983,15 @@
 
       // si cambia el tamano de la ventana, se vuelve a encajar
       window.addEventListener("resize", () => {
-        if (prefs.ancho) fijarAncho(prefs.ancho);
-        fijarDesplazamiento(prefs.desplazamiento || 0);
+        encajar();
+        Object.values(PANELES).forEach((panel) => {
+          pintarPanel(panel);
+          fijarDesplazamiento(panel, ajustes(panel).desplazamiento || 0);
+        });
       });
 
       aplicar();
-      fijarDesplazamiento(prefs.desplazamiento || 0);
+      Object.values(PANELES).forEach((panel) => fijarDesplazamiento(panel, 0));
     };
 
     document.addEventListener("DOMContentLoaded", app);
@@ -846,6 +1036,15 @@
         ¶ separar
       </button>
 
+      <button
+        class="chip"
+        id="boton-notas"
+        type="button"
+        title="Notas (Cmd+2)"
+      >
+        📝
+      </button>
+
       <button class="chip" id="paleta" type="button" title="Colores">
         🎨
       </button>
@@ -863,41 +1062,35 @@
 
     <div class="panel" id="panel" hidden>
       <div class="muestras" id="muestras"></div>
-      <label class="fila">
+      <label class="color-fila">
         <span>Página</span><input type="color" id="c-pagina" />
       </label>
-      <label class="fila">
+      <label class="color-fila">
         <span>Hoja</span><input type="color" id="c-hoja" />
       </label>
-      <label class="fila">
+      <label class="color-fila">
         <span>Texto</span><input type="color" id="c-texto" />
       </label>
     </div>
 
-    <div class="marco" id="marco">
-      <div id="formatter" class="formatter" contenteditable="true">
-        Escribe...
+    <div class="fila" id="fila">
+      <div class="marco" id="marco-lectura" data-panel="lectura">
+        <div id="formatter" class="formatter" contenteditable="true">
+          Escribe...
+        </div>
+        <span class="asa asa-mover" data-asa="mover" title="Mover a los lados"></span>
+        <span class="asa asa-izq" data-asa="izq" title="Cambiar el ancho"></span>
+        <span class="asa asa-der" data-asa="der" title="Cambiar el ancho"></span>
+        <span class="asa asa-abajo" data-asa="abajo" title="Cambiar el alto"></span>
       </div>
-      <span
-        class="asa asa-mover"
-        data-asa="mover"
-        title="Arrastra para mover el bloque a los lados (solo en modo div)"
-      ></span>
-      <span
-        class="asa asa-izq"
-        data-asa="izq"
-        title="Arrastra para cambiar el ancho"
-      ></span>
-      <span
-        class="asa asa-der"
-        data-asa="der"
-        title="Arrastra para cambiar el ancho"
-      ></span>
-      <span
-        class="asa asa-abajo"
-        data-asa="abajo"
-        title="Arrastra para cambiar el alto"
-      ></span>
+
+      <div class="marco" id="marco-notas" data-panel="notas" hidden>
+        <textarea id="texto-notas" class="notas" placeholder="Notas..."></textarea>
+        <span class="asa asa-mover" data-asa="mover" title="Mover a los lados"></span>
+        <span class="asa asa-izq" data-asa="izq" title="Cambiar el ancho"></span>
+        <span class="asa asa-der" data-asa="der" title="Cambiar el ancho"></span>
+        <span class="asa asa-abajo" data-asa="abajo" title="Cambiar el alto"></span>
+      </div>
     </div>
   </body>
 </html>
