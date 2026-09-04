@@ -645,6 +645,27 @@
         });
       });
 
+      document.querySelectorAll("[data-ajuste]").forEach((boton) => {
+        const nombre = boton.dataset.ajuste;
+        const ajuste = AJUSTES[nombre];
+
+        boton.addEventListener("click", () => {
+          const actual = prefs[nombre] ?? ajuste.def;
+          fijarAjuste(nombre, actual + Number(boton.dataset.paso) * ajuste.paso);
+          guardar();
+        });
+      });
+
+      // doble clic sobre el numero: vuelve al valor recomendado
+      Object.keys(AJUSTES).forEach((nombre) => {
+        document
+          .getElementById("valor-" + nombre)
+          .addEventListener("dblclick", () => {
+            fijarAjuste(nombre, AJUSTES[nombre].def);
+            guardar();
+          });
+      });
+
       // --- Separar en parrafos ---
       // misma logica que remove-lines-and-separate-by-dots.html: junta
       // todas las lineas en una sola y luego corta por el punto mas
