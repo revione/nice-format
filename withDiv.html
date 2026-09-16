@@ -70,6 +70,15 @@
         transform: translateX(var(--desplazamiento, 0px));
       }
 
+      /* El marco de notas se queda pegado en su sitio al bajar por la
+         pagina, en vez de desplazarse con el texto de lectura, para
+         poder escribir sin perderlo de vista. Se despega solo cuando
+         el de lectura (mas alto) se acaba, que es donde termina la fila. */
+      .marco[data-panel="notas"] {
+        position: sticky;
+        top: max(4vh, 56px);
+      }
+
       .formatter {
         /* 1.6 de interlineado y 24px son los valores de partida
            recomendados para lectura; se ajustan desde la barra */
