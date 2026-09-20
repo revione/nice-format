@@ -208,10 +208,14 @@
       }
 
       /* --- Notas: la hoja de al lado, con su propio marco --- */
+      /* Crece con lo que se escribe en vez de tener un alto fijo (por
+         eso no lleva asa-abajo); topa en 90vh y de ahi en adelante
+         hace scroll interno en vez de seguir creciendo. */
       .notas {
         width: 100%;
-        height: 80vh;
-        min-height: 80vh;
+        field-sizing: content;
+        min-height: 120px;
+        max-height: 90vh;
         box-sizing: border-box;
         overflow: auto;
         resize: none;
@@ -395,6 +399,7 @@
       prefs.paneles.notas = prefs.paneles.notas || {};
       if (prefs.ancho) prefs.paneles.lectura.ancho = prefs.ancho;
       if (prefs.alto) prefs.paneles.lectura.alto = prefs.alto;
+      delete prefs.paneles.notas.alto; // ahora las notas crecen solas
       delete prefs.ancho;
       delete prefs.alto;
       delete prefs.reparto;
@@ -498,6 +503,8 @@
           "--desplazamiento",
           (ajuste.desplazamiento || 0) + "px"
         );
+        // las notas ya no tienen alto fijo: crecen solas con field-sizing
+        if (panel.id === "notas") return;
         panel.hoja.style.height = ajuste.alto ? ajuste.alto + "px" : "";
         panel.hoja.style.minHeight = ajuste.alto ? ajuste.alto + "px" : "";
       };
@@ -1119,7 +1126,6 @@
         <span class="asa asa-mover" data-asa="mover" title="Mover a los lados"></span>
         <span class="asa asa-izq" data-asa="izq" title="Cambiar el ancho"></span>
         <span class="asa asa-der" data-asa="der" title="Cambiar el ancho"></span>
-        <span class="asa asa-abajo" data-asa="abajo" title="Cambiar el alto"></span>
       </div>
     </div>
   </body>
