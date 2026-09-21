@@ -799,6 +799,11 @@
 
       formatter.addEventListener("input", () => {
         deshacerSeparar = null;
+        // al vaciar el texto de lectura, vuelve a subir: si no, la
+        // pagina se queda desplazada mirando el hueco donde estaba
+        if (!formatter.innerText.trim()) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
       });
 
       // arrastrar solo mueve el numero; al soltar se vuelve a repartir
