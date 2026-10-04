@@ -349,6 +349,40 @@
         accent-color: currentColor;
         cursor: pointer;
       }
+
+      /* --- Panel de palabras repetidas --- */
+      .panel-palabras {
+        min-width: 220px;
+        max-width: min(320px, calc(100vw - 24px));
+      }
+      .total-palabras {
+        opacity: 0.65;
+      }
+      .lista-palabras {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 50vh;
+        overflow: auto;
+      }
+      .palabra-fila {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background-color: var(--pagina);
+      }
+      .palabra-fila b {
+        opacity: 0.6;
+        font-weight: 500;
+      }
+
+      /* confirmacion breve al copiar: el boton cambia de texto un instante */
+      .chip.copiado {
+        opacity: 1;
+      }
     </style>
   </head>
 
@@ -359,6 +393,8 @@
       const botonTema = document.getElementById("tema");
       const chipModo = document.getElementById("modo");
       const panel = document.getElementById("panel");
+      const panelPalabras = document.getElementById("panel-palabras");
+      const flotantes = [panel, panelPalabras];
       const areaNotas = document.getElementById("texto-notas");
       const entradas = {
         pagina: document.getElementById("c-pagina"),
@@ -797,8 +833,81 @@
 
       document.getElementById("separar").addEventListener("click", separar);
 
+      // una oracion/clausula por linea en vez de parrafos por limite de
+      // caracteres: corta en puntos, comas y en las conjunciones
+      // alemanas "und"/"oder", para leer despacio frase por frase
+      const separarPorOracion = () => {
+        const marcado = quitarSaltos(formatter.innerText).replace(
+          /(\.\.\.|[,.\-!?¡¿]|\bund\b|\boder\b)\s*/gi,
+          "$1\n"
+        );
+        const oraciones = marcado
+          .split("\n")
+          .map((oracion) => oracion.trim())
+          .filter(Boolean);
+        if (!oraciones.length) return;
+
+        const html = oraciones
+          .map((oracion) => "<div>" + escapar(oracion) + "</div>")
+          .join("<div><br></div>");
+
+        deshacerSeparar = formatter.innerHTML;
+        formatter.innerHTML = html;
+        aplicar();
+      };
+
+      document
+        .getElementById("separar-oracion")
+        .addEventListener("click", separarPorOracion);
+
+      // cuenta las palabras del texto de lectura, conservando acentos
+      // y los caracteres propios del aleman
+      const contarPalabras = (texto) => {
+        const limpio = texto
+          .toLowerCase()
+          .replace(/[^\w\säöüßáéíóúüñç]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (!limpio) return {};
+
+        const conteo = {};
+        limpio
+          .split(" ")
+          .filter((palabra) => palabra.length > 1)
+          .forEach((palabra) => (conteo[palabra] = (conteo[palabra] || 0) + 1));
+        return conteo;
+      };
+
+      const pintarPalabrasRepetidas = () => {
+        const repetidas = Object.entries(contarPalabras(formatter.innerText))
+          .filter(([, veces]) => veces > 1)
+          .sort(([, a], [, b]) => b - a);
+
+        const totalPalabras = document.getElementById("total-palabras");
+        const listaPalabras = document.getElementById("lista-palabras");
+
+        if (!repetidas.length) {
+          totalPalabras.textContent = "Ninguna palabra se repite todavia";
+          listaPalabras.innerHTML = "";
+          return;
+        }
+
+        totalPalabras.textContent = repetidas.length + " palabras se repiten";
+        listaPalabras.innerHTML = repetidas
+          .map(
+            ([palabra, veces]) =>
+              '<div class="palabra-fila"><span>' +
+              escapar(palabra) +
+              "</span><b>" +
+              veces +
+              "</b></div>"
+          )
+          .join("");
+      };
+
       formatter.addEventListener("input", () => {
         deshacerSeparar = null;
+        if (!panelPalabras.hidden) pintarPalabrasRepetidas();
         // al vaciar el texto de lectura, vuelve a subir: si no, la
         // pagina se queda desplazada mirando el hueco donde estaba
         if (!formatter.innerText.trim()) {
@@ -938,13 +1047,30 @@
         });
       });
 
+      // abre uno solo a la vez: el que se abre cierra a los demas
+      const alternarFlotante = (flotante) => {
+        const abrir = flotante.hidden;
+        flotantes.forEach((otro) => (otro.hidden = true));
+        flotante.hidden = !abrir;
+      };
+
       document.getElementById("paleta").addEventListener("click", (event) => {
         event.stopPropagation();
-        panel.hidden = !panel.hidden;
+        alternarFlotante(panel);
+      });
+
+      document.getElementById("repetidas").addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (panelPalabras.hidden) pintarPalabrasRepetidas();
+        alternarFlotante(panelPalabras);
       });
 
       document.addEventListener("click", (event) => {
-        if (!panel.hidden && !panel.contains(event.target)) panel.hidden = true;
+        flotantes.forEach((flotante) => {
+          if (!flotante.hidden && !flotante.contains(event.target)) {
+            flotante.hidden = true;
+          }
+        });
       });
 
       const alternarNotas = () => {
@@ -970,9 +1096,32 @@
         guardadoNotas = setTimeout(guardar, 400);
       });
 
-      areaNotas.addEventListener("focus", pintarModo);
+      // recuerda cual de los dos se enfoco por ultima vez, para saber
+      // que copiar: al hacer click en el boton, el foco ya paso a el
+      let ultimoFoco = "lectura";
+      areaNotas.addEventListener("focus", () => {
+        ultimoFoco = "notas";
+        pintarModo();
+      });
       areaNotas.addEventListener("blur", pintarModo);
-      formatter.addEventListener("focus", pintarModo);
+      formatter.addEventListener("focus", () => {
+        ultimoFoco = "lectura";
+        pintarModo();
+      });
+
+      const botonCopiar = document.getElementById("copiar");
+      let avisoCopiar;
+      botonCopiar.addEventListener("click", () => {
+        const texto =
+          ultimoFoco === "notas" ? areaNotas.value : formatter.innerText;
+        navigator.clipboard.writeText(texto);
+
+        botonCopiar.textContent = "✓ copiado";
+        clearTimeout(avisoCopiar);
+        avisoCopiar = setTimeout(() => {
+          botonCopiar.textContent = "📋 copiar";
+        }, 1200);
+      });
 
       // salta al tema emparejado: Papel <-> Noche, Sepia <-> Ambar...
       const alternarTema = () => {
@@ -990,8 +1139,9 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          if (!panel.hidden) {
-            panel.hidden = true;
+          const abierto = flotantes.find((flotante) => !flotante.hidden);
+          if (abierto) {
+            abierto.hidden = true;
           } else if (document.activeElement === areaNotas) {
             // en las notas el equivalente a salir de edicion es fijarlas
             areaNotas.readOnly = !areaNotas.readOnly;
@@ -1068,7 +1218,7 @@
           type="range"
           id="maxChar"
           min="10"
-          max="50"
+          max="100"
           step="5"
           value="10"
         />
@@ -1081,7 +1231,34 @@
         type="button"
         title="Quita los saltos de línea y reparte el texto en párrafos cortando por puntos y comas"
       >
-        ¶ separar
+        ¶ párrafos
+      </button>
+
+      <button
+        class="chip"
+        id="separar-oracion"
+        type="button"
+        title="Pone cada oración en su propia línea, cortando en puntos, comas y en 'und'/'oder'"
+      >
+        ¶ oraciones
+      </button>
+
+      <button
+        class="chip"
+        id="copiar"
+        type="button"
+        title="Copiar el texto del panel donde estabas escribiendo"
+      >
+        📋 copiar
+      </button>
+
+      <button
+        class="chip"
+        id="repetidas"
+        type="button"
+        title="Palabras que se repiten en el texto"
+      >
+        🔠 repetidas
       </button>
 
       <button
@@ -1119,6 +1296,11 @@
       <label class="color-fila">
         <span>Texto</span><input type="color" id="c-texto" />
       </label>
+    </div>
+
+    <div class="panel panel-palabras" id="panel-palabras" hidden>
+      <div class="total-palabras" id="total-palabras"></div>
+      <div class="lista-palabras" id="lista-palabras"></div>
     </div>
 
     <div class="fila" id="fila">
